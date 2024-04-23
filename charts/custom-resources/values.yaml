@@ -1,0 +1,18 @@
+---
+  apiversion: foo.io/v1beta1
+  kind: foobarbaz
+  metadata:
+    name: foo
+  spec:
+    baz:
+      bar: foo
+# ---
+# apiversion: external-secrets.io/v1beta1
+# kind: ClusterSecretStore
+# metadata:
+#   name: aws-secretsmanager
+# spec:
+#   provider:
+#     aws:
+#       service: secretsmanager
+#       region: eu-west-1
