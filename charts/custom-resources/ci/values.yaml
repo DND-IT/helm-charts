@@ -3,10 +3,10 @@
 # This will get around terraform catch 22 with crds not availble
 # until after terraform apply
 #
-# apiVersion: foo.io/v1beta1
-# kind: foobarbaz
-# metadata:
-#   name: foo
-# spec:
-#   baz:
-#     bar: foo
+apiVersion: foo.io/v1beta1
+kind: foobarbaz
+metadata:
+  name: foo
+spec:
+  baz:
+    bar: foo
