@@ -12,7 +12,7 @@ image_tag: stable
 image_pull_policy: IfNotPresent
 
 cronjob:
-  schedule: /
+  schedule: "0 0 * * *"
 
   # cronjob.suspend -- If cronjob executions should be suspended.
   suspend: false
