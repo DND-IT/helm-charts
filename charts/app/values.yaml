@@ -16,8 +16,8 @@ command: []
 args: []
 env: {}
 
-image_repo:
-image_tag: stable
+image_repo: nginx
+image_tag: latest
 image_pull_policy: IfNotPresent
 
 probe:

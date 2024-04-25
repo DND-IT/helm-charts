@@ -22,8 +22,8 @@ A generic application chart with one deployment
 | externalSecrets.refreshInterval | string | `"5m"` |  |
 | externalSecrets.secretNames | list | `[]` |  |
 | image_pull_policy | string | `"IfNotPresent"` |  |
-| image_repo | string | `nil` |  |
-| image_tag | string | `"stable"` |  |
+| image_repo | string | `"nginx"` |  |
+| image_tag | string | `"latest"` |  |
 | ingress.annotations | string | `nil` |  |
 | ingress.className | string | `nil` |  |
 | ingress.hosts | list | `[]` |  |
