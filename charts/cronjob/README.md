@@ -17,7 +17,7 @@ A generic application chart which run kubernetes cron job
 | affinity | object | `{}` |  |
 | args | list | `[]` |  |
 | command | list | `[]` |  |
-| cronjob.schedule | string | `"/"` |  |
+| cronjob.schedule | string | `"0 0 * * *"` |  |
 | cronjob.suspend | bool | `false` | If cronjob executions should be suspended. |
 | env | object | `{}` |  |
 | image_pull_policy | string | `"IfNotPresent"` |  |
