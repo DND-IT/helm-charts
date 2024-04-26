@@ -4,6 +4,24 @@
 
 A generic application chart with one deployment
 
+## Usage
+
+Reference the release of the chart you want to deploy in terraform
+
+```hcl
+resource "helm_release" "app" {
+  chart     = "https://dnd-it.github.io/helm-charts/app"
+
+  values = [
+    templatefile("values.yaml")
+  ]
+  set {
+    name  = "service.name"
+    value = "my-custom-service-name"
+  }
+}
+```
+
 ## Maintainers
 
 | Name | Email | Url |

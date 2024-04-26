@@ -4,6 +4,24 @@
 
 A generic application chart which run kubernetes cron job
 
+## Usage
+
+Reference the release of the chart you want to deploy in terraform
+
+```hcl
+resource "helm_release" "app" {
+  chart     = "https://dnd-it.github.io/helm-charts/cronjob"
+
+  values = [
+    templatefile("values.yaml")
+  ]
+  set {
+    name  = "foo"
+    value = "bar"
+  }
+}
+```
+
 ## Maintainers
 
 | Name | Email | Url |
