@@ -1,6 +1,6 @@
 apiVersion: v2
 name: custom-resources
-description: A Helm chart for Kubernetes
+description: Deploy custom resources via Helm
 maintainers:
   - name: DAI
     email: dai@tamedia.ch
