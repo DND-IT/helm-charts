@@ -1,0 +1,8 @@
+apiVersion: v2
+name: app
+description: A generic application chart with one deployment
+maintainers:
+  - name: DAI
+    email: dai@tamedia.ch
+type: application
+version: 1.0.0

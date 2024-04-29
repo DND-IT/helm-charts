@@ -1,0 +1,26 @@
+{{- if .Values.service.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  # Support the custom name to not break the compatibility
+  name: {{ default .Values.service.name .Release.Name }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    type: {{ .Chart.Name }}
+    app: {{ .Release.Name }}
+  {{- with .Values.service.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    type: {{ .Chart.Name }}
+    app: {{ .Release.Name }}
+{{- end }}

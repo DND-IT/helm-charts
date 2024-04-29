@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  annotations:
+    {{- toYaml .Values.metadata.deploymentAnnotations | nindent 4 }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    type: {{ .Chart.Name }}
+    app: {{ .Release.Name }}
+    {{- if .Values.metadata.labels.datadog.env }}
+    tags.datadoghq.com/env: {{ .Values.metadata.labels.datadog.env }}
+    {{- end }}
+    {{- if .Values.metadata.labels.datadog.service }}
+    tags.datadoghq.com/service: {{ .Values.metadata.labels.datadog.service }}
+    {{- end }}
+    {{- if .Values.metadata.labels.datadog.version }}
+    tags.datadoghq.com/version: {{ .Values.metadata.labels.datadog.version }}
+    {{- end }}
+spec:
+  {{- if not .Values.scale.enabled }} # https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/#migrating-deployments-and-statefulsets-to-horizontal-autoscaling
+  replicas: {{ .Values.scale.minReplicas }}
+  {{- end }}
+  selector:
+    matchLabels:
+      type: {{ .Chart.Name }}
+      app: {{ .Release.Name }}
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: {{ .Values.update.maxUnavailable }}
+      maxSurge: {{ .Values.update.maxSurge }}
+  template:
+    metadata:
+      annotations:
+        {{- toYaml .Values.metadata.podAnnotations | nindent 8 }}
+      labels:
+        type: {{ .Chart.Name }}
+        app: {{ .Release.Name }}
+        {{- if .Values.metadata.labels.datadog.env }}
+        tags.datadoghq.com/env: {{ .Values.metadata.labels.datadog.env }}
+        {{- end }}
+        {{- if .Values.metadata.labels.datadog.service }}
+        tags.datadoghq.com/service: {{ .Values.metadata.labels.datadog.service }}
+        {{- end }}
+        {{- if .Values.metadata.labels.datadog.version }}
+        tags.datadoghq.com/version: {{ .Values.metadata.labels.datadog.version }}
+        {{- end }}
+    spec:
+      {{- if .Values.aws_iam_role_arn }}
+      serviceAccountName: {{ .Release.Name }}
+      securityContext:
+        fsGroup: 65534 # To be able to read Kubernetes and AWS token files
+      {{- end }}
+      containers:
+        - name: {{ .Release.Name }}
+          image: "{{ .Values.image_repo }}:{{ .Values.image_tag }}"
+          imagePullPolicy: {{ .Values.image_pull_policy }}
+          {{- if .Values.command }}
+          command:
+            {{- .Values.command | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.args }}
+          args:
+            {{- .Values.args | toYaml | nindent 12 }}
+          {{- end }}
+          env:
+            - name: PORT
+              value: {{ .Values.port | quote }}
+            {{- if .Values.metadata.labels.datadog.env }}
+            - name: DD_ENV
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/env']
+            {{- end }}
+            {{- if .Values.metadata.labels.datadog.service }}
+            - name: DD_SERVICE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/service']
+            {{- end }}
+            {{- if .Values.metadata.labels.datadog.version }}
+            - name: DD_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['tags.datadoghq.com/version']
+            {{- end }}
+            {{- if .Values.env }}
+            {{- range $key, $val := .Values.env }}
+            - name: {{ $key }}
+              value: {{ $val | quote }}
+            {{- end }}
+            {{- end }}
+          {{- with .Values.externalSecrets.secretNames }}
+          envFrom:
+            {{- range . }}
+            - secretRef:
+                name: {{ . | lower | replace "/" "-" }}
+            {{- end }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.port }}
+              protocol: TCP
+          {{- if .Values.probe.liveness }}
+          livenessProbe:
+            httpGet:
+              path: {{ .Values.probe.liveness | quote }}
+              port: http
+            initialDelaySeconds: {{ .Values.probe.livenessInitialDelaySeconds }}
+            periodSeconds: {{ .Values.probe.livenessPeriodSeconds }}
+            timeoutSeconds: {{ .Values.probe.livenessTimeoutSeconds }}
+          {{- end }}
+          {{- if .Values.probe.readiness }}
+          readinessProbe:
+            httpGet:
+              path: {{ .Values.probe.readiness | quote }}
+              port: http
+            initialDelaySeconds: {{ .Values.probe.readinessInitialDelaySeconds }}
+            periodSeconds: {{ .Values.probe.readinessPeriodSeconds }}
+            timeoutSeconds: {{ .Values.probe.readinessTimeoutSeconds }}
+            failureThreshold: {{ .Values.probe.readinessFailureThreshold }}
+          {{- end }}
+          # Let's add startup probe only if there is already a liveness defined without requiring new values on application side
+          {{- if .Values.probe.liveness }}
+          startupProbe:
+            httpGet:
+              path: {{ coalesce .Values.probe.startup .Values.probe.liveness | quote }}
+              port: http
+              {{- if .Values.probe.startupHttpHeaders }}
+              httpHeaders:
+                {{ .Values.probe.startupHttpHeaders | toYaml | nindent 16 }}
+              {{- end }}
+            # This means that by default, any application who doesn't respond after 3*40 seconds (2 minutes) gets killed and restarted
+            # Can be dangerous if we have slow-starting apps. Can we assume that in 2 minutes all the apps are ready to serve content? Currently anyway
+            failureThreshold: 40
+            periodSeconds: 3
+            timeoutSeconds: {{ .Values.probe.startupTimeoutSeconds }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+    {{- end }}
+    {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints: {{ toYaml .Values.topologySpreadConstraints | nindent 8 }}
+    {{- end }}

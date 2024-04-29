@@ -1,0 +1,8 @@
+apiVersion: v2
+name: cronjob
+description: A generic application chart which run kubernetes cron job
+maintainers:
+  - name: DAI
+    email: dai@tamedia.ch
+type: application
+version: 1.1.0

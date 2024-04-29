@@ -1,0 +1,36 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+## Usage
+
+Reference the release of the chart you want to deploy in terraform
+
+```hcl
+resource "helm_release" "app" {
+  chart     = "https://dnd-it.github.io/helm-charts/cronjob"
+
+  values = [
+    templatefile("values.yaml")
+  ]
+  set {
+    name  = "foo"
+    value = "bar"
+  }
+}
+```
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+{{ template "helm-docs.versionFooter" . }}

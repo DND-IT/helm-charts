@@ -1,0 +1,104 @@
+# App specific configs
+scale:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 10
+  minAvailable: 50%
+  cpuThresholdPercentage: 100
+  # -1 means "unset". Use positive integer to enable it.
+  memoryThresholdPercentage: -1
+
+port: 80
+# ["bundle", "exec", "rake", "db:create", "db:migrate"]
+# command: []
+command: []
+# ["db:create", "db:migrate"]
+args: []
+env: {}
+
+image_repo: nginx
+image_tag: latest
+image_pull_policy: IfNotPresent
+
+probe:
+  liveness: /
+  livenessInitialDelaySeconds: 0
+  livenessPeriodSeconds: 10
+  livenessTimeoutSeconds: 2
+  readiness: /
+  readinessInitialDelaySeconds: 0
+  readinessPeriodSeconds: 5
+  readinessFailureThreshold: 2
+  readinessTimeoutSeconds: 2
+  startup:
+  startupTimeoutSeconds: 1
+  startupHttpHeaders:
+
+service:
+  annotations:
+  enabled: true
+  type: ClusterIP
+  port: 80
+  name:
+
+# Activated by setting at least one host
+ingress:
+  className:
+  annotations:
+  hosts: []
+  paths: ["/"]
+  tls: false
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+metadata:
+  deploymentAnnotations: {}
+  podAnnotations: {}
+  hpaAnnotations: {}
+  labels:
+    datadog:
+      env: ""
+      service: ""
+      version: ""
+
+topologySpreadConstraints:
+  # -- Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).
+  # If no constraints are defined, the cluster default is used.
+  # - topologyKey: topology.kubernetes.io/zone
+  #   maxSkew: 5
+  #   whenUnsatisfiable: ScheduleAnyway
+  # - topologyKey: kubernetes.io/hostname
+  #   maxSkew: 3
+  #   whenUnsatisfiable: ScheduleAnyway
+  - topologyKey: topology.kubernetes.io/zone
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
+  - topologyKey: kubernetes.io/hostname
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
+update:
+  maxUnavailable: 0%
+  maxSurge: 25%
+
+externalSecrets:
+  refreshInterval: 5m
+  clusterSecretStore: aws-secretsmanager
+  # secret names that should be fetched and made available to the Pods
+  secretNames: []

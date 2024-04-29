@@ -1,0 +1,14 @@
+# by setting minReplica = 1 the PDB won't be deployed.
+# if you want HA then minReplica must be > 1.
+{{- if gt (int .Values.scale.minReplicas) 1 }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ .Release.Name }}
+spec:
+  minAvailable: {{ .Values.scale.minAvailable }}
+  selector:
+    matchLabels:
+      type: {{ .Chart.Name }}
+      app: {{ .Release.Name }}
+{{- end }}

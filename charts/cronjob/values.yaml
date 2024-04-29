@@ -1,0 +1,46 @@
+# Default values for cron helm chart
+# cron helm chart manage 2 k8s resources:
+# - CronJob
+# - ServiceAccount
+port: 80
+command: []
+args: []
+env: {}
+
+image_repo: nginx
+image_tag: stable
+image_pull_policy: IfNotPresent
+
+cronjob:
+  schedule: "0 0 * * *"
+
+  # cronjob.suspend -- If cronjob executions should be suspended.
+  suspend: false
+
+resources:
+  {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+restartPolicy: "Never"
+
+metadata:
+  labels:
+    datadog:
+      env: ""
+      service: ""
+      version: ""
