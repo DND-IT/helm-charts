@@ -1,8 +1,8 @@
 apiVersion: v2
 name: app
-description: A generic application chart with one deployment
+description: A generic kubernetes application
 maintainers:
   - name: DAI
     email: dai@tamedia.ch
 type: application
-version: 1.0.0
+version: 0.1.0

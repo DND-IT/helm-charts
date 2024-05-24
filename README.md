@@ -1,6 +1,6 @@
 # Helm Charts
 
-[Repository cloned from Renovate Helm Charts](https://github.com/renovatebot/helm-charts)
+Tamedia Helm Charts for Kubernetes.
 
 ## Kubernetes version support
 
@@ -18,16 +18,8 @@ helm repo update
 Using config from a file:
 
 ```bash
-helm install --generate-name --set-file renovate.config=config.json renovate/renovate
+helm install --generate-name dnd-it/chart-name
 ```
-
-Using config from a string:
-
-```bash
-helm install --generate-name --set renovate.config='\{\"token\":\"...\"\}' renovate/renovate
-```
-
-**Note**: `renovate.config` must be a valid Renovate [self-hosted configuration](https://docs.renovatebot.com/self-hosted-configuration/).
 
 ## Contributing
 
