@@ -10,8 +10,10 @@
 Reference the release of the chart you want to deploy in terraform
 
 ```hcl
-resource "helm_release" "app" {
-  chart     = "https://dnd-it.github.io/helm-charts/cronjob"
+resource "helm_release" "cronjob" {
+  name       = "cronjob"
+  repository = "https://dnd-it.github.io/helm-charts"
+  chart      = "cronjob"
 
   values = [
     templatefile("values.yaml")
