@@ -1,0 +1,42 @@
+apiVersion: v1
+entries:
+  app:
+  - apiVersion: v2
+    created: "2024-05-24T07:13:36.108478157Z"
+    description: A generic kubernetes application
+    digest: 0025439e4bd9eb3da0215d557b17dad0b1966c60e1dd77cca510271817fda11e
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: app
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/app-0.1.0/app-0.1.0.tgz
+    version: 0.1.0
+  cronjob:
+  - apiVersion: v2
+    created: "2024-05-24T07:13:36.293927428Z"
+    description: A generic kubernetes cron job
+    digest: 4742474f7da48a65ae8696ec073de4ec6dfe329e8adc6deb4ce144e076f996e3
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: cronjob
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/cronjob-0.1.0/cronjob-0.1.0.tgz
+    version: 0.1.0
+  custom-resources:
+  - apiVersion: v2
+    created: "2024-05-24T07:13:36.500540507Z"
+    description: Deploy custom resources via Helm
+    digest: a8b4deb96d1220ebfdee86052b8cc8e449375de248e04cd4ff7829aded9b21b8
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: custom-resources
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.0/custom-resources-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-05-24T07:13:36.500571144Z"
