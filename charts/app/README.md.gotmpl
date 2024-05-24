@@ -11,7 +11,9 @@ Reference the release of the chart you want to deploy in terraform
 
 ```hcl
 resource "helm_release" "app" {
-  chart     = "https://dnd-it.github.io/helm-charts/app"
+  name       = "app"
+  repository = "https://dnd-it.github.io/helm-charts"
+  chart      = "app"
 
   values = [
     templatefile("values.yaml")
