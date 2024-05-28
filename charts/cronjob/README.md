@@ -1,6 +1,6 @@
 # cronjob
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes cron job
 
@@ -9,8 +9,10 @@ A generic kubernetes cron job
 Reference the release of the chart you want to deploy in terraform
 
 ```hcl
-resource "helm_release" "app" {
-  chart     = "https://dnd-it.github.io/helm-charts/cronjob"
+resource "helm_release" "cronjob" {
+  name       = "cronjob"
+  repository = "https://dnd-it.github.io/helm-charts"
+  chart      = "cronjob"
 
   values = [
     templatefile("values.yaml")

@@ -14,8 +14,10 @@ eg. Karpenter Controller and Karpenter NodePools / EC2NodeClass can be appled wi
 the kubectl provider
 
 ```hcl
-resource "helm_release" "app" {
-  chart     = "https://dnd-it.github.io/helm-charts/custom-resources"
+resource "helm_release" "custom_resources" {
+  name       = "custom-resources"
+  repository = "https://dnd-it.github.io/helm-charts"
+  chart      = "custom-resources"
 
   values = [
     templatefile("node-pool.yaml")

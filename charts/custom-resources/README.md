@@ -1,6 +1,6 @@
 # custom-resources
 
-![Version: 0.1.0](https://img.shields.io/badge/Version-0.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.1.1](https://img.shields.io/badge/Version-0.1.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 Deploy custom resources via Helm
 
@@ -13,8 +13,10 @@ eg. Karpenter Controller and Karpenter NodePools / EC2NodeClass can be appled wi
 the kubectl provider
 
 ```hcl
-resource "helm_release" "app" {
-  chart     = "https://dnd-it.github.io/helm-charts/custom-resources"
+resource "helm_release" "custom_resources" {
+  name       = "custom-resources"
+  repository = "https://dnd-it.github.io/helm-charts"
+  chart      = "custom-resources"
 
   values = [
     templatefile("node-pool.yaml")
