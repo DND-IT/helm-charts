@@ -2,6 +2,18 @@ apiVersion: v1
 entries:
   app:
   - apiVersion: v2
+    created: "2024-05-28T06:28:44.963029404Z"
+    description: A generic kubernetes application
+    digest: 2fa70d4d3f718bee4a1d57fac4b3609db8013ef4130063aada95250e46b2b986
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: app
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/app-0.1.1/app-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
     created: "2024-05-24T07:13:36.108478157Z"
     description: A generic kubernetes application
     digest: 0025439e4bd9eb3da0215d557b17dad0b1966c60e1dd77cca510271817fda11e
@@ -14,6 +26,18 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/app-0.1.0/app-0.1.0.tgz
     version: 0.1.0
   cronjob:
+  - apiVersion: v2
+    created: "2024-05-28T06:28:45.088172199Z"
+    description: A generic kubernetes cron job
+    digest: 4b5790a5e4477f6c7af9bdb3283c1c0065dbba146ad2d04f95b2671485b50659
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: cronjob
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/cronjob-0.1.1/cronjob-0.1.1.tgz
+    version: 0.1.1
   - apiVersion: v2
     created: "2024-05-24T07:13:36.293927428Z"
     description: A generic kubernetes cron job
@@ -28,6 +52,18 @@ entries:
     version: 0.1.0
   custom-resources:
   - apiVersion: v2
+    created: "2024-05-28T06:28:45.1999399Z"
+    description: Deploy custom resources via Helm
+    digest: 378973ef296348a146cdea738cea30d0e0ada17a5031a020fe99434117cb6e47
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: custom-resources
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.1/custom-resources-0.1.1.tgz
+    version: 0.1.1
+  - apiVersion: v2
     created: "2024-05-24T07:13:36.500540507Z"
     description: Deploy custom resources via Helm
     digest: a8b4deb96d1220ebfdee86052b8cc8e449375de248e04cd4ff7829aded9b21b8
@@ -39,4 +75,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.0/custom-resources-0.1.0.tgz
     version: 0.1.0
-generated: "2024-05-24T07:13:36.500571144Z"
+generated: "2024-05-28T06:28:45.199956371Z"
