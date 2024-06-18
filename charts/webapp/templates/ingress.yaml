@@ -32,7 +32,7 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: {{ default $.Values.service.name $.Release.Name }}
+                name: {{ $.Values.service.name | default $.Release.Name }}
                 port:
                   number: {{ $.Values.service.port }}
         {{- end }}
