@@ -99,4 +99,17 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.0/custom-resources-0.1.0.tgz
     version: 0.1.0
-generated: "2024-06-17T14:42:12.750230486Z"
+  webapp:
+  - apiVersion: v2
+    created: "2024-06-18T05:47:31.175823979Z"
+    description: A generic kubernetes application
+    digest: 9133a406b6100fc83c857f9c2d1d5cf6585d8e6ba4e5c45936e3da4b2368ff96
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: webapp
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
+    version: 0.2.0
+generated: "2024-06-18T05:47:31.175848215Z"
