@@ -1,8 +1,8 @@
 1. Get the application URL by running these commands:
 {{- if .Values.ingress.hosts }}
 {{- range $host := .Values.ingress.hosts }}
-  {{- range $.Values.ingress.paths }}
-  http{{ if $.Values.ingress.tls }}s{{ end }}://{{ $host }}{{ . }}
+  {{- range .Values.ingress.paths }}
+  http{{ if .Values.ingress.tls }}s{{ end }}://{{ $host }}{{ . }}
   {{- end }}
 {{- end }}
 {{- else if contains "NodePort" .Values.service.type }}

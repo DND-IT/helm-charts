@@ -27,14 +27,14 @@ spec:
     - host: {{ . | quote }}
       http:
         paths:
-        {{- range $.Values.ingress.paths }}
+        {{- range .Values.ingress.paths }}
           - path: {{ . }}
             pathType: Prefix
             backend:
               service:
                 name: {{ default .Values.service.name .Release.Name }}
                 port:
-                  number: {{ $.Values.service.port }}
+                  number: {{ .Values.service.port }}
         {{- end }}
   {{- end }}
 {{- end }}
