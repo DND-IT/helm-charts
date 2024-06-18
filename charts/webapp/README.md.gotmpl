@@ -13,7 +13,7 @@ Reference the release of the chart you want to deploy in terraform
 resource "helm_release" "app" {
   name       = "app"
   repository = "https://dnd-it.github.io/helm-charts"
-  chart      = "app"
+  chart      = "webapp"
 
   values = [
     templatefile("values.yaml")

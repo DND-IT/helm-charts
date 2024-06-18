@@ -1,8 +1,8 @@
 apiVersion: v2
-name: app
+name: webapp
 description: A generic kubernetes application
 maintainers:
   - name: DAI
     email: dai@tamedia.ch
 type: application
-version: 0.1.3
+version: 0.2.0
