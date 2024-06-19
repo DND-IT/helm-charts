@@ -40,6 +40,8 @@ spec:
           serviceAccountName: {{ .Release.Name }}
           securityContext:
             fsGroup: 65534 # To be able to read Kubernetes and AWS token files
+          {{- else }}
+          serviceAccountName: default
           {{- end }}
           containers:
             - name: {{ .Release.Name }}
