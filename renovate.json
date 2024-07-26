@@ -1,10 +1,6 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": [
-    "local>renovatebot/.github",
-    "local>renovatebot/.github//merge-queue.json"
-  ],
-  "assignees": ["rarkins", "viceice", "JamieMagee"],
+  "assignees": ["swibrow"],
   "hostRules": [
     {
       "matchHost": "api.github.com",
@@ -12,35 +8,6 @@
     }
   ],
   "customManagers": [
-    {
-      "customType": "regex",
-      "description": "Update renovate docker image references",
-      "fileMatch": ["^charts\\/renovate\\/Chart\\.yaml$"],
-      "matchStrings": [
-        "appVersion: '(?<currentValue>.*?)'\\s+",
-        "version: '(?<currentValue>.*?)'\\s+"
-      ],
-      "depNameTemplate": "ghcr.io/renovatebot/renovate",
-      "datasourceTemplate": "docker"
-    },
-    {
-      "customType": "regex",
-      "description": "Update docker image references",
-      "fileMatch": ["^charts\\/renovate\\/Chart\\.yaml$"],
-      "matchStrings": ["image: (?<depName>.*?):(?<currentValue>.*?)\\s+"],
-      "datasourceTemplate": "docker"
-    },
-    {
-      "customType": "regex",
-      "description": "Update renovate docker image references",
-      "fileMatch": ["^charts\\/renovate\\/README\\.md$"],
-      "matchStrings": [
-        "\\|\\s+image.tag\\s+\\|\\s+string\\s+\\|\\s+`\"(?<currentValue>.*?)\"`\\s+\\|\\s+",
-        "(:\\s|-)(?<currentValue>\\d+\\.\\d+\\.\\d+(?:\\+\\d+)?)"
-      ],
-      "depNameTemplate": "ghcr.io/renovatebot/renovate",
-      "datasourceTemplate": "docker"
-    },
     {
       "customType": "regex",
       "description": "Update kindest kubernetes references",
@@ -53,19 +20,6 @@
     }
   ],
   "packageRules": [
-    {
-      "description": "Don't require approval for redis major updates",
-      "matchPackageNames": ["redis"],
-      "matchManagers": ["helmv3"],
-      "dependencyDashboardApproval": false
-    },
-    {
-      "matchFileNames": ["charts/renovate/README.md"],
-      "schedule": null,
-      "semanticCommitType": "chore",
-      "semanticCommitScope": "deps",
-      "additionalBranchPrefix": ""
-    },
     {
       "description": "Separate minor and patch updates for kindest",
       "matchPackageNames": ["kindest/node"],
@@ -82,16 +36,6 @@
       "description": "Trim leading v from version for helm-docs",
       "matchPackageNames": ["helm-docs"],
       "extractVersion": "^v(?<version>\\d+\\.\\d+\\.\\d+)$"
-    },
-    {
-      "description": "Use fix semantic commit scope for renovate and redis updates",
-      "matchPackageNames": [
-        "renovate/renovate",
-        "ghcr.io/renovatebot/renovate",
-        "redis"
-      ],
-      "semanticCommitType": "fix",
-      "semanticCommitScope": null
     },
     {
       "description": "Workaround for azure/setup-helm action updates",
