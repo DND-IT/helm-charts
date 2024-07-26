@@ -102,8 +102,8 @@ spec:
             {{- end }}
           {{- end }}
           ports:
-            - name: http
-              containerPort: {{ .Values.port }}
+            - name: {{ .Values.service.portName }}
+              containerPort: {{ .Values.service.targetPort }}
               protocol: TCP
           {{- if .Values.probe.liveness }}
           livenessProbe:
