@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 0.2.1](https://img.shields.io/badge/Version-0.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -24,6 +24,27 @@ resource "helm_release" "app" {
 }
 ```
 
+## Upgrading
+
+This section lists major and breaking changes of each Helm Chart version.
+
+<details>
+<summary>1.0.0</summary>
+
+- Ingress resource are now created when `ingress.enabled` is set to `true`. ingress.hosts has no effect.
+- Service name removed from values.yaml. Service name defaults to release name.
+- Deployment pod port removed from values.yaml. Pod port defaults to service target port.
+
+```
+ingress:
+  enabled: true
+  hosts:
+    - host: foo.bar
+      paths:
+        - /
+```
+</details>
+
 ## Maintainers
 
 | Name | Email | Url |
@@ -44,8 +65,9 @@ resource "helm_release" "app" {
 | image_pull_policy | string | `"IfNotPresent"` |  |
 | image_repo | string | `"nginx"` |  |
 | image_tag | string | `"latest"` |  |
-| ingress.annotations | string | `nil` |  |
-| ingress.className | string | `nil` |  |
+| ingress.annotations | object | `{}` |  |
+| ingress.className | string | `""` |  |
+| ingress.enabled | bool | `false` |  |
 | ingress.hosts | list | `[]` |  |
 | ingress.paths[0] | string | `"/"` |  |
 | ingress.tls | bool | `false` |  |
@@ -56,7 +78,6 @@ resource "helm_release" "app" {
 | metadata.labels.datadog.version | string | `""` |  |
 | metadata.podAnnotations | object | `{}` |  |
 | nodeSelector | object | `{}` |  |
-| port | int | `80` |  |
 | probe.liveness | string | `"/"` |  |
 | probe.livenessInitialDelaySeconds | int | `0` |  |
 | probe.livenessPeriodSeconds | int | `10` |  |
@@ -76,11 +97,15 @@ resource "helm_release" "app" {
 | scale.memoryThresholdPercentage | int | `-1` |  |
 | scale.minAvailable | string | `"50%"` |  |
 | scale.minReplicas | int | `1` |  |
-| service.annotations | string | `nil` |  |
+| service.annotations | object | `{}` |  |
 | service.enabled | bool | `true` |  |
-| service.name | string | `nil` |  |
 | service.port | int | `80` |  |
+| service.portName | string | `"http"` |  |
+| service.targetPort | int | `80` |  |
 | service.type | string | `"ClusterIP"` |  |
+| targetGroupBinding.annotations | object | `{}` |  |
+| targetGroupBinding.enabled | bool | `false` |  |
+| targetGroupBinding.targetGroupARN | string | `""` |  |
 | tolerations | list | `[]` |  |
 | topologySpreadConstraints[0] | object | `{"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"ScheduleAnyway"}` | Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/). If no constraints are defined, the cluster default is used. - topologyKey: topology.kubernetes.io/zone   maxSkew: 5   whenUnsatisfiable: ScheduleAnyway - topologyKey: kubernetes.io/hostname   maxSkew: 3   whenUnsatisfiable: ScheduleAnyway |
 | topologySpreadConstraints[1].maxSkew | int | `1` |  |

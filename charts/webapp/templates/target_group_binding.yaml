@@ -1,0 +1,19 @@
+{{- if .Values.targetGroupBinding.enabled -}}
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    chart: {{ .Chart.Name }}-{{ .Chart.Version }}
+    heritage: {{ .Release.Service }}
+    type: {{ .Chart.Name }}
+    app: {{ .Release.Name }}
+  {{- with .Values.targetGroupBinding.annotations }}
+  annotations: {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  serviceRef:
+    name:  {{ .Release.Name }}
+    port: {{ .Values.service.port }}
+  targetGroupARN: {{ .Values.targetGroupBinding.targetGroupARN }}
+{{- end }}

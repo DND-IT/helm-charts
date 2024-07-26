@@ -8,7 +8,6 @@ scale:
   # -1 means "unset". Use positive integer to enable it.
   memoryThresholdPercentage: -1
 
-port: 80
 # ["bundle", "exec", "rake", "db:create", "db:migrate"]
 # command: []
 command: []
@@ -35,22 +34,28 @@ probe:
   startupHttpHeaders:
 
 service:
-  annotations:
+  # Enable the service
   enabled: true
+  # Annotations to be added to the service
+  annotations: {}
+  # Type of service to create
   type: ClusterIP
+  # Port that the service is exposed on
   port: 80
-  name:
+  # Port that the target pod serves traffic on
+  targetPort: 80
+  # Name of the port that the service is exposed on
+  portName: http
 
-# Activated by setting at least one host
 ingress:
-  className:
-  annotations:
+  enabled: false
+  className: ""
+  annotations: {}
   hosts: []
   paths: ["/"]
   tls: false
 
-resources:
-  {}
+resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -102,3 +107,8 @@ externalSecrets:
   clusterSecretStore: aws-secretsmanager
   # secret names that should be fetched and made available to the Pods
   secretNames: []
+
+targetGroupBinding:
+  enabled: false
+  targetGroupARN: ""
+  annotations: {}

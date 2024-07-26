@@ -25,6 +25,27 @@ resource "helm_release" "app" {
 }
 ```
 
+## Upgrading
+
+This section lists major and breaking changes of each Helm Chart version.
+
+<details>
+<summary>1.0.0</summary>
+
+- Ingress resource are now created when `ingress.enabled` is set to `true`. ingress.hosts has no effect.
+- Service name removed from values.yaml. Service name defaults to release name.
+- Deployment pod port removed from values.yaml. Pod port defaults to service target port.
+
+```
+ingress:
+  enabled: true
+  hosts:
+    - host: foo.bar
+      paths:
+        - /
+```
+</details>
+
 {{ template "chart.homepageLine" . }}
 
 {{ template "chart.maintainersSection" . }}

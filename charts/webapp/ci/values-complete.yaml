@@ -14,8 +14,13 @@ metadata:
   podAnnotations:
     thisisapod: annotation
 service:
-  name: complete
+  enabled: true
+  port: 1337
+  portName: foo
+  targetPort: 9001
+  type: ClusterIP
 ingress:
+  enabled: true
   className: alb
   hosts:
     - www.example.com
@@ -24,7 +29,6 @@ scale:
   minReplicas: 2
   maxReplicas: 15
   cpuThresholdPercentage: 80
-port: 3000
 probe:
   liveness: /api/health
   readiness: /api/health
@@ -49,3 +53,9 @@ tolerations:
 externalSecrets:
   secretNames:
     - "complete/databaseCredentials"
+
+targetGroupBinding:
+  enabled: true
+  targetGroupARN: arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/complete/1234567890123456
+  annotations:
+    foo: bar
