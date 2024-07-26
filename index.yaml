@@ -113,6 +113,18 @@ entries:
     version: 0.1.0
   webapp:
   - apiVersion: v2
+    created: "2024-07-26T08:18:26.11884295Z"
+    description: A generic kubernetes application
+    digest: d908225ce361c5b303d9f7480933ec84e795c9e3020f137f6dbca23f03dfb81f
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: webapp
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/webapp-1.0.0/webapp-1.0.0.tgz
+    version: 1.0.0
+  - apiVersion: v2
     created: "2024-06-18T16:08:04.525838615Z"
     description: A generic kubernetes application
     digest: f332e9f4e9c758bfe66c63a67f48d77b634774472aa9f4e37aba098955945c75
@@ -136,4 +148,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2024-06-19T13:58:00.622800971Z"
+generated: "2024-07-26T08:18:26.118876402Z"
