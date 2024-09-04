@@ -1,6 +1,6 @@
-# by setting minReplica = 1 the PDB won't be deployed.
-# if you want HA then minReplica must be > 1.
-{{- if gt (int .Values.scale.minReplicas) 1 }}
+# by setting scale.minReplica = 1 or replicas = 1 the PDB won't be created.
+# if you want HA then scale.minReplica must be > 1 or replicas > 1
+{{- if (or (and .Values.scale.enabled (gt (int .Values.scale.minReplicas) 1)) (gt (int .Values.replicas) 1)) }}
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:

@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -90,6 +90,7 @@ ingress:
 | probe.startup | string | `nil` |  |
 | probe.startupHttpHeaders | string | `nil` |  |
 | probe.startupTimeoutSeconds | int | `1` |  |
+| replicas | int | `1` |  |
 | resources | object | `{}` |  |
 | scale.cpuThresholdPercentage | int | `100` |  |
 | scale.enabled | bool | `true` |  |
