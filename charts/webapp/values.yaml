@@ -1,3 +1,6 @@
+# Set replicas if scaling is not enabled
+replicas: 1
+
 # App specific configs
 scale:
   enabled: true
