@@ -51,6 +51,18 @@ entries:
     version: 0.1.0
   cronjob:
   - apiVersion: v2
+    created: "2024-09-12T12:19:06.652607666Z"
+    description: A generic kubernetes cron job
+    digest: 3626c326c56f3cb7149a8f70463ad8df191111dc7d3ab0cd5bd7f745b1aaa838
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: cronjob
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/cronjob-0.2.1/cronjob-0.2.1.tgz
+    version: 0.2.1
+  - apiVersion: v2
     created: "2024-06-19T13:58:00.622775793Z"
     description: A generic kubernetes cron job
     digest: fe2388a0327e99adcfc3e20e27251873c4aad654b15a31711c3405b6b6393288
@@ -88,6 +100,18 @@ entries:
     version: 0.1.0
   custom-resources:
   - apiVersion: v2
+    created: "2024-09-12T12:19:06.781934894Z"
+    description: Deploy custom resources via Helm
+    digest: dd3284697505057b860ac09e5b2c95d7198cb3d4056403e48609f7371b12fac1
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: custom-resources
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.2/custom-resources-0.1.2.tgz
+    version: 0.1.2
+  - apiVersion: v2
     created: "2024-05-28T06:28:45.1999399Z"
     description: Deploy custom resources via Helm
     digest: 378973ef296348a146cdea738cea30d0e0ada17a5031a020fe99434117cb6e47
@@ -112,6 +136,18 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.0/custom-resources-0.1.0.tgz
     version: 0.1.0
   webapp:
+  - apiVersion: v2
+    created: "2024-09-12T12:19:06.911801537Z"
+    description: A generic kubernetes application
+    digest: 2492795a6109936cf8057784ac266b762f86d88c9b4a6cdaa56a9e744f6ad34e
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: webapp
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/webapp-1.2.0/webapp-1.2.0.tgz
+    version: 1.2.0
   - apiVersion: v2
     created: "2024-09-06T13:44:32.471055879Z"
     description: A generic kubernetes application
@@ -160,4 +196,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2024-09-06T13:44:32.471091064Z"
+generated: "2024-09-12T12:19:06.911847734Z"
