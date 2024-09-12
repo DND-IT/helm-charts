@@ -59,3 +59,5 @@ targetGroupBinding:
   targetGroupARN: arn:aws:elasticloadbalancing:us-west-2:123456789012:targetgroup/complete/1234567890123456
   annotations:
     foo: bar
+
+aws_iam_role_arn: arn:aws:iam::123456789012:role/complete
