@@ -115,3 +115,5 @@ targetGroupBinding:
   enabled: false
   targetGroupARN: ""
   annotations: {}
+
+aws_iam_role_arn: ""
