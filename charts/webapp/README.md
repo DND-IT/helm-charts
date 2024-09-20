@@ -77,7 +77,7 @@ ingress:
 | metadata.labels.datadog.env | string | `""` |  |
 | metadata.labels.datadog.service | string | `""` |  |
 | metadata.labels.datadog.version | string | `""` |  |
-| metadata.podAnnotations."fluentbit.io/exclude" | string | `"true"` | Exclude or include pods logs from fluentbit collection |
+| metadata.podAnnotations."fluentbit.io/exclude" | string | `"true"` |  |
 | nodeSelector | object | `{}` |  |
 | probe.liveness | string | `"/"` |  |
 | probe.livenessInitialDelaySeconds | int | `0` |  |

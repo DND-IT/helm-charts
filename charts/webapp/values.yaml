@@ -79,7 +79,7 @@ affinity: {}
 metadata:
   deploymentAnnotations: {}
   podAnnotations:
-    # -- Exclude or include pods logs from fluentbit collection
+    # Exclude or include pods logs from fluentbit collection
     fluentbit.io/exclude: "true"
     # fluentbit.io/include: "true"
   hpaAnnotations: {}
