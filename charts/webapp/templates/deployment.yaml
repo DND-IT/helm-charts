@@ -69,7 +69,7 @@ spec:
           {{- end }}
           env:
             - name: PORT
-              value: {{ .Values.port | quote }}
+              value: {{ .Values.service.targetPort | quote }}
             {{- if .Values.metadata.labels.datadog.env }}
             - name: DD_ENV
               valueFrom:
