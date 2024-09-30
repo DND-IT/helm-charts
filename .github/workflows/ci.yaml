@@ -83,7 +83,7 @@ jobs:
         k8s:
           # from https://hub.docker.com/r/kindest/node/tags
           - v1.29.7 # renovate: kindest
-          - v1.30.3 # renovate: kindest
+          - v1.30.4 # renovate: kindest
     steps:
       - name: Checkout
         uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938 # v4.2.0
