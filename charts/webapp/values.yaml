@@ -97,7 +97,7 @@ topologySpreadConstraints:
     - topology.kubernetes.io/zone
     - kubernetes.io/hostname
   whenUnsatisfiable: ScheduleAnyway
-  
+
 update:
   maxUnavailable: 0%
   maxSurge: 25%

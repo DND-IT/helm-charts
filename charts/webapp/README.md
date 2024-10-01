@@ -109,5 +109,9 @@ ingress:
 | targetGroupBinding.enabled | bool | `false` |  |
 | targetGroupBinding.targetGroupARN | string | `""` |  |
 | tolerations | list | `[]` |  |
+| topologySpreadConstraints.enabled | bool | `true` |  |
+| topologySpreadConstraints.maxSkew | int | `1` | Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/). |
+| topologySpreadConstraints.topologyKeys | list | `["topology.kubernetes.io/zone","kubernetes.io/hostname"]` | The key of node labels. See https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/ All the labels will be considered to try to find the best match |
+| topologySpreadConstraints.whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
 | update.maxSurge | string | `"25%"` |  |
 | update.maxUnavailable | string | `"0%"` |  |
