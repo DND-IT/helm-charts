@@ -86,7 +86,7 @@ metadata:
       service: ""
       version: ""
 
-topologySpreadConstraints:
+# topologySpreadConstraints:
   # -- Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).
   # If no constraints are defined, the cluster default is used.
   # - topologyKey: topology.kubernetes.io/zone
@@ -95,12 +95,7 @@ topologySpreadConstraints:
   # - topologyKey: kubernetes.io/hostname
   #   maxSkew: 3
   #   whenUnsatisfiable: ScheduleAnyway
-  - topologyKey: topology.kubernetes.io/zone
-    maxSkew: 1
-    whenUnsatisfiable: ScheduleAnyway
-  - topologyKey: kubernetes.io/hostname
-    maxSkew: 1
-    whenUnsatisfiable: ScheduleAnyway
+
 update:
   maxUnavailable: 0%
   maxSurge: 25%
