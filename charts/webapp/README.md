@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.2.1](https://img.shields.io/badge/Version-1.2.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.3.0](https://img.shields.io/badge/Version-1.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -109,9 +109,9 @@ ingress:
 | targetGroupBinding.enabled | bool | `false` |  |
 | targetGroupBinding.targetGroupARN | string | `""` |  |
 | tolerations | list | `[]` |  |
-| topologySpreadConstraints[0] | object | `{"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"ScheduleAnyway"}` | Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/). If no constraints are defined, the cluster default is used. - topologyKey: topology.kubernetes.io/zone   maxSkew: 5   whenUnsatisfiable: ScheduleAnyway - topologyKey: kubernetes.io/hostname   maxSkew: 3   whenUnsatisfiable: ScheduleAnyway |
-| topologySpreadConstraints[1].maxSkew | int | `1` |  |
-| topologySpreadConstraints[1].topologyKey | string | `"kubernetes.io/hostname"` |  |
-| topologySpreadConstraints[1].whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
+| topologySpreadConstraints.enabled | bool | `true` |  |
+| topologySpreadConstraints.maxSkew | int | `1` | Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/). |
+| topologySpreadConstraints.topologyKeys | list | `["topology.kubernetes.io/zone","kubernetes.io/hostname"]` | The key of node labels. See https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/ All the labels will be considered to try to find the best match |
+| topologySpreadConstraints.whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
 | update.maxSurge | string | `"25%"` |  |
 | update.maxUnavailable | string | `"0%"` |  |
