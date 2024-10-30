@@ -39,6 +39,8 @@ probe:
 service:
   # Enable the service
   enabled: true
+  # Service name. If not set, the template will use the release name
+  # name: ""
   # Annotations to be added to the service
   annotations: {}
   # Type of service to create

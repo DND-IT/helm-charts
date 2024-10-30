@@ -15,6 +15,7 @@ metadata:
     thisisapod: annotation
 service:
   enabled: true
+  name: complete
   port: 1337
   portName: foo
   targetPort: 9001
