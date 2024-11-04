@@ -55,6 +55,13 @@ spec:
       {{- else }}
       serviceAccountName: default
       {{- end }}
+      {{- if .Values.initContainer.enabled }}
+      initContainers:
+        - name: "init-{{ .Release.Name }}"
+          image: {{ .Values.initContainer.image }}
+          command: {{ .Values.initContainer.command | toYaml }}
+          args: {{ .Values.initContainer.args | toYaml }}
+      {{- end }}
       containers:
         - name: {{ .Release.Name }}
           image: "{{ .Values.image_repo }}:{{ .Values.image_tag }}"
