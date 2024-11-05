@@ -58,9 +58,15 @@ spec:
       {{- if .Values.initContainer.enabled }}
       initContainers:
         - name: "init-{{ .Release.Name }}"
-          image: {{ .Values.initContainer.image }}
-          command: {{ .Values.initContainer.command | toYaml }}
-          args: {{ .Values.initContainer.args | toYaml }}
+          image: "{{ .Values.initContainer.image }}:{{ .Values.initContainer.image_tag }}"
+          {{-if .Values.initContainer.command }}
+          command:
+            {{- .Values.initContainer.command | toYaml | nindent 12 }}
+          {{- end }}
+          {{-if .Values.initContainer.args }}
+          args:
+            {{- .Values.initContainer.args | toYaml | nindent 12 }}
+          {{- end }}
       {{- end }}
       containers:
         - name: {{ .Release.Name }}

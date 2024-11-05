@@ -72,11 +72,11 @@ ingress:
 | ingress.hosts | list | `[]` |  |
 | ingress.paths[0] | string | `"/"` |  |
 | ingress.tls | bool | `false` |  |
-| initContainer.args[0] | string | `""` |  |
-| initContainer.command[0] | string | `"/bin/sh"` |  |
-| initContainer.command[1] | string | `"-c"` |  |
+| initContainer.args | list | `[]` |  |
+| initContainer.command | list | `[]` |  |
 | initContainer.enabled | bool | `false` |  |
 | initContainer.image | string | `""` |  |
+| initContainer.image_tag | string | `""` |  |
 | metadata.deploymentAnnotations | object | `{}` |  |
 | metadata.hpaAnnotations | object | `{}` |  |
 | metadata.labels.datadog.env | string | `""` |  |

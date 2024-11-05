@@ -120,5 +120,6 @@ aws_iam_role_arn: ""
 initContainer:
   enabled: false
   image: ""
-  command: ["/bin/sh", "-c"]
-  args: [""]
+  image_tag: ""
+  command: []
+  args: []
