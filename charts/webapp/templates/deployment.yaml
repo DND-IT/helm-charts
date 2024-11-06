@@ -59,11 +59,11 @@ spec:
       initContainers:
         - name: "init-{{ .Release.Name }}"
           image: "{{ .Values.initContainer.image }}:{{ .Values.initContainer.image_tag }}"
-          {{-if .Values.initContainer.command }}
+          {{- if .Values.initContainer.command }}
           command:
             {{- .Values.initContainer.command | toYaml | nindent 12 }}
           {{- end }}
-          {{-if .Values.initContainer.args }}
+          {{- if .Values.initContainer.args }}
           args:
             {{- .Values.initContainer.args | toYaml | nindent 12 }}
           {{- end }}
