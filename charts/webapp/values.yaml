@@ -17,6 +17,8 @@ command: []
 # ["db:create", "db:migrate"]
 args: []
 env: {}
+# Overwrites targetPort in the service
+# port: 80
 
 image_repo: nginx
 image_tag: latest

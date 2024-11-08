@@ -82,7 +82,7 @@ spec:
           {{- end }}
           env:
             - name: PORT
-              value: {{ .Values.service.targetPort | quote }}
+              value: {{ default .Values.service.targetPort .Values.port | quote }}
             {{- if .Values.metadata.labels.datadog.env }}
             - name: DD_ENV
               valueFrom:
@@ -116,7 +116,7 @@ spec:
           {{- end }}
           ports:
             - name: {{ .Values.service.portName }}
-              containerPort: {{ .Values.service.targetPort }}
+              containerPort:  {{ default .Values.service.targetPort .Values.port }}
               protocol: TCP
           {{- if .Values.probe.liveness }}
           livenessProbe:
