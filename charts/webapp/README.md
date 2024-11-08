@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.5.0](https://img.shields.io/badge/Version-1.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -72,6 +72,12 @@ ingress:
 | ingress.hosts | list | `[]` |  |
 | ingress.paths[0] | string | `"/"` |  |
 | ingress.tls | bool | `false` |  |
+| initContainer.args | list | `[]` |  |
+| initContainer.command | list | `[]` |  |
+| initContainer.enabled | bool | `false` |  |
+| initContainer.image | string | `""` |  |
+| initContainer.image_tag | string | `""` |  |
+| initContainer.name | string | `""` |  |
 | metadata.deploymentAnnotations | object | `{}` |  |
 | metadata.hpaAnnotations | object | `{}` |  |
 | metadata.labels.datadog.env | string | `""` |  |

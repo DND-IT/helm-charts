@@ -62,3 +62,14 @@ targetGroupBinding:
     foo: bar
 
 aws_iam_role_arn: arn:aws:iam::123456789012:role/complete
+
+initContainer:
+  enabled: true
+  name: initcontainer
+  image: busybox
+  image_tag: 1.31.1
+  command:
+    - "sh"
+    - "-c"
+  args:
+    - "echo Hello, DAI!"

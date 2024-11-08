@@ -116,3 +116,11 @@ targetGroupBinding:
   annotations: {}
 
 aws_iam_role_arn: ""
+
+initContainer:
+  enabled: false
+  name: ""
+  image: ""
+  image_tag: ""
+  command: []
+  args: []
