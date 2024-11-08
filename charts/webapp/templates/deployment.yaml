@@ -57,7 +57,7 @@ spec:
       {{- end }}
       {{- if .Values.initContainer.enabled }}
       initContainers:
-        - name: "init-{{ .Release.Name }}"
+        - name: {{ .Values.initContainer.Name }}
           image: "{{ .Values.initContainer.image }}:{{ .Values.initContainer.image_tag }}"
           {{- if .Values.initContainer.command }}
           command:

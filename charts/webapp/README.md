@@ -77,6 +77,7 @@ ingress:
 | initContainer.enabled | bool | `false` |  |
 | initContainer.image | string | `""` |  |
 | initContainer.image_tag | string | `""` |  |
+| initContainer.name | string | `""` |  |
 | metadata.deploymentAnnotations | object | `{}` |  |
 | metadata.hpaAnnotations | object | `{}` |  |
 | metadata.labels.datadog.env | string | `""` |  |
