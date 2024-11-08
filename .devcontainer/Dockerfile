@@ -1,4 +1,4 @@
-FROM ghcr.io/containerbase/base:11.11.40@sha256:0d83160727796f33d583e93c9ce0c325a834f1ae3bf5011711453ad2e676746b
+FROM ghcr.io/containerbase/base:13.0.11@sha256:fd35bb6b0e087c93afceb3296c6762c8f58fc4b69700087508fd001a3fda1bcb
 
 COPY tools/*.sh /usr/local/containerbase/tools/
 
