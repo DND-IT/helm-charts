@@ -18,7 +18,7 @@ spec:
     - name: {{ .Values.service.portName }}
       port: {{ .Values.service.port }}
       protocol: TCP
-      targetPort: {{ .Values.service.targetPort }}
+      targetPort:  {{ default .Values.service.targetPort .Values.port }}
   selector:
     type: {{ .Chart.Name }}
     app: {{ .Release.Name }}
