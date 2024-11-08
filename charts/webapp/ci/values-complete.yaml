@@ -72,4 +72,4 @@ initContainer:
     - "sh"
     - "-c"
   args:
-    - "echo Hello, World!"
+    - "echo Hello, DAI!"
