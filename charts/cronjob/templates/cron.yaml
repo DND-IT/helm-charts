@@ -19,6 +19,7 @@ metadata:
 spec:
   schedule: {{ .Values.cronjob.schedule }}
   suspend: {{ .Values.cronjob.suspend }}
+  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
   jobTemplate:
     spec:
       template:
