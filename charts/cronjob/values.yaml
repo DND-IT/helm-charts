@@ -37,6 +37,7 @@ tolerations: []
 affinity: {}
 
 restartPolicy: "Never"
+concurrencyPolicy: "Allow"
 
 metadata:
   labels:
