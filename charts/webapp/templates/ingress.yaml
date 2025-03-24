@@ -23,9 +23,23 @@ spec:
       secretName: {{ .Release.Name }}-tls
 {{- end }}
   rules:
+  {{- if not (empty .Values.ingress.hosts) }}
   {{- range .Values.ingress.hosts }}
     - host: {{ . | quote }}
       http:
+        paths:
+        {{- range $.Values.ingress.paths }}
+          - path: {{ . }}
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ $.Values.service.name | default $.Release.Name }}
+                port:
+                  number: {{ $.Values.service.port }}
+        {{- end }}
+  {{- end }}
+{{- else }}
+    - http:
         paths:
         {{- range $.Values.ingress.paths }}
           - path: {{ . }}
