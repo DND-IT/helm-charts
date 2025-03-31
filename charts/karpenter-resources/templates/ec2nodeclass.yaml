@@ -1,0 +1,138 @@
+{{- if .Values.ec2NodeClasses }}
+{{- $clusterName := include "karpenter-resources.clusterName" . -}}
+{{- $eksDiscoveryEnabled := .Values.global.eksDiscovery.enabled | default false -}}
+{{- $eksOwnershipValue := .Values.global.eksDiscovery.ownershipValue | default "owned" -}}
+{{- range $name, $nodeClass := .Values.ec2NodeClasses }}
+---
+apiVersion: karpenter.k8s.aws/v1
+kind: EC2NodeClass
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "karpenter-resources.labels" $ | nindent 4 }}
+spec:
+  {{- with $nodeClass.kubelet }}
+  kubelet:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  {{- if hasKey $nodeClass "amiFamily" }}
+  amiFamily: {{ $nodeClass.amiFamily }}
+  {{- end }}
+
+  {{- if $eksDiscoveryEnabled }}
+  subnetSelectorTerms:
+  - tags:
+      kubernetes.io/cluster/{{ $clusterName }}: {{ $eksOwnershipValue }}
+  {{- else }}
+  {{- with $nodeClass.subnetSelectorTerms }}
+  subnetSelectorTerms:
+    {{- range . }}
+    - {{- range $key, $value := . }}
+      {{- if eq $key "tags" }}
+      tags:
+        {{- range $tagKey, $tagValue := $value }}
+        {{ $tagKey }}: {{ $tagValue }}
+        {{- end }}
+      {{- else }}
+      {{ $key }}: {{ $value }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+
+  {{- if $eksDiscoveryEnabled }}
+  securityGroupSelectorTerms:
+  - tags:
+      kubernetes.io/cluster/{{ $clusterName }}: {{ $eksOwnershipValue }}
+  {{- else }}
+  {{- with $nodeClass.securityGroupSelectorTerms }}
+  securityGroupSelectorTerms:
+    {{- range . }}
+    - {{- range $key, $value := . }}
+      {{- if eq $key "tags" }}
+      tags:
+        {{- range $tagKey, $tagValue := $value }}
+        {{ $tagKey }}: {{ $tagValue }}
+        {{- end }}
+      {{- else }}
+      {{ $key }}: {{ $value }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- end }}
+
+  {{- if hasKey $nodeClass "role" }}
+  role: {{ $nodeClass.role }}
+  {{- end }}
+
+  {{- if hasKey $nodeClass "instanceProfile" }}
+  instanceProfile: {{ $nodeClass.instanceProfile }}
+  {{- end }}
+
+  {{- with $nodeClass.amiSelectorTerms }}
+  amiSelectorTerms:
+    {{- range . }}
+    - {{- range $key, $value := . }}
+      {{- if eq $key "tags" }}
+      tags:
+        {{- range $tagKey, $tagValue := $value }}
+        {{ $tagKey }}: {{ $tagValue }}
+        {{- end }}
+      {{- else }}
+      {{ $key }}: {{ $value }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+
+  {{- with $nodeClass.capacityReservationSelectorTerms }}
+  capacityReservationSelectorTerms:
+    {{- range . }}
+    - {{- range $key, $value := . }}
+      {{- if eq $key "tags" }}
+      tags:
+        {{- range $tagKey, $tagValue := $value }}
+        {{ $tagKey }}: {{ $tagValue }}
+        {{- end }}
+      {{- else }}
+      {{ $key }}: {{ $value }}
+      {{- end }}
+    {{- end }}
+    {{- end }}
+  {{- end }}
+
+  {{- with $nodeClass.tags }}
+  tags:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  {{- with $nodeClass.metadataOptions }}
+  metadataOptions:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  {{- with $nodeClass.blockDeviceMappings }}
+  blockDeviceMappings:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  {{- if hasKey $nodeClass "instanceStorePolicy" }}
+  instanceStorePolicy: {{ $nodeClass.instanceStorePolicy }}
+  {{- end }}
+
+  {{- if hasKey $nodeClass "userData" }}
+  userData: {{ $nodeClass.userData }}
+  {{- end }}
+
+  {{- if hasKey $nodeClass "detailedMonitoring" }}
+  detailedMonitoring: {{ $nodeClass.detailedMonitoring }}
+  {{- end }}
+
+  {{- if hasKey $nodeClass "associatePublicIPAddress" }}
+  associatePublicIPAddress: {{ $nodeClass.associatePublicIPAddress }}
+  {{- end }}
+{{- end }}
+{{- end }}
