@@ -1,0 +1,13 @@
+global:
+  role: KarpenterNodeRole-BasicCluster
+  eksDiscovery:
+    enabled: true
+    clusterName: basic-cluster
+    ownershipValue: "owned"
+nodePools:
+  default:
+    enabled: true
+
+ec2NodeClasses:
+  default:
+    enabled: true

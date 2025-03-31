@@ -1,0 +1,316 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "nameOverride": {
+      "type": "string",
+      "description": "Override the chart name"
+    },
+    "fullnameOverride": {
+      "type": "string",
+      "description": "Override the full chart name"
+    },
+    "global": {
+      "type": "object",
+      "properties": {
+        "eksDiscovery": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable EKS discovery"
+            },
+            "clusterName": {
+              "type": "string",
+              "description": "Cluster name for tagging and discovery"
+            },
+            "ownershipValue": {
+              "type": "string",
+              "description": "Ownership value for the kubernetes.io/cluster tag",
+              "default": "owned"
+            }
+          },
+          "required": ["enabled"]
+        },
+        "role": {
+          "type": "string",
+          "description": "Karpenter Role Name for node IAM permissions"
+        },
+        "instanceProfileName": {
+          "type": "string",
+          "description": "Karpenter Instance Profile Name for node IAM permissions"
+        }
+      },
+      "required": ["role", "instanceProfileName"]
+    },
+    "nodePools": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9-_]+$": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable this NodePool"
+            },
+            "labels": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "annotations": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "nodeClassRef": {
+              "type": "object",
+              "properties": {
+                "group": {
+                  "type": "string"
+                },
+                "kind": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                }
+              },
+              "required": ["group", "kind", "name"]
+            },
+            "taints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "effect": {
+                    "type": "string",
+                    "enum": ["NoSchedule", "PreferNoSchedule", "NoExecute"]
+                  }
+                },
+                "required": ["key", "effect"]
+              }
+            },
+            "startupTaints": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "value": {
+                    "type": "string"
+                  },
+                  "effect": {
+                    "type": "string",
+                    "enum": ["NoSchedule", "PreferNoSchedule", "NoExecute"]
+                  }
+                },
+                "required": ["key", "effect"]
+              }
+            },
+            "expireAfter": {
+              "type": "string",
+              "pattern": "^([0-9]+[hms])|Never$",
+              "description": "Node expiry duration or 'Never'"
+            },
+            "requirements": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "key": {
+                    "type": "string"
+                  },
+                  "operator": {
+                    "type": "string",
+                    "enum": ["In", "NotIn", "Exists", "DoesNotExist", "Gt", "Lt", "Gte", "Lte"]
+                  },
+                  "values": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                },
+                "required": ["key", "operator"]
+              }
+            },
+            "disruption": {
+              "type": "object",
+              "properties": {
+                "consolidationPolicy": {
+                  "type": "string",
+                  "enum": ["WhenEmptyOrUnderutilized", "WhenUnderutilized", "Never"]
+                },
+                "consolidateAfter": {
+                  "type": "string",
+                  "pattern": "^[0-9]+[hms]$"
+                }
+              }
+            },
+            "limits": {
+              "type": "object",
+              "properties": {
+                "cpu": {
+                  "type": "integer"
+                },
+                "memory": {
+                  "type": "string",
+                  "pattern": "^[0-9]+[KMGTPe]i$"
+                }
+              },
+              "required": ["cpu", "memory"]
+            }
+          },
+          "required": ["enabled", "nodeClassRef", "requirements"]
+        }
+      }
+    },
+    "ec2NodeClasses": {
+      "type": "object",
+      "patternProperties": {
+        "^[a-zA-Z0-9-_]+$": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean",
+              "description": "Enable this EC2NodeClass"
+            },
+            "kubelet": {
+              "type": "object",
+              "additionalProperties": true
+            },
+            "amiFamily": {
+              "type": "string"
+            },
+            "amiSelectorTerms": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "alias": {
+                    "type": "string"
+                  }
+                }
+              }
+            },
+            "subnetSelectorTerms": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "securityGroupSelectorTerms": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string"
+                  },
+                  "name": {
+                    "type": "string"
+                  },
+                  "tags": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "role": {
+              "type": "string"
+            },
+            "instanceProfile": {
+              "type": "string"
+            },
+            "tags": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "metadataOptions": {
+              "type": "object",
+              "properties": {
+                "httpPutResponseHopLimit": {
+                  "type": "integer",
+                  "minimum": 1,
+                  "maximum": 64
+                },
+                "httpTokens": {
+                  "type": "string",
+                  "enum": ["optional", "required"]
+                }
+              }
+            },
+            "blockDeviceMappings": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "deviceName": {
+                    "type": "string"
+                  },
+                  "ebs": {
+                    "type": "object",
+                    "properties": {
+                      "volumeSize": {
+                        "type": "string",
+                        "pattern": "^[0-9]+[KMGTPe]i$"
+                      },
+                      "volumeType": {
+                        "type": "string",
+                        "enum": ["gp2", "gp3", "io1", "io2", "sc1", "st1"]
+                      },
+                      "encrypted": {
+                        "type": "boolean"
+                      },
+                      "deleteOnTermination": {
+                        "type": "boolean"
+                      },
+                      "iops": {
+                        "type": "integer",
+                        "minimum": 100
+                      },
+                      "throughput": {
+                        "type": "integer",
+                        "minimum": 125
+                      }
+                    },
+                    "required": ["volumeSize", "volumeType"]
+                  }
+                },
+                "required": ["deviceName", "ebs"]
+              }
+            }
+          },
+          "required": ["enabled"]
+        }
+      }
+    }
+  }
+}
