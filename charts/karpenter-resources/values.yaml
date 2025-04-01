@@ -1,0 +1,166 @@
+# Values for karpenter-resources chart
+# This chart manages Karpenter NodePools and EC2NodeClasses
+
+# Global chart settings
+nameOverride: ""
+fullnameOverride: ""
+
+default:
+  enabled: true
+  role: "foo"
+
+# Global values
+global:
+  # Enable EKS discovery - uses standard EKS tags for subnets and security groups
+  # When true, it will override subnetSelectorTerms and securityGroupSelectorTerms with EKS standard tags
+  eksDiscovery:
+    enabled: true
+    # Cluster name - used for tagging and discovery
+    # This value is used in the karpenter.sh/discovery tag for subnets and security groups
+    # and in the kubernetes.io/cluster/${CLUSTER_NAME} tag for EKS discovery
+    clusterName: ""
+    # Ownership value for the kubernetes.io/cluster/${CLUSTER_NAME} tag
+    # Common values: "owned" or "shared"
+    ownershipValue: "owned"
+
+  # Karpenter Role Name
+  roleName: ""
+  # Karpenter Instance Profile Name
+  instanceProfileName: ""
+
+# NodePools configuration
+# Each key under nodePools becomes a separate NodePool resource
+nodePools:
+  default:
+    # --- NodePool metadata ---
+    labels: {}
+    annotations: {}
+
+    # --- NodePool template spec ---
+    nodeClassRef:
+      group: karpenter.k8s.aws
+      kind: EC2NodeClass
+      name: default
+
+    taints: []
+
+    startupTaints: []
+
+    # Use "Never" to disable expiry
+    expireAfter: "720h"
+
+    # --- Requirements (optional) ---
+    requirements:
+      - key: "karpenter.k8s.aws/instance-category"
+        operator: In
+        values: ["c", "m", "r", "t"]
+      - key: "karpenter.k8s.aws/instance-cpu"
+        operator: In
+        values: ["2", "4", "8", "16", "32"]
+      - key: "karpenter.k8s.aws/instance-hypervisor"
+        operator: In
+        values: ["nitro"]
+      - key: "karpenter.k8s.aws/instance-memory"
+        operator: Gt
+        values: ["2048"]
+      - key: "karpenter.sh/capacity-type"
+        operator: In
+        values: ["spot", "on-demand"]
+      - key: "karpenter.k8s.aws/instance-generation"
+        operator: Gt
+        values: ["2"]
+
+    # --- Disruption configuration (optional) ---
+    disruption:
+      # Options: WhenEmptyOrUnderutilized | WhenEmpty
+      consolidationPolicy: "WhenEmptyOrUnderutilized"
+      consolidateAfter: "5m"
+      # budgets:
+      #   - nodes: "20%"
+      #     reasons:
+      #       - "Empty"
+      #       - "Drifted"
+      #   - nodes: "5"
+      #   - nodes: "0"
+      #     schedule: "@daily"
+      #     duration: 10m
+      #     reasons:
+      #       - "Underutilized"
+
+    # --- Resource limits (optional) ---
+    limits:
+      cpu: 100
+      memory: 400Gi
+      # nvidia.com/gpu: 2
+
+  # Example of a second nodepool
+  # compute:
+  #   nodeClassRef:
+  #     group: karpenter.k8s.aws
+  #     kind: EC2NodeClass
+  #     name: compute
+  #   requirements:
+  #   - key: "karpenter.k8s.aws/instance-category"
+  #     operator: In
+  #     values: ["c"]
+
+# EC2NodeClass configuration
+# Each key under ec2NodeClasses becomes a separate EC2NodeClass resource
+ec2NodeClasses:
+  default:
+    # --- AMI family ---
+    # amiFamily: "AL2"
+
+    # --- Subnet configuration ---
+    subnetSelectorTerms: []
+    # - id: "subnet-12345678" # Example of a specific subnet ID
+    # - tags:
+    #     karpenter.sh/discovery: "${CLUSTER_NAME}" # Will be replaced by global.clusterName
+
+    # --- Security group configuration ---
+    securityGroupSelectorTerms: []
+    # - id: "sg-12345678" # Example of a specific security group ID
+    # - name: "my-security-group" # Example of a specific security group name
+    # - tags:
+    #     karpenter.sh/discovery: "" # Will be replaced by global.clusterName
+
+    # --- IAM configuration ---
+    # Must specify one of "role" or "instanceProfile"
+    # role: # Will be replaced by global.role if set
+    role: "ThisNeedsToBeReplaced"
+
+    # instanceProfile: Will be replaced by global.instanceProfileName if set
+    instanceProfile: ""
+
+    # --- AMI configuration (optional) ---
+    amiSelectorTerms:
+      - alias: bottlerocket@latest
+
+    # --- EC2 instance tags (optional) ---
+    tags: {}
+
+    # --- IMDS configuration (optional) ---
+    metadataOptions:
+      httpPutResponseHopLimit: 2
+
+    # --- Storage configuration (optional) ---
+    blockDeviceMappings:
+      - deviceName: /dev/xvda
+        ebs:
+          volumeSize: 4Gi
+          volumeType: gp3
+          encrypted: true
+          deleteOnTermination: true
+      - deviceName: /dev/xvdb
+        ebs:
+          volumeSize: 20Gi
+          volumeType: gp3
+          encrypted: true
+          deleteOnTermination: true
+  # Example of a second EC2NodeClass
+  # compute:
+  #   amiFamily: "AL2023"
+  #   role: "KarpenterNodeRole-${CLUSTER_NAME}"
+  #   subnetSelectorTerms:
+  #   - tags:
+  #       karpenter.sh/discovery: "${CLUSTER_NAME}"
