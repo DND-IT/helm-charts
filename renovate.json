@@ -1,5 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "baseBranches": ["main"],
+  "extends": [
+    "github>tx-pts-dai/renovate-config"
+  ],
+  "schedule": [
+    "after 9am on Monday"
+  ],
   "assignees": ["swibrow"],
   "hostRules": [
     {
@@ -21,9 +28,9 @@
   ],
   "packageRules": [
     {
-      "description": "Separate minor and patch updates for kindest",
+      "description": "Minor and patch updates for kindest",
       "matchPackageNames": ["kindest/node"],
-      "separateMinorPatch": true
+      "separateMinorPatch": false
     },
     {
       "description": "Require approval and no automerge for kindest major and minor updates",
