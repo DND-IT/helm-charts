@@ -1,0 +1,107 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+## Usage
+
+### Plain Helm Install Example
+
+To install the chart directly using Helm CLI:
+
+```bash
+# Add the repository
+helm repo add dnd-it https://dnd-it.github.io/helm-charts
+helm repo update
+
+# Install the chart with custom values
+helm install karpenter-resources dnd-it/karpenter-resources \
+  --namespace kube-system \
+  --set global.role=karpenter-node-role \
+  --set global.eksDiscovery.clusterName=my-cluster \
+  --set nodePools.default.enabled=true \
+  --set nodePools.default.nodeClassRef.name=default \
+  --set ec2NodeClasses.default.enabled=true \
+  --set ec2NodeClasses.default.amiFamily=Bottlerocket
+```
+
+Alternatively, you can use a values file:
+
+```bash
+# Create a values.yaml file with your configuration
+cat > values.yaml << EOF
+global:
+  role: karpenter-node-role
+  instanceProfileName: karpenter-node-instance-profile
+
+nodePools:
+  default:
+    enabled: true
+    requirements:
+      - key: "karpenter.k8s.aws/instance-category"
+        operator: In
+        values: ["c"]
+      - key: "karpenter.k8s.aws/instance-cpu"
+        operator: In
+        values: ["8"]
+    limits:
+      cpu: 100
+      memory: 400Gi
+
+ec2NodeClasses:
+  default:
+    enabled: true
+    amiFamily: Bottlerocket
+    amiSelectorTerms:
+      - alias: bottlerocket@latest
+    blockDeviceMappings:
+      - deviceName: /dev/xvda
+        ebs:
+          volumeSize: 10Gi
+          volumeType: gp3
+          encrypted: true
+          deleteOnTermination: true
+EOF
+
+# Install using the values file
+helm install karpenter-resources dnd-it/karpenter-resources \
+  --namespace karpenter \
+  --create-namespace \
+  -f values.yaml
+```
+
+### Terraform Example
+
+Reference the release of the chart you want to deploy in terraform
+
+```hcl
+resource "helm_release" "karpenter_resources" {
+  name       = "karpenter-resources"
+  repository = "https://dnd-it.github.io/helm-charts"
+  chart      = "karpenter-resources"
+
+  values = [
+    templatefile("values.yaml")
+  ]
+  set {
+    name  = "nodePools.default.enabled"
+    value = "true"
+  }
+  set {
+    name  = "ec2NodeClasses.default.enabled"
+    value = "true"
+  }
+}
+```
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}

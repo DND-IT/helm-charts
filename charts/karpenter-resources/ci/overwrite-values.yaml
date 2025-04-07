@@ -1,0 +1,23 @@
+global:
+  role: KarpenterNodeRole-BasicCluster
+  eksDiscovery:
+    enabled: true
+    clusterName: basic-cluster
+
+ec2NodeClasses:
+  default:
+    enabled: true
+
+nodePools:
+  default:
+    enabled: true
+    requirements:
+      - key: "karpenter.k8s.aws/instance-category"
+        operator: In
+        values: ["c"]
+      - key: "karpenter.k8s.aws/instance-family"
+        operator: In
+        values: ["c5", "c5d", "c5a", "c5ad", "c5n", "c5na"]
+      - key: "karpenter.k8s.aws/instance-cpu"
+        operator: In
+        values: ["8", "16", "32"]

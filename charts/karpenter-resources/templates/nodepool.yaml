@@ -1,0 +1,85 @@
+{{- if .Values.nodePools }}
+{{- $clusterName := .Values.global.eksDiscovery.clusterName -}}
+{{- range $name, $nodePool := .Values.nodePools }}
+{{- if $nodePool.enabled -}}
+---
+apiVersion: karpenter.sh/v1
+kind: NodePool
+metadata:
+  name: {{ $name }}
+  labels:
+    {{- include "karpenter-resources.labels" $ | nindent 4 }}
+    {{- with $nodePool.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $nodePool.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  template:
+    metadata:
+      {{- with $nodePool.labels }}
+      labels:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $nodePool.annotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with $nodePool.nodeClassRef }}
+      nodeClassRef:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with $nodePool.taints }}
+      taints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- with $nodePool.startupTaints }}
+      startupTaints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+      {{- if hasKey $nodePool "expireAfter" }}
+      expireAfter: {{ $nodePool.expireAfter }}
+      {{- end }}
+
+      {{- if hasKey $nodePool "terminationGracePeriod" }}
+      terminationGracePeriod: {{ $nodePool.terminationGracePeriod }}
+      {{- end }}
+
+      {{- with $nodePool.requirements }}
+      requirements:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+
+  {{- with $nodePool.disruption }}
+  disruption:
+    {{- if hasKey . "consolidationPolicy" }}
+    consolidationPolicy: {{ .consolidationPolicy }}
+    {{- end }}
+
+    {{- if hasKey . "consolidateAfter" }}
+    consolidateAfter: {{ .consolidateAfter }}
+    {{- end }}
+
+    {{- with .budgets }}
+    budgets:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+
+  {{- with $nodePool.limits }}
+  limits:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+
+  {{- if hasKey $nodePool "weight" }}
+  weight: {{ $nodePool.weight }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
