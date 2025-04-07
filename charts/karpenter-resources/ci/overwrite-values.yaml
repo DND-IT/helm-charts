@@ -1,3 +1,9 @@
+global:
+  role: KarpenterNodeRole-BasicCluster
+  eksDiscovery:
+    enabled: true
+    clusterName: basic-cluster
+
 ec2NodeClasses:
   default:
     enabled: true

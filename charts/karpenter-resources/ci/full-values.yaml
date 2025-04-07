@@ -96,6 +96,10 @@ ec2NodeClasses:
     userData: |
       #!/bin/bash
       echo "Hello, world!"
+    securityGroupSelectorTerms:
+      - id: sg-0123456789abcdef0
+    subnetSelectorTerms:
+      - id: subnet-0123456789abcdef0
   special:
     enabled: true
     tags:
