@@ -102,9 +102,7 @@ jobs:
           version: v0.22.0 # renovate: datasource=github-releases depName=kind packageName=kubernetes-sigs/kind
 
       - name: Install CRDs
-        run: |
-          kubectl create -f https://raw.githubusercontent.com/aws/karpenter/v1.3.2/pkg/apis/crds/karpenter.sh_nodepools.yaml
-          kubectl create -f https://raw.githubusercontent.com/aws/karpenter/v1.3.2/pkg/apis/crds/karpenter.k8s.aws_ec2nodeclasses.yaml
+        run: .github/install-crds.sh
 
       - name: Install chart-testing
         uses: helm/chart-testing-action@e6669bcd63d7cb57cb4380c33043eebe5d111992 # v2.6.1
