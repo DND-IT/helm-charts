@@ -24,7 +24,7 @@ spec:
   {{- if $eksDiscoveryEnabled }}
   subnetSelectorTerms:
   - tags:
-      kubernetes.io/cluster/{{ $clusterName }}: {{ $eksOwnershipValue }}
+      karpenter.sh/discovery: {{ $clusterName }}
   {{- else }}
   {{- with $nodeClass.subnetSelectorTerms }}
   subnetSelectorTerms:
@@ -35,7 +35,7 @@ spec:
   {{- if $eksDiscoveryEnabled }}
   securityGroupSelectorTerms:
   - tags:
-      kubernetes.io/cluster/{{ $clusterName }}: {{ $eksOwnershipValue }}
+      karpenter.sh/discovery: {{ $clusterName }}
   {{- else }}
   {{- with $nodeClass.securityGroupSelectorTerms }}
   securityGroupSelectorTerms:

@@ -12,8 +12,6 @@ global:
     enabled: false
     # Cluster name - used for tagging and discovery
     clusterName: ""
-    # Ownership value for the kubernetes.io/cluster/${clusterName} tag
-    ownershipValue: "owned"
 
   # Karpenter Role Name - Required for node IAM permissions
   role: ""
@@ -92,7 +90,8 @@ ec2NodeClasses:
     enabled: false
 
     # --- Kubelet configuration ---
-    kubelet: {}
+    kubelet:
+      {}
       # podsPerCore: 2
       # maxPods: 20
       # systemReserved:
@@ -130,14 +129,14 @@ ec2NodeClasses:
     subnetSelectorTerms: []
     # - id: "subnet-12345678"
     # - tags:
-    #     karpenter.sh/discovery: "${CLUSTER_NAME}"
+    #     karpenter.sh/discovery: "${clusterName}"
 
     # --- Security group configuration ---
     securityGroupSelectorTerms: []
     # - id: "sg-12345678"
     # - name: "my-security-group"
     # - tags:
-    #     karpenter.sh/discovery: "${CLUSTER_NAME}"
+    #     karpenter.sh/discovery: "${clusterName}"
 
     # --- IAM configuration ---
     role: ""
