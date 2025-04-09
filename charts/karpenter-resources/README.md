@@ -1,6 +1,6 @@
 # karpenter-resources
 
-![Version: 0.2.0](https://img.shields.io/badge/Version-0.2.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.2](https://img.shields.io/badge/AppVersion-1.3.2-informational?style=flat-square)
+![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.3](https://img.shields.io/badge/AppVersion-1.3.3-informational?style=flat-square)
 
 A Helm chart for Karpenter Custom Resources
 
@@ -110,22 +110,17 @@ resource "helm_release" "karpenter_resources" {
 | ec2NodeClasses.default.blockDeviceMappings[0].deviceName | string | `"/dev/xvda"` |  |
 | ec2NodeClasses.default.blockDeviceMappings[0].ebs.deleteOnTermination | bool | `true` |  |
 | ec2NodeClasses.default.blockDeviceMappings[0].ebs.encrypted | bool | `true` |  |
-| ec2NodeClasses.default.blockDeviceMappings[0].ebs.iops | int | `3000` |  |
-| ec2NodeClasses.default.blockDeviceMappings[0].ebs.throughput | int | `125` |  |
 | ec2NodeClasses.default.blockDeviceMappings[0].ebs.volumeSize | string | `"4Gi"` |  |
 | ec2NodeClasses.default.blockDeviceMappings[0].ebs.volumeType | string | `"gp3"` |  |
 | ec2NodeClasses.default.blockDeviceMappings[1].deviceName | string | `"/dev/xvdb"` |  |
 | ec2NodeClasses.default.blockDeviceMappings[1].ebs.deleteOnTermination | bool | `true` |  |
 | ec2NodeClasses.default.blockDeviceMappings[1].ebs.encrypted | bool | `true` |  |
-| ec2NodeClasses.default.blockDeviceMappings[1].ebs.iops | int | `3000` |  |
-| ec2NodeClasses.default.blockDeviceMappings[1].ebs.throughput | int | `125` |  |
 | ec2NodeClasses.default.blockDeviceMappings[1].ebs.volumeSize | string | `"50Gi"` |  |
 | ec2NodeClasses.default.blockDeviceMappings[1].ebs.volumeType | string | `"gp3"` |  |
 | ec2NodeClasses.default.enabled | bool | `false` |  |
 | ec2NodeClasses.default.instanceProfile | string | `""` |  |
 | ec2NodeClasses.default.kubelet | object | `{}` |  |
 | ec2NodeClasses.default.metadataOptions.httpPutResponseHopLimit | int | `2` |  |
-| ec2NodeClasses.default.metadataOptions.httpTokens | string | `"required"` |  |
 | ec2NodeClasses.default.role | string | `""` |  |
 | ec2NodeClasses.default.securityGroupSelectorTerms | list | `[]` |  |
 | ec2NodeClasses.default.subnetSelectorTerms | list | `[]` |  |
@@ -142,8 +137,7 @@ resource "helm_release" "karpenter_resources" {
 | nodePools.default.enabled | bool | `false` |  |
 | nodePools.default.expireAfter | string | `"720h"` |  |
 | nodePools.default.labels | object | `{}` |  |
-| nodePools.default.limits.cpu | int | `100` |  |
-| nodePools.default.limits.memory | string | `"400Gi"` |  |
+| nodePools.default.limits.cpu | string | `"1000"` |  |
 | nodePools.default.nodeClassRef.group | string | `"karpenter.k8s.aws"` |  |
 | nodePools.default.nodeClassRef.kind | string | `"EC2NodeClass"` |  |
 | nodePools.default.nodeClassRef.name | string | `"default"` |  |
@@ -155,11 +149,10 @@ resource "helm_release" "karpenter_resources" {
 | nodePools.default.requirements[0].values[3] | string | `"t"` |  |
 | nodePools.default.requirements[1].key | string | `"karpenter.k8s.aws/instance-cpu"` |  |
 | nodePools.default.requirements[1].operator | string | `"In"` |  |
-| nodePools.default.requirements[1].values[0] | string | `"2"` |  |
-| nodePools.default.requirements[1].values[1] | string | `"4"` |  |
-| nodePools.default.requirements[1].values[2] | string | `"8"` |  |
-| nodePools.default.requirements[1].values[3] | string | `"16"` |  |
-| nodePools.default.requirements[1].values[4] | string | `"32"` |  |
+| nodePools.default.requirements[1].values[0] | string | `"4"` |  |
+| nodePools.default.requirements[1].values[1] | string | `"8"` |  |
+| nodePools.default.requirements[1].values[2] | string | `"16"` |  |
+| nodePools.default.requirements[1].values[3] | string | `"32"` |  |
 | nodePools.default.requirements[2].key | string | `"karpenter.k8s.aws/instance-hypervisor"` |  |
 | nodePools.default.requirements[2].operator | string | `"In"` |  |
 | nodePools.default.requirements[2].values[0] | string | `"nitro"` |  |
