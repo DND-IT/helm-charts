@@ -80,8 +80,8 @@ nodePools:
 
     # --- Resource limits ---
     limits:
-      cpu: "1000"
-      # memory: 400Gi
+      cpu: 1000
+      memory: 4000Gi
 
 # EC2NodeClass configuration
 # Each key under ec2NodeClasses becomes a separate EC2NodeClass resource
