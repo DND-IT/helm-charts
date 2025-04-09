@@ -150,6 +150,19 @@ entries:
   karpenter-resources:
   - apiVersion: v2
     appVersion: 1.3.3
+    created: "2025-04-09T13:24:50.581704575Z"
+    description: A Helm chart for Karpenter Custom Resources
+    digest: bb3b96a55eff90674b014cbcbac188e7835ca5e27aa4273f4c63109bb972b724
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: karpenter-resources
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/karpenter-resources-0.3.1/karpenter-resources-0.3.1.tgz
+    version: 0.3.1
+  - apiVersion: v2
+    appVersion: 1.3.3
     created: "2025-04-09T12:57:48.5119089Z"
     description: A Helm chart for Karpenter Custom Resources
     digest: 96918c23b9a648af2e9c5144500860e22c7529c7166e0900f89b791c3198f2f3
@@ -320,4 +333,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2025-04-09T12:57:48.51196779Z"
+generated: "2025-04-09T13:24:50.581762294Z"
