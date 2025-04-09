@@ -1,6 +1,6 @@
 # karpenter-resources
 
-![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.3](https://img.shields.io/badge/AppVersion-1.3.3-informational?style=flat-square)
+![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.3](https://img.shields.io/badge/AppVersion-1.3.3-informational?style=flat-square)
 
 A Helm chart for Karpenter Custom Resources
 
@@ -137,7 +137,8 @@ resource "helm_release" "karpenter_resources" {
 | nodePools.default.enabled | bool | `false` |  |
 | nodePools.default.expireAfter | string | `"720h"` |  |
 | nodePools.default.labels | object | `{}` |  |
-| nodePools.default.limits.cpu | string | `"1000"` |  |
+| nodePools.default.limits.cpu | int | `1000` |  |
+| nodePools.default.limits.memory | string | `"4000Gi"` |  |
 | nodePools.default.nodeClassRef.group | string | `"karpenter.k8s.aws"` |  |
 | nodePools.default.nodeClassRef.kind | string | `"EC2NodeClass"` |  |
 | nodePools.default.nodeClassRef.name | string | `"default"` |  |
