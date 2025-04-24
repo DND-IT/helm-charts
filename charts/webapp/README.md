@@ -63,6 +63,8 @@ ingress:
 | externalSecrets.clusterSecretStore | string | `"aws-secretsmanager"` |  |
 | externalSecrets.refreshInterval | string | `"5m"` |  |
 | externalSecrets.secretNames | list | `[]` |  |
+| extraEnvFrom | list | `[]` |  |
+| extraObjects | list | `[]` |  |
 | image_pull_policy | string | `"IfNotPresent"` |  |
 | image_repo | string | `"nginx"` |  |
 | image_tag | string | `"latest"` |  |
