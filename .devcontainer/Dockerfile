@@ -1,5 +1,7 @@
 FROM ghcr.io/containerbase/base:13.8.9@sha256:41b3e7db52a4f638d0f6c9241844d55dcaac465eed951b6e44c72edddeab780b
 
+# Install Python
+RUN apt-get update && apt-get install -y python3 python3-pip && apt-get clean
 
 COPY tools/*.sh /usr/local/containerbase/tools/
 
