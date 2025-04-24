@@ -112,6 +112,22 @@ externalSecrets:
   # secret names that should be fetched and made available to the Pods
   secretNames: []
 
+extraEnvFrom: []
+  # extraEnvFrom:
+  #   - secretRef:
+  #       name: my-secret
+  #   - configMapRef:
+  #       name: my-configmap
+
+extraObjects: []
+  # extraObjects:
+  #   - apiVersion: v1
+  #     kind: ConfigMap
+  #     metadata:
+  #       name: my-configmap
+  #     data:
+  #       key: value
+
 targetGroupBinding:
   enabled: false
   targetGroupARN: ""
