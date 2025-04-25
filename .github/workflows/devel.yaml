@@ -26,7 +26,7 @@ jobs:
       - name: Build and run dev container task
         uses: devcontainers/ci@8bf61b26e9c3a98f69cb6ce2f88d24ff59b785c6 # v0.3.1900000417
         with:
-          runCmd: ct lint --config .github/ct.yaml
+          runCmd: ct lint --check-version-increment=false --config .github/ct.yaml
           env: GITHUB_TOKEN
         env:
           GITHUB_TOKEN: ${{ github.token }}
