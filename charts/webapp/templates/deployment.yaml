@@ -107,13 +107,18 @@ spec:
               value: {{ $val | quote }}
             {{- end }}
             {{- end }}
-          {{- with .Values.externalSecrets.secretNames }}
+          {{- if or .Values.externalSecrets.secretNames .Values.extraEnvFrom }}
           envFrom:
-            {{- range . }}
+            {{- with .Values.externalSecrets.secretNames }}
+              {{- range . }}
             - secretRef:
                 name: {{ . | lower | replace "/" "-" }}
+              {{- end }}
             {{- end }}
-          {{- end }}
+            {{- with .Values.extraEnvFrom }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end}}
           ports:
             - name: {{ .Values.service.portName }}
               containerPort:  {{ default .Values.service.targetPort .Values.port }}

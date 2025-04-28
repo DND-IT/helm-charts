@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.7.0](https://img.shields.io/badge/Version-1.7.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.8.0](https://img.shields.io/badge/Version-1.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -63,6 +63,8 @@ ingress:
 | externalSecrets.clusterSecretStore | string | `"aws-secretsmanager"` |  |
 | externalSecrets.refreshInterval | string | `"5m"` |  |
 | externalSecrets.secretNames | list | `[]` |  |
+| extraEnvFrom | list | `[]` |  |
+| extraObjects | list | `[]` |  |
 | image_pull_policy | string | `"IfNotPresent"` |  |
 | image_repo | string | `"nginx"` |  |
 | image_tag | string | `"latest"` |  |
