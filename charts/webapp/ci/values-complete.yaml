@@ -42,6 +42,20 @@ resources:
 env:
   FEED_BASE_URL: https://www.feed-url.com
 
+extraEnvFrom:
+  - configMapRef:
+      name: complete-configmap
+
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: complete-configmap
+      namespace: default
+    data:
+      key1: value1
+      key2: value2
+
 nodeSelector:
   provisioner-group: general
   kubernetes.io/arch: amd64
