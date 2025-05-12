@@ -38,6 +38,7 @@ affinity: {}
 
 restartPolicy: "Never"
 concurrencyPolicy: "Allow"
+startingDeadlineSeconds: "120"
 
 metadata:
   labels:
