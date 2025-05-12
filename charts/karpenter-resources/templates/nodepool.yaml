@@ -1,7 +1,7 @@
 {{- if .Values.nodePools }}
-{{- $clusterName := .Values.global.eksDiscovery.clusterName -}}
+{{- $clusterName := .Values.global.eksDiscovery.clusterName }}
 {{- range $name, $nodePool := .Values.nodePools }}
-{{- if $nodePool.enabled -}}
+{{- if $nodePool.enabled }}
 ---
 apiVersion: karpenter.sh/v1
 kind: NodePool

@@ -1,7 +1,7 @@
 {{- if .Values.ec2NodeClasses }}
-{{- $clusterName := .Values.global.eksDiscovery.clusterName -}}
-{{- $eksDiscoveryEnabled := .Values.global.eksDiscovery.enabled -}}
-{{- $eksOwnershipValue := .Values.global.eksDiscovery.ownershipValue -}}
+{{- $clusterName := .Values.global.eksDiscovery.clusterName }}
+{{- $eksDiscoveryEnabled := .Values.global.eksDiscovery.enabled }}
+{{- $eksOwnershipValue := .Values.global.eksDiscovery.ownershipValue }}
 {{- range $name, $nodeClass := .Values.ec2NodeClasses }}
 {{- if $nodeClass.enabled }}
 ---
