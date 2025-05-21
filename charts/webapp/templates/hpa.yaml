@@ -4,7 +4,7 @@ kind: HorizontalPodAutoscaler
 metadata:
   annotations:
     {{- toYaml .Values.metadata.hpaAnnotations | nindent 4 }}
-  name: {{ .Release.Name }}
+  name: {{ include "webapp.name" . }}
 spec:
   minReplicas: {{ .Values.scale.minReplicas }}
   maxReplicas: {{ .Values.scale.maxReplicas }}
@@ -27,5 +27,5 @@ spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: {{ .Release.Name }}
+    name: {{ include "webapp.name" . }}
 {{- end }}

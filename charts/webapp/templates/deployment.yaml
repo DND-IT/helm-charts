@@ -1,14 +1,14 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ .Values.deployment.name | default .Release.Name }}
+  name: {{ include "webapp.name" . }}
   annotations:
     {{- toYaml .Values.metadata.deploymentAnnotations | nindent 4 }}
   labels:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     type: {{ .Chart.Name }}
-    app: {{ .Release.Name }}
+    app: {{ include "webapp.name" . }}
     {{- if .Values.metadata.labels.datadog.env }}
     tags.datadoghq.com/env: {{ .Values.metadata.labels.datadog.env }}
     {{- end }}
@@ -25,7 +25,7 @@ spec:
   selector:
     matchLabels:
       type: {{ .Chart.Name }}
-      app: {{ .Release.Name }}
+      app: {{ include "webapp.name" . }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
@@ -37,7 +37,7 @@ spec:
         {{- toYaml .Values.metadata.podAnnotations | nindent 8 }}
       labels:
         type: {{ .Chart.Name }}
-        app: {{ .Release.Name }}
+        app: {{ include "webapp.name" . }}
         {{- if .Values.metadata.labels.datadog.env }}
         tags.datadoghq.com/env: {{ .Values.metadata.labels.datadog.env }}
         {{- end }}
@@ -48,8 +48,8 @@ spec:
         tags.datadoghq.com/version: {{ .Values.metadata.labels.datadog.version }}
         {{- end }}
     spec:
-      {{- if .Values.aws_iam_role_arn }}
-      serviceAccountName: {{ .Release.Name }}
+      {{- if or .Values.aws_iam_role_arn .Values.serviceAccountName .Values.deploymentServiceAccountName }}
+      serviceAccountName: {{ coalesce .Values.deploymentServiceAccountName .Values.serviceAccountName (include "webapp.name" .) }}
       securityContext:
         fsGroup: 65534 # To be able to read Kubernetes and AWS token files
       {{- else }}
@@ -69,7 +69,7 @@ spec:
           {{- end }}
       {{- end }}
       containers:
-        - name: {{ .Release.Name }}
+        - name: {{ include "webapp.name" . }}
           image: "{{ .Values.image_repo }}:{{ .Values.image_tag }}"
           imagePullPolicy: {{ .Values.image_pull_policy }}
           {{- if .Values.command }}
@@ -142,7 +142,6 @@ spec:
             timeoutSeconds: {{ .Values.probe.readinessTimeoutSeconds }}
             failureThreshold: {{ .Values.probe.readinessFailureThreshold }}
           {{- end }}
-          # Let's add startup probe only if there is already a liveness defined without requiring new values on application side
           {{- if .Values.probe.liveness }}
           startupProbe:
             httpGet:
@@ -152,8 +151,6 @@ spec:
               httpHeaders:
                 {{ .Values.probe.startupHttpHeaders | toYaml | nindent 16 }}
               {{- end }}
-            # This means that by default, any application who doesn't respond after 3*40 seconds (2 minutes) gets killed and restarted
-            # Can be dangerous if we have slow-starting apps. Can we assume that in 2 minutes all the apps are ready to serve content? Currently anyway
             failureThreshold: 40
             periodSeconds: 3
             timeoutSeconds: {{ .Values.probe.startupTimeoutSeconds }}
@@ -178,7 +175,7 @@ spec:
         - topologyKey: {{ . | quote }}
           labelSelector:
             matchLabels:
-              app: {{ $.Release.Name }}
+              app: {{ include "webapp.name" $ }}
               type: {{ $.Chart.Name }}
           maxSkew: {{ $.Values.topologySpreadConstraints.maxSkew }}
           whenUnsatisfiable: {{ $.Values.topologySpreadConstraints.whenUnsatisfiable }}
