@@ -91,7 +91,7 @@ service:
   enabled: true
   type: ClusterIP
   port: 80
-  targetPort: http
+  targetPort: 80
   ports: []
   annotations: {}
   labels: {}
