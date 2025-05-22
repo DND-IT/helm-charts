@@ -1,5 +1,14 @@
+# Override resource names. Default is the helm release name
+nameOverride: ""
+
 # Set replicas if scaling is not enabled
 replicas: 1
+
+# Set the name of the service account to use. If not set, a default service account will be used.
+serviceAccountName: ""
+
+# Set the name of the service account to use for the deployment. If not set, a default service account will be used.
+deploymentServiceAccountName: ""
 
 # App specific configs
 scale:
@@ -62,7 +71,8 @@ ingress:
   paths: ["/"]
   tls: false
 
-resources: {}
+resources:
+  {}
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -112,14 +122,16 @@ externalSecrets:
   # secret names that should be fetched and made available to the Pods
   secretNames: []
 
-extraEnvFrom: []
+extraEnvFrom:
+  []
   # extraEnvFrom:
   #   - secretRef:
   #       name: my-secret
   #   - configMapRef:
   #       name: my-configmap
 
-extraObjects: []
+extraObjects:
+  []
   # extraObjects:
   #   - apiVersion: v1
   #     kind: ConfigMap

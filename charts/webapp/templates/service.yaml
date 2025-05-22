@@ -2,12 +2,12 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Values.service.name | default .Release.Name }} # This should be {{ include "webapp.fullname" . }} but would break many deployments
+  name: {{ default (include "webapp.name" .) .Values.service.name }}
   labels:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
     type: {{ .Chart.Name }}
-    app: {{ .Release.Name }}
+    app: {{ include "webapp.name" . }}
   {{- with .Values.service.annotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -21,5 +21,5 @@ spec:
       targetPort:  {{ default .Values.service.targetPort .Values.port }}
   selector:
     type: {{ .Chart.Name }}
-    app: {{ .Release.Name }}
+    app: {{ include "webapp.name" . }}
 {{- end }}

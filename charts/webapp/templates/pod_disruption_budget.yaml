@@ -4,11 +4,11 @@
 apiVersion: policy/v1
 kind: PodDisruptionBudget
 metadata:
-  name: {{ .Release.Name }}
+  name: {{ include "webapp.name" . }}
 spec:
   minAvailable: {{ .Values.scale.minAvailable }}
   selector:
     matchLabels:
       type: {{ .Chart.Name }}
-      app: {{ .Release.Name }}
+      app: {{ include "webapp.name" . }}
 {{- end }}

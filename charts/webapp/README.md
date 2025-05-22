@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.8.0](https://img.shields.io/badge/Version-1.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.9.0](https://img.shields.io/badge/Version-1.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -27,6 +27,35 @@ resource "helm_release" "app" {
 ## Upgrading
 
 This section lists major and breaking changes of each Helm Chart version.
+
+<details>
+<summary>1.9.0</summary>
+
+- Add nameOverride to all resources that were using release name
+- Allow setting service account name in the deployment
+
+values.yaml
+
+```yaml
+nameOverride: "my-resource-name"
+
+serviceAccountName: "other-service-account-name"
+```
+
+rendered resources
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: my-resource-name
+---
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: my-resource-name
+```
+</details>
 
 <details>
 <summary>1.0.0</summary>
@@ -59,6 +88,7 @@ ingress:
 | args | list | `[]` |  |
 | aws_iam_role_arn | string | `""` |  |
 | command | list | `[]` |  |
+| deploymentServiceAccountName | string | `""` |  |
 | env | object | `{}` |  |
 | externalSecrets.clusterSecretStore | string | `"aws-secretsmanager"` |  |
 | externalSecrets.refreshInterval | string | `"5m"` |  |
@@ -86,6 +116,7 @@ ingress:
 | metadata.labels.datadog.service | string | `""` |  |
 | metadata.labels.datadog.version | string | `""` |  |
 | metadata.podAnnotations | object | `{}` |  |
+| nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
 | probe.liveness | string | `"/"` |  |
 | probe.livenessInitialDelaySeconds | int | `0` |  |
@@ -113,6 +144,7 @@ ingress:
 | service.portName | string | `"http"` |  |
 | service.targetPort | int | `80` |  |
 | service.type | string | `"ClusterIP"` |  |
+| serviceAccountName | string | `""` |  |
 | targetGroupBinding.annotations | object | `{}` |  |
 | targetGroupBinding.enabled | bool | `false` |  |
 | targetGroupBinding.targetGroupARN | string | `""` |  |
