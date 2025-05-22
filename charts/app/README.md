@@ -380,7 +380,7 @@ This chart is licensed under the MIT License. See LICENSE file for details.
 | service.labels | object | `{}` |  |
 | service.port | int | `80` |  |
 | service.ports | list | `[]` |  |
-| service.targetPort | string | `"http"` |  |
+| service.targetPort | int | `80` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.create | bool | `true` |  |
