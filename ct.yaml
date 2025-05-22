@@ -1,0 +1,23 @@
+chart-repos:
+  - bitnami=https://charts.bitnami.com/bitnami
+  - prometheus-community=https://prometheus-community.github.io/helm-charts
+
+additional-charts:
+  - bitnami/nginx
+
+chart-dirs:
+  - charts
+
+helm-extra-args: --timeout 10m
+
+check-version-increment: true
+validate-yaml: true
+validate-chart-schema: true
+validate-maintainers: true
+
+lint-conf: lintconf.yaml
+
+target-branch: main
+github-groups: true
+
+debug: true
