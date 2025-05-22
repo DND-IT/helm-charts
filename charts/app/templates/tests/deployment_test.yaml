@@ -1,0 +1,138 @@
+suite: test deployment
+templates:
+  - deployment.yaml
+tests:
+  - it: should create deployment with default values
+    asserts:
+      - isKind:
+          of: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-generic-app
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: generic-app
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:1.21
+
+  - it: should create deployment with custom image
+    set:
+      image.repository: myapp
+      image.tag: v2.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: myapp:v2.0.0
+
+  - it: should set custom replicas
+    set:
+      deployment.replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+
+  - it: should not set replicas when autoscaling is enabled
+    set:
+      autoscaling.enabled: true
+    asserts:
+      - notExists:
+          path: spec.replicas
+
+  - it: should add environment variables
+    set:
+      deployment.env:
+        - name: ENV
+          value: production
+        - name: DEBUG
+          value: "false"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: ENV
+            value: production
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DEBUG
+            value: "false"
+
+  - it: should add resource limits
+    set:
+      deployment.resources:
+        limits:
+          cpu: 500m
+          memory: 512Mi
+        requests:
+          cpu: 100m
+          memory: 128Mi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.cpu
+          value: 500m
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.memory
+          value: 128Mi
+
+  - it: should enable probes when configured
+    set:
+      deployment.livenessProbe.enabled: true
+      deployment.readinessProbe.enabled: true
+    asserts:
+      - exists:
+          path: spec.template.spec.containers[0].livenessProbe
+      - exists:
+          path: spec.template.spec.containers[0].readinessProbe
+
+  - it: should add node selector
+    set:
+      deployment.nodeSelector:
+        kubernetes.io/os: linux
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector
+          value:
+            kubernetes.io/os: linux
+
+  - it: should add persistence volume mount
+    set:
+      persistence.enabled: true
+      persistence.mountPath: /data
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: data
+            mountPath: /data
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: data
+            persistentVolumeClaim:
+              claimName: RELEASE-NAME-generic-app-data
+
+  - it: should add init containers
+    set:
+      initContainers:
+        - name: init-db
+          image: busybox
+          command: ['sh', '-c', 'sleep 10']
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: init-db
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: busybox
+
+  - it: should not create deployment when disabled
+    set:
+      deployment.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0

@@ -1,5 +1,0 @@
-helm-extra-args: --timeout 10m
-check-version-increment: true
-debug: true
-target-branch: main
-github-groups: true

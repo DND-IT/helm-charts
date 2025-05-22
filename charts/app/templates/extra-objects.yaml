@@ -1,0 +1,8 @@
+{{- range .Values.extraObjects }}
+---
+{{- if typeIs "string" . }}
+{{- include "app.tplValue" (dict "value" . "context" $) }}
+{{- else }}
+{{- include "app.tplValue" (dict "value" (toYaml .) "context" $) }}
+{{- end }}
+{{- end }}
