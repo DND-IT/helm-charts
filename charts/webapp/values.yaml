@@ -4,6 +4,9 @@ nameOverride: ""
 # Set replicas if scaling is not enabled
 replicas: 1
 
+# Set the number of old ReplicaSets to retain to allow rollback.
+revisionHistoryLimit: 3
+
 # Set the name of the service account to use. If not set, a default service account will be used.
 serviceAccountName: ""
 
