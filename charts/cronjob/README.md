@@ -1,6 +1,6 @@
 # cronjob
 
-![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.5.0](https://img.shields.io/badge/Version-0.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes cron job
 
@@ -41,12 +41,19 @@ resource "helm_release" "cronjob" {
 | cronjob.schedule | string | `"0 0 * * *"` |  |
 | cronjob.suspend | bool | `false` | If cronjob executions should be suspended. |
 | env | object | `{}` |  |
+| externalSecrets.clusterSecretStore | string | `"aws-secretsmanager"` |  |
+| externalSecrets.refreshInterval | string | `"5m"` |  |
+| externalSecrets.secretNames | list | `[]` |  |
+| extraEnvFrom | list | `[]` |  |
+| extraObjects | list | `[]` |  |
+| fullnameOverride | string | `""` |  |
 | image_pull_policy | string | `"IfNotPresent"` |  |
 | image_repo | string | `"nginx"` |  |
 | image_tag | string | `"stable"` |  |
 | metadata.labels.datadog.env | string | `""` |  |
 | metadata.labels.datadog.service | string | `""` |  |
 | metadata.labels.datadog.version | string | `""` |  |
+| nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
 | port | int | `80` |  |
 | resources | object | `{}` |  |

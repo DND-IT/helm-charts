@@ -2,6 +2,8 @@
 # cron helm chart manage 2 k8s resources:
 # - CronJob
 # - ServiceAccount
+nameOverride: ""
+fullnameOverride: ""
 port: 80
 command: []
 args: []
@@ -39,6 +41,28 @@ affinity: {}
 restartPolicy: "Never"
 concurrencyPolicy: "Allow"
 startingDeadlineSeconds: "120"
+
+externalSecrets:
+  refreshInterval: 5m
+  clusterSecretStore: aws-secretsmanager
+  # secret names that should be fetched and made available to the Pods
+  secretNames: []
+
+extraEnvFrom: []
+  # extraEnvFrom:
+  #   - secretRef:
+  #       name: my-secret
+  #   - configMapRef:
+  #       name: my-configmap
+
+extraObjects: []
+  # extraObjects:
+  #   - apiVersion: v1
+  #     kind: ConfigMap
+  #     metadata:
+  #       name: my-configmap
+  #     data:
+  #       key: value
 
 metadata:
   labels:
