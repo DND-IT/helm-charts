@@ -84,6 +84,18 @@ spec:
                   value: {{ $val | quote }}
               {{- end }}
               {{- end }}
+              {{- if or .Values.externalSecrets.secretNames .Values.extraEnvFrom }}
+              envFrom:
+                {{- with .Values.externalSecrets.secretNames }}
+                  {{- range . }}
+                - secretRef:
+                    name: {{ . | lower | replace "/" "-" }}
+                  {{- end }}
+                {{- end }}
+                {{- with .Values.extraEnvFrom }}
+                  {{- toYaml . | nindent 12 }}
+                {{- end }}
+              {{- end}}
               ports:
                 - name: http
                   containerPort: {{ .Values.port }}

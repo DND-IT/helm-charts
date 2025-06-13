@@ -1,0 +1,10 @@
+serviceAccountName: foo
+extraManifests:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: foo-configmap
+      namespace: default
+    data:
+      key1: value1
+      key2: value2
