@@ -2,6 +2,8 @@
 # cron helm chart manage 2 k8s resources:
 # - CronJob
 # - ServiceAccount
+nameOverride: ""
+fullnameOverride: ""
 port: 80
 command: []
 args: []
