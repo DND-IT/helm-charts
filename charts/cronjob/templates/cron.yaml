@@ -93,7 +93,7 @@ spec:
                   {{- end }}
                 {{- end }}
                 {{- with .Values.extraEnvFrom }}
-                  {{- toYaml . | nindent 12 }}
+                  {{- toYaml . | nindent 16 }}
                 {{- end }}
               {{- end}}
               ports:

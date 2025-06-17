@@ -8,3 +8,18 @@ extraManifests:
     data:
       key1: value1
       key2: value2
+  - apiVersion: v1
+    kind: Secret
+    metadata:
+      name: foo-secret
+      namespace: default
+    type: Opaque
+    data:
+      secretKey1: c2VjcmV0VmFsdWUx  # base64 encoded value1
+      secretKey2: c2VjcmV0VmFsdWUy  # base64 encoded value2
+
+extraEnvFrom:
+  - configMapRef:
+      name: foo-configmap
+  - secretRef:
+      name: foo-secret
