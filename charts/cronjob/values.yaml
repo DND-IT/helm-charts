@@ -13,6 +13,7 @@ image_repo: nginx
 image_tag: stable
 image_pull_policy: IfNotPresent
 
+cronjobName: ""
 cronjob:
   schedule: "0 0 * * *"
 
