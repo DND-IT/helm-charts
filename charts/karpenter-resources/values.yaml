@@ -65,7 +65,7 @@ nodePools:
     # --- Disruption configuration ---
     disruption:
       consolidationPolicy: "WhenEmptyOrUnderutilized"
-      consolidateAfter: "5m"
+      consolidateAfter: "1h"
       # budgets:
       #   - nodes: "20%"
       #     reasons:
