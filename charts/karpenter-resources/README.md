@@ -1,6 +1,6 @@
 # karpenter-resources
 
-![Version: 0.3.2](https://img.shields.io/badge/Version-0.3.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.3](https://img.shields.io/badge/AppVersion-1.3.3-informational?style=flat-square)
+![Version: 0.3.3](https://img.shields.io/badge/Version-0.3.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.3](https://img.shields.io/badge/AppVersion-1.3.3-informational?style=flat-square)
 
 A Helm chart for Karpenter Custom Resources
 
@@ -132,7 +132,7 @@ resource "helm_release" "karpenter_resources" {
 | global.role | string | `""` |  |
 | nameOverride | string | `""` |  |
 | nodePools.default.annotations | object | `{}` |  |
-| nodePools.default.disruption.consolidateAfter | string | `"5m"` |  |
+| nodePools.default.disruption.consolidateAfter | string | `"1h"` |  |
 | nodePools.default.disruption.consolidationPolicy | string | `"WhenEmptyOrUnderutilized"` |  |
 | nodePools.default.enabled | bool | `false` |  |
 | nodePools.default.expireAfter | string | `"720h"` |  |
