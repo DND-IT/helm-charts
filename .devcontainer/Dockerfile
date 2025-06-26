@@ -21,5 +21,5 @@ RUN install-tool helm v3.17.2
 # renovate: datasource=github-releases packageName=norwoodj/helm-docs
 RUN install-tool helm-docs 1.14.2
 
-# renovate: datasource=github-releases packageName=instrumenta/kubeval
-RUN install-tool kubeval v0.16.1
+# renovate: datasource=github-releases packageName=yannh/kubeconform
+RUN install-tool kubeconform v0.16.1
