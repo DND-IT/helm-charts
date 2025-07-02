@@ -23,3 +23,9 @@ extraEnvFrom:
       name: foo-configmap
   - secretRef:
       name: foo-secret
+
+cronjob:
+  schedule: "0 0 * * *"
+  timeZone: "Europe/Zurich"
+  suspend: true
+  startingDeadlineSeconds: 120
