@@ -1,6 +1,6 @@
 # cronjob
 
-![Version: 0.7.0](https://img.shields.io/badge/Version-0.7.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.8.0](https://img.shields.io/badge/Version-0.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes cron job
 
@@ -40,6 +40,7 @@ resource "helm_release" "cronjob" {
 | concurrencyPolicy | string | `"Allow"` |  |
 | cronjob.schedule | string | `"0 0 * * *"` |  |
 | cronjob.suspend | bool | `false` | If cronjob executions should be suspended. |
+| cronjob.timeZone | string | `"Etc/UTC"` |  |
 | cronjobName | string | `""` |  |
 | env | object | `{}` |  |
 | externalSecrets.clusterSecretStore | string | `"aws-secretsmanager"` |  |

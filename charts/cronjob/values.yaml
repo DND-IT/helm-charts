@@ -16,6 +16,7 @@ image_pull_policy: IfNotPresent
 cronjobName: ""
 cronjob:
   schedule: "0 0 * * *"
+  timeZone: "Etc/UTC"
 
   # cronjob.suspend -- If cronjob executions should be suspended.
   suspend: false
