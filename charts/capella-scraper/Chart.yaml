@@ -8,5 +8,5 @@ home: https://github.com/DND-IT/helm-charts
 sources:
   - https://github.com/DND-IT/helm-charts
 maintainers:
-  - name: DND-IT
-    url: https://github.com/DND-IT
+  - name: DAI
+    email: dai@tamedia.ch

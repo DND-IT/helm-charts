@@ -35,7 +35,7 @@ resource "helm_release" "capella_scraper" {
 
 | Name | Email | Url |
 | ---- | ------ | --- |
-| DND-IT |  | <https://github.com/DND-IT> |
+| DAI | <dai@tamedia.ch> |  |
 
 ## Source Code
 
