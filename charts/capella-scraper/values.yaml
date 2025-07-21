@@ -16,8 +16,8 @@ service:
   port: 8080
   targetPort: 8080
 
-# Service account name (uses existing prometheus-operator service account)
-serviceAccountName: "prometheus-operator-kube-p-operator"
+# Service account name (required - must be provided)
+serviceAccountName: ""
 
 # Resource limits and requests
 resources:

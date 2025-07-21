@@ -4,88 +4,7 @@
 
 A Helm chart for deploying Capella Prometheus Scraper
 
-**Homepage:** <https://github.com/DND-IT/helm-charts>
-
-## Maintainers
-
-| Name | Email | Url |
-| ---- | ------ | --- |
-| DND-IT |  | <https://github.com/DND-IT> |
-
-## Source Code
-
-* <https://github.com/DND-IT/helm-charts>
-
-## Installation
-
-### Add Helm repository
-
-```shell
-helm repo add dnd-it https://dnd-it.github.io/helm-charts
-helm repo update
-```
-
-### Install the chart
-
-Using config from a file:
-
-```bash
-helm install --generate-name dnd-it/capella-scraper -f values.yaml
-```
-
-## Configuration
-
-The following table lists the configurable parameters of the capella-scraper chart and their default values.
-
-## Values
-
-| Key | Type | Default | Description |
-|-----|------|---------|-------------|
-| capellaFQDN | string | `""` |  |
-| image_pull_policy | string | `"Always"` |  |
-| image_repo | string | `""` |  |
-| image_tag | string | `""` |  |
-| jobName | string | `""` |  |
-| resources.limits.cpu | string | `"500m"` |  |
-| resources.limits.memory | string | `"1024Mi"` |  |
-| resources.requests.cpu | string | `"100m"` |  |
-| resources.requests.memory | string | `"512Mi"` |  |
-| scrapePass | string | `""` |  |
-| scrapeUser | string | `""` |  |
-| service.port | int | `8080` |  |
-| service.targetPort | int | `8080` |  |
-| serviceAccountName | string | `"prometheus-operator-kube-p-operator"` |  |
-
-## Examples
-
-### Basic Usage
-
-```yaml
-# values.yaml
-image_repo: "your-registry/capella-scraper"
-image_tag: "1.0.1"  # Required - specify your image version
-
-capellaFQDN: "cb.example.cloud.couchbase.com"
-jobName: "feed-capella-production"
-scrapeUser: "feed-admin"
-scrapePass: "your-password"
-```
-
-## Terraform Migration
-
-Example Terraform configuration to migrate from:
-
-```hcl
-resource "kubernetes_deployment" "feed-prom-capella-scraper" {
-  # ... deployment configuration
-}
-
-resource "kubernetes_service" "feed-prom-capella-scraper-service" {
-  # ... service configuration
-}
-```
-
-To Helm:
+## Usage
 
 ```hcl
 resource "helm_release" "capella_scraper" {
@@ -104,7 +23,39 @@ resource "helm_release" "capella_scraper" {
       jobName     = "feed-capella-${var.environment}"
       scrapeUser  = var.capella_scrape_user
       scrapePass  = var.capella_scrape_pass
+
+      serviceAccountName = "prometheus-operator-kube-p-operator"
     })
   ]
 }
 ```
+**Homepage:** <https://github.com/DND-IT/helm-charts>
+
+## Maintainers
+
+| Name | Email | Url |
+| ---- | ------ | --- |
+| DND-IT |  | <https://github.com/DND-IT> |
+
+## Source Code
+
+* <https://github.com/DND-IT/helm-charts>
+
+## Values
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| capellaFQDN | string | `""` |  |
+| image_pull_policy | string | `"Always"` |  |
+| image_repo | string | `""` |  |
+| image_tag | string | `""` |  |
+| jobName | string | `""` |  |
+| resources.limits.cpu | string | `"500m"` |  |
+| resources.limits.memory | string | `"1024Mi"` |  |
+| resources.requests.cpu | string | `"100m"` |  |
+| resources.requests.memory | string | `"512Mi"` |  |
+| scrapePass | string | `""` |  |
+| scrapeUser | string | `""` |  |
+| service.port | int | `8080` |  |
+| service.targetPort | int | `8080` |  |
+| serviceAccountName | string | `""` |  |
