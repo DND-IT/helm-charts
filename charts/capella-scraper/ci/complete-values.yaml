@@ -1,0 +1,6 @@
+# Test with minimal values
+image_repo: "registry/capella-scraper"
+capellaFQDN: "my.test.cloud.couchbase.com"
+jobName: "capella-test"
+scrapeUser: "admin"
+scrapePass: "password"

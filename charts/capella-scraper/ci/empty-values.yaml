@@ -1,6 +1,0 @@
-# Test with minimal values
-image_repo: "test-registry/capella-scraper"
-capellaFQDN: "cb.test.cloud.couchbase.com"
-jobName: "feed-capella-test"
-scrapeUser: "feed-admin"
-scrapePass: "test-password"
