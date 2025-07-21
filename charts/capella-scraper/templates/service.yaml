@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "capella-scraper.fullname" . }}
+  labels:
+    {{- include "capella-scraper.labels" . | nindent 4 }}
+spec:
+  selector:
+    app: {{ include "capella-scraper.fullname" . }}
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.targetPort }}

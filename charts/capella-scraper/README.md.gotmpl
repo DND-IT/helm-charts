@@ -1,0 +1,90 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+## Installation
+
+### Add Helm repository
+
+```shell
+helm repo add dnd-it https://dnd-it.github.io/helm-charts
+helm repo update
+```
+
+### Install the chart
+
+Using config from a file:
+
+```bash
+helm install --generate-name dnd-it/{{ template "chart.name" . }} -f values.yaml
+```
+
+## Configuration
+
+The following table lists the configurable parameters of the {{ template "chart.name" . }} chart and their default values.
+
+{{ template "chart.valuesSection" . }}
+
+## Examples
+
+### Basic Usage
+
+```yaml
+# values.yaml
+image_repo: "your-registry/capella-scraper"
+image_tag: "1.0.1"
+
+capellaFQDN: "cb.example.cloud.couchbase.com"
+jobName: "feed-capella-production"
+scrapeUser: "feed-admin"
+scrapePass: "your-password"
+```
+
+## Terraform Migration
+
+Example Terraform configuration to migrate from:
+
+```hcl
+resource "kubernetes_deployment" "feed-prom-capella-scraper" {
+  # ... deployment configuration
+}
+
+resource "kubernetes_service" "feed-prom-capella-scraper-service" {
+  # ... service configuration
+}
+```
+
+To Helm:
+
+```hcl
+resource "helm_release" "capella_scraper" {
+  name       = "capella-scraper"
+  repository = "https://dnd-it.github.io/helm-charts"
+  chart      = "capella-scraper"
+  version    = "0.1.0"
+  namespace  = "monitoring"
+
+  values = [
+    yamlencode({
+      image_repo = var.capella_container_registry_url
+      image_tag  = "1.0.1"
+
+      capellaFQDN = var.capella_FQDN
+      jobName     = "feed-capella-${var.environment}"
+      scrapeUser  = var.capella_scrape_user
+      scrapePass  = var.capella_scrape_pass
+    })
+  ]
+}
+```

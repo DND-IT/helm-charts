@@ -1,0 +1,12 @@
+apiVersion: v2
+name: capella-scraper
+description: A Helm chart for deploying Capella Prometheus Scraper
+type: application
+version: 0.1.0
+appVersion: "1.0.1"
+home: https://github.com/DND-IT/helm-charts
+sources:
+  - https://github.com/DND-IT/helm-charts
+maintainers:
+  - name: DND-IT
+    url: https://github.com/DND-IT

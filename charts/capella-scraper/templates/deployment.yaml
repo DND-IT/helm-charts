@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "capella-scraper.fullname" . }}
+  labels:
+    {{- include "capella-scraper.labels" . | nindent 4 }}
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "capella-scraper.fullname" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "capella-scraper.fullname" . }}
+    spec:
+      serviceAccountName: {{ .Values.serviceAccountName }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: provisioner-group
+                operator: In
+                values:
+                - general
+      tolerations:
+        - key: "karpenter.sh/default"
+          operator: "Exists"
+          effect: "NoSchedule"
+      containers:
+        - name: {{ include "capella-scraper.name" . }}
+          image: "{{ .Values.image_repo }}:{{ .Values.image_tag }}"
+          imagePullPolicy: {{ .Values.image_pull_policy }}
+          args:
+            - "--capellaFQDN"
+            - {{ .Values.capellaFQDN | quote }}
+            - "--jobName"
+            - {{ .Values.jobName | quote }}
+            - "--scrapePass"
+            - {{ .Values.scrapePass | quote }}
+            - "--scrapeUser"
+            - {{ .Values.scrapeUser | quote }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
