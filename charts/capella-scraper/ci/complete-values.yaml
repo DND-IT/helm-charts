@@ -1,5 +1,6 @@
 # Test with minimal values
 image_repo: "registry/capella-scraper"
+image_tag: "1.0.1"
 capellaFQDN: "my.test.cloud.couchbase.com"
 jobName: "capella-test"
 scrapeUser: "admin"

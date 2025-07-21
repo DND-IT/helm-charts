@@ -44,7 +44,7 @@ The following table lists the configurable parameters of the capella-scraper cha
 | capellaFQDN | string | `""` |  |
 | image_pull_policy | string | `"Always"` |  |
 | image_repo | string | `""` |  |
-| image_tag | string | `"1.0.1"` |  |
+| image_tag | string | `""` |  |
 | jobName | string | `""` |  |
 | resources.limits.cpu | string | `"500m"` |  |
 | resources.limits.memory | string | `"1024Mi"` |  |
@@ -63,7 +63,7 @@ The following table lists the configurable parameters of the capella-scraper cha
 ```yaml
 # values.yaml
 image_repo: "your-registry/capella-scraper"
-image_tag: "1.0.1"
+image_tag: "1.0.1"  # Required - specify your image version
 
 capellaFQDN: "cb.example.cloud.couchbase.com"
 jobName: "feed-capella-production"
@@ -98,7 +98,7 @@ resource "helm_release" "capella_scraper" {
   values = [
     yamlencode({
       image_repo = var.capella_container_registry_url
-      image_tag  = "1.0.1"
+      image_tag  = var.capella_image_tag  # Now a variable input
 
       capellaFQDN = var.capella_FQDN
       jobName     = "feed-capella-${var.environment}"
