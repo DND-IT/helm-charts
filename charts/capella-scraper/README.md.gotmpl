@@ -26,7 +26,7 @@ resource "helm_release" "capella_scraper" {
       scrapeUser  = var.capella_scrape_user
       scrapePass  = var.capella_scrape_pass
 
-      serviceAccountName = "prometheus-operator-kube-p-operator"
+      serviceAccountName = "prometheus-operator-kube-p-operator"  # Must exist in namespace
     })
   ]
 }
