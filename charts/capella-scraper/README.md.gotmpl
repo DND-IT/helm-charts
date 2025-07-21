@@ -19,7 +19,7 @@ resource "helm_release" "capella_scraper" {
   values = [
     yamlencode({
       image_repo = var.capella_container_registry_url
-      image_tag  = var.capella_image_tag  # Now a variable input
+      image_tag  = var.capella_image_tag
 
       capellaFQDN = var.capella_FQDN
       jobName     = "feed-capella-${var.environment}"
