@@ -1,9 +1,11 @@
 apiVersion: v2
 name: app
-description: A generic, flexible Helm chart for deploying applications on Kubernetes. This chart follows best practices and provides comprehensive configuration options for most application deployment scenarios.
+description: |
+  A generic, flexible Helm chart for deploying applications on Kubernetes.
+  This chart follows best practices and provides comprehensive configuration
+  options for most application deployment scenarios.
 type: application
 version: 0.1.0
-appVersion: "1.0.0"
 
 keywords:
   - application
