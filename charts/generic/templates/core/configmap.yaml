@@ -1,0 +1,98 @@
+{{- if .Values.configMap.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "generic.configMapName" . }}
+  namespace: {{ include "generic.namespace" . }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.configMap.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.configMap.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- if or .Values.configMap.data .Values.configMap.binaryData }}
+{{- with .Values.configMap.data }}
+data:
+  {{- range $key, $value := . }}
+  {{- if kindIs "string" $value }}
+  {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+  {{- else }}
+  {{ $key }}: |
+    {{- include "generic.tplValue" (dict "value" ($value | toYaml) "context" $) | nindent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- with .Values.configMap.binaryData }}
+binaryData:
+  {{- range $key, $value := . }}
+  {{ $key }}: {{ $value }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.extraConfigMaps }}
+{{- range $name, $configMap := .Values.extraConfigMaps }}
+{{- if $configMap.enabled | default true }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $configMap.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $configMap.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- if or $configMap.data $configMap.binaryData $configMap.files }}
+{{- if or $configMap.data $configMap.files }}
+data:
+  {{- with $configMap.data }}
+  {{- range $key, $value := . }}
+  {{- if kindIs "string" $value }}
+  {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+  {{- else }}
+  {{ $key }}: |
+    {{- include "generic.tplValue" (dict "value" ($value | toYaml) "context" $) | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- with $configMap.files }}
+  {{- $files := . }}
+  {{- if kindIs "slice" $files }}
+  {{- range $files }}
+  {{- if .name }}
+  {{ .name }}: |
+    {{- .content | nindent 4 }}
+  {{- else }}
+  {{- range $path := .paths }}
+  {{ base $path }}: |
+    {{- $.Files.Get $path | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- else }}
+  {{- range $fileName, $filePath := $files }}
+  {{ $fileName }}: |
+    {{- $.Files.Get $filePath | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- with $configMap.binaryData }}
+binaryData:
+  {{- range $key, $value := . }}
+  {{ $key }}: {{ $value }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

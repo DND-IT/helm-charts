@@ -1,0 +1,103 @@
+{{- if and .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: {{ include "generic.fullname" . }}-tcp
+  namespace: {{ include "generic.namespace" . }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.gateway.tcpRoute.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.gateway.tcpRoute.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.gateway.tcpRoute.parentRefs }}
+  parentRefs:
+    {{- range $parentRef := . }}
+    - {{- if $parentRef.group }}
+      group: {{ $parentRef.group }}
+      {{- end }}
+      {{- if $parentRef.kind }}
+      kind: {{ $parentRef.kind }}
+      {{- end }}
+      {{- if $parentRef.namespace }}
+      namespace: {{ $parentRef.namespace }}
+      {{- end }}
+      name: {{ $parentRef.name }}
+      {{- with $parentRef.sectionName }}
+      sectionName: {{ . }}
+      {{- end }}
+      {{- with $parentRef.port }}
+      port: {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- else }}
+  parentRefs:
+    - name: {{ .Values.gateway.tcpRoute.gatewayName | default (printf "%s-gateway" (include "generic.fullname" .)) }}
+      {{- with .Values.gateway.tcpRoute.gatewayNamespace }}
+      namespace: {{ . }}
+      {{- end }}
+  {{- end }}
+  rules:
+    {{- if .Values.gateway.tcpRoute.rules }}
+    {{- range $rule := .Values.gateway.tcpRoute.rules }}
+    - backendRefs:
+        {{- range $backendRef := $rule.backendRefs }}
+        - {{- if $backendRef.group }}
+          group: {{ $backendRef.group }}
+          {{- end }}
+          {{- if $backendRef.kind }}
+          kind: {{ $backendRef.kind }}
+          {{- end }}
+          {{- if $backendRef.namespace }}
+          namespace: {{ $backendRef.namespace }}
+          {{- end }}
+          name: {{ $backendRef.name }}
+          {{- with $backendRef.port }}
+          port: {{ . }}
+          {{- end }}
+          {{- with $backendRef.weight }}
+          weight: {{ . }}
+          {{- end }}
+        {{- end }}
+    {{- end }}
+    {{- else }}
+    # Default rule
+    - backendRefs:
+        - name: {{ include "generic.fullname" . }}
+          port: {{ (index .Values.service.ports 0).port | default 80 }}
+    {{- end }}
+{{- if .Values.gateway.tcpRoute.additionalRoutes }}
+{{- range $name, $route := .Values.gateway.tcpRoute.additionalRoutes }}
+{{- if $route.enabled | default true }}
+---
+apiVersion: gateway.networking.k8s.io/v1alpha2
+kind: TCPRoute
+metadata:
+  name: {{ printf "%s-%s-tcp" (include "generic.fullname" $) $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $route.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $route.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $route.parentRefs }}
+  parentRefs:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $route.rules }}
+  rules:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

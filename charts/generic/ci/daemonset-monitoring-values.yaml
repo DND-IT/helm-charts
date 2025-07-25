@@ -1,0 +1,193 @@
+# Example: DaemonSet for Node Monitoring
+# Runs monitoring agent on every node in the cluster
+
+nameOverride: "node-monitor"
+
+workload:
+  type: daemonset
+  enabled: true
+
+  # DaemonSet specific settings
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 0
+
+image:
+  repository: prom/node-exporter
+  tag: "v1.7.0"
+  pullPolicy: IfNotPresent
+
+# Run as privileged to access host metrics
+podSecurityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+  runAsGroup: 0
+  fsGroup: 0
+  privileged: true
+
+# Container ports
+containerPorts:
+  - name: metrics
+    containerPort: 9100
+    protocol: TCP
+    hostPort: 9100
+
+deployment:
+  args:
+    - --path.procfs=/host/proc
+    - --path.sysfs=/host/sys
+    - --path.rootfs=/host/root
+    - --collector.filesystem.ignored-mount-points
+    - ^/(dev|proc|sys|var/lib/docker/.+|var/lib/kubelet/pods/.+)($|/)
+    - --collector.netclass.ignored-devices
+    - ^(veth.*)$
+
+  resources:
+    limits:
+      memory: "200Mi"
+      cpu: "200m"
+    requests:
+      cpu: "50m"
+      memory: "50Mi"
+
+  livenessProbe:
+    httpGet:
+      path: /
+      port: metrics
+    initialDelaySeconds: 30
+    periodSeconds: 30
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: metrics
+    initialDelaySeconds: 5
+    periodSeconds: 10
+
+  volumeMounts:
+    - name: proc
+      mountPath: /host/proc
+      readOnly: true
+    - name: sys
+      mountPath: /host/sys
+      readOnly: true
+    - name: root
+      mountPath: /host/root
+      readOnly: true
+      mountPropagation: HostToContainer
+
+  # Override security context for privileged access
+  securityContext:
+    privileged: true
+    runAsNonRoot: false
+    runAsUser: 0
+    allowPrivilegeEscalation: true
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop: []
+      add:
+        - SYS_TIME
+        - SYS_ADMIN
+
+# Host network for accessing host metrics
+hostNetwork: true
+hostPID: true
+
+# Tolerate all taints to run on every node
+tolerations:
+  - operator: Exists
+
+# Node selector to target specific nodes (optional)
+nodeSelector: {}
+  # node-role.kubernetes.io/worker: "true"
+
+# Service for Prometheus scraping
+service:
+  enabled: true
+  type: ClusterIP
+  port: 9100
+  targetPort: metrics
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9100"
+
+# Volumes for accessing host filesystem
+persistence:
+  enabled: false  # Using extraVolumes instead
+
+# Extra volumes for host paths
+extraVolumes:
+  - name: proc
+    hostPath:
+      path: /proc
+      type: Directory
+  - name: sys
+    hostPath:
+      path: /sys
+      type: Directory
+  - name: root
+    hostPath:
+      path: /
+      type: Directory
+
+# Service monitor for Prometheus Operator
+serviceMonitor:
+  enabled: true
+  interval: 30s
+  scrapeTimeout: 10s
+  endpoints:
+    - port: metrics
+      path: /metrics
+      relabelings:
+        - sourceLabels: [__meta_kubernetes_pod_node_name]
+          targetLabel: node
+        - sourceLabels: [__meta_kubernetes_pod_host_ip]
+          targetLabel: instance
+
+# Prometheus rules for alerting
+prometheusRule:
+  enabled: true
+  rules:
+    - alert: NodeDown
+      expr: up{job="node-monitor"} == 0
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Node {{ $labels.node }} is down"
+        description: "Node exporter on {{ $labels.node }} has been down for more than 5 minutes."
+
+    - alert: HighCPUUsage
+      expr: |
+        100 - (avg by (instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High CPU usage on {{ $labels.instance }}"
+        description: "CPU usage is above 80% (current value: {{ $value }}%)"
+
+    - alert: HighMemoryUsage
+      expr: |
+        (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+      for: 10m
+      labels:
+        severity: warning
+      annotations:
+        summary: "High memory usage on {{ $labels.instance }}"
+        description: "Memory usage is above 85% (current value: {{ $value }}%)"
+
+    - alert: DiskSpaceLow
+      expr: |
+        (node_filesystem_avail_bytes{mountpoint="/"} / node_filesystem_size_bytes{mountpoint="/"}) * 100 < 10
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "Low disk space on {{ $labels.instance }}"
+        description: "Disk space on root filesystem is below 10% (current value: {{ $value }}%)"
+
+# Priority class for critical monitoring
+priorityClassName: system-node-critical

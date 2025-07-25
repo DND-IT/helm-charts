@@ -1,0 +1,296 @@
+suite: test prometheusrule
+templates:
+  - monitoring/prometheus/prometheusrule.yaml
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render when enabled
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.groups:
+        - name: example.rules
+          rules:
+            - alert: TestAlert
+              expr: up == 0
+              for: 5m
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: PrometheusRule
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+
+  - it: should set custom labels and annotations
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.labels:
+        prometheus: kube-prometheus
+        role: alert-rules
+      prometheusRule.annotations:
+        custom: annotation
+      prometheusRule.groups:
+        - name: example.rules
+          rules:
+            - alert: TestAlert
+              expr: up == 0
+    asserts:
+      - equal:
+          path: metadata.labels.prometheus
+          value: kube-prometheus
+      - equal:
+          path: metadata.labels.role
+          value: alert-rules
+      - equal:
+          path: metadata.annotations.custom
+          value: annotation
+
+  - it: should configure alert rules correctly
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.groups:
+        - name: app.rules
+          interval: 30s
+          limit: 100
+          rules:
+            - alert: HighErrorRate
+              expr: |
+                (
+                  sum(rate(http_requests_total{status=~"5.."}[5m]))
+                  /
+                  sum(rate(http_requests_total[5m]))
+                ) > 0.05
+              for: 10m
+              labels:
+                severity: warning
+                team: platform
+              annotations:
+                summary: High error rate detected
+                description: "Error rate is {{ $value | humanizePercentage }}"
+    asserts:
+      - equal:
+          path: spec.groups[0].name
+          value: app.rules
+      - equal:
+          path: spec.groups[0].interval
+          value: 30s
+      - equal:
+          path: spec.groups[0].limit
+          value: 100
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: HighErrorRate
+      - equal:
+          path: spec.groups[0].rules[0].for
+          value: 10m
+      - equal:
+          path: spec.groups[0].rules[0].labels.severity
+          value: warning
+      - equal:
+          path: spec.groups[0].rules[0].labels.team
+          value: platform
+      - equal:
+          path: spec.groups[0].rules[0].annotations.summary
+          value: High error rate detected
+
+  - it: should configure recording rules correctly
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.groups:
+        - name: recording.rules
+          rules:
+            - record: job:http_requests:rate5m
+              expr: |
+                sum by (job, status) (
+                  rate(http_requests_total[5m])
+                )
+              labels:
+                team: platform
+    asserts:
+      - equal:
+          path: spec.groups[0].rules[0].record
+          value: job:http_requests:rate5m
+      - equal:
+          path: spec.groups[0].rules[0].labels.team
+          value: platform
+      - isNull:
+          path: spec.groups[0].rules[0].alert
+
+  - it: should support multiple groups
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.groups:
+        - name: alerts.rules
+          rules:
+            - alert: ServiceDown
+              expr: up == 0
+              for: 5m
+        - name: recording.rules
+          rules:
+            - record: job:up:avg
+              expr: avg by (job) (up)
+    asserts:
+      - lengthEqual:
+          path: spec.groups
+          count: 2
+      - equal:
+          path: spec.groups[0].name
+          value: alerts.rules
+      - equal:
+          path: spec.groups[1].name
+          value: recording.rules
+      - equal:
+          path: spec.groups[0].rules[0].alert
+          value: ServiceDown
+      - equal:
+          path: spec.groups[1].rules[0].record
+          value: job:up:avg
+
+  - it: should support partial response strategy
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.groups:
+        - name: example.rules
+          partialResponseStrategy: warn
+          rules:
+            - alert: TestAlert
+              expr: up == 0
+    asserts:
+      - equal:
+          path: spec.groups[0].partial_response_strategy
+          value: warn
+
+  - it: should create additional rules
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.groups:
+        - name: main.rules
+          rules:
+            - alert: MainAlert
+              expr: up == 0
+      prometheusRule.additionalRules:
+        slo:
+          enabled: true
+          groups:
+            - name: slo.rules
+              rules:
+                - record: slo:availability:ratio_rate5m
+                  expr: |
+                    sum(rate(http_requests_total{status!~"5.."}[5m]))
+                    /
+                    sum(rate(http_requests_total[5m]))
+    asserts:
+      - hasDocuments:
+          count: 2
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-slo
+        documentIndex: 1
+      - equal:
+          path: spec.groups[0].name
+          value: slo.rules
+        documentIndex: 1
+
+  - it: should skip disabled additional rules
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.groups:
+        - name: main.rules
+          rules:
+            - alert: MainAlert
+              expr: up == 0
+      prometheusRule.additionalRules:
+        slo:
+          enabled: false
+          groups:
+            - name: slo.rules
+              rules:
+                - record: test
+                  expr: up
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: should handle complex SLI/SLO rules
+    capabilities:
+      apiVersions:
+        - monitoring.coreos.com/v1/PrometheusRule
+    set:
+      prometheusRule.enabled: true
+      prometheusRule.groups:
+        - name: sli.rules
+          interval: 30s
+          rules:
+            - record: http_requests:burnrate5m
+              expr: |
+                (
+                  sum(rate(http_requests_total{status=~"5.."}[5m]))
+                  /
+                  sum(rate(http_requests_total[5m]))
+                )
+            - record: http_requests:burnrate30m
+              expr: |
+                (
+                  sum(rate(http_requests_total{status=~"5.."}[30m]))
+                  /
+                  sum(rate(http_requests_total[30m]))
+                )
+            - alert: ErrorBudgetBurn
+              expr: |
+                (
+                  http_requests:burnrate5m > (14.4 * (1 - 0.99))
+                  and
+                  http_requests:burnrate30m > (14.4 * (1 - 0.99))
+                )
+              for: 2m
+              labels:
+                severity: critical
+                slo: availability
+              annotations:
+                summary: High error budget burn rate
+                description: Error budget is burning at {{ $value }} rate
+    asserts:
+      - lengthEqual:
+          path: spec.groups[0].rules
+          count: 3
+      - equal:
+          path: spec.groups[0].rules[0].record
+          value: http_requests:burnrate5m
+      - equal:
+          path: spec.groups[0].rules[2].alert
+          value: ErrorBudgetBurn
+      - equal:
+          path: spec.groups[0].rules[2].labels.slo
+          value: availability

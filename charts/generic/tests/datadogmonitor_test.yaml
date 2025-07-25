@@ -1,0 +1,175 @@
+suite: test datadog monitor
+templates:
+  - monitoring/datadog/datadogmonitor.yaml
+tests:
+  - it: should not create DatadogMonitor when disabled
+    set:
+      datadogMonitor.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create DatadogMonitor when enabled
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogMonitor
+    set:
+      datadogMonitor.enabled: true
+      datadogMonitor.monitors:
+        test-monitor:
+          enabled: true
+          query: "avg(last_5m):avg:system.cpu.user{*} > 0.9"
+          type: "metric alert"
+          name: "High CPU Usage"
+          message: "CPU usage is too high"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: DatadogMonitor
+      - isAPIVersion:
+          of: datadoghq.com/v1alpha1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-test-monitor
+      - equal:
+          path: spec.query
+          value: "avg(last_5m):avg:system.cpu.user{*} > 0.9"
+      - equal:
+          path: spec.type
+          value: "metric alert"
+
+  - it: should create multiple monitors
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogMonitor
+    set:
+      datadogMonitor.enabled: true
+      datadogMonitor.monitors:
+        monitor1:
+          enabled: true
+          query: "query1"
+          type: "query alert"
+        monitor2:
+          enabled: true
+          query: "query2"
+          type: "log alert"
+        monitor3:
+          enabled: false
+          query: "query3"
+          type: "metric alert"
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: should include all monitor fields
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogMonitor
+    set:
+      datadogMonitor.enabled: true
+      datadogMonitor.monitors:
+        complete-monitor:
+          enabled: true
+          query: "avg(last_10m):avg:system.disk.in_use{*} by {host} > 0.8"
+          type: "metric alert"
+          name: "Disk Usage Alert"
+          message: "Disk usage is above 80% on {{host.name}}"
+          tags:
+            - "team:infrastructure"
+            - "severity:warning"
+          priority: 3
+          options:
+            thresholds:
+              critical: 0.9
+              warning: 0.8
+            notifyNoData: true
+            noDataTimeframe: 20
+            renotifyInterval: 60
+          labels:
+            custom: label
+          annotations:
+            description: "Monitor for disk usage"
+    asserts:
+      - equal:
+          path: spec.name
+          value: "Disk Usage Alert"
+      - equal:
+          path: spec.message
+          value: "Disk usage is above 80% on {{host.name}}"
+      - equal:
+          path: spec.priority
+          value: 3
+      - contains:
+          path: spec.tags
+          content: "team:infrastructure"
+      - contains:
+          path: spec.tags
+          content: "severity:warning"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: 0.9
+      - equal:
+          path: spec.options.thresholds.warning
+          value: 0.8
+      - equal:
+          path: spec.options.notifyNoData
+          value: true
+      - equal:
+          path: spec.options.noDataTimeframe
+          value: 20
+      - equal:
+          path: metadata.labels.custom
+          value: label
+      - equal:
+          path: metadata.annotations.description
+          value: "Monitor for disk usage"
+
+  - it: should handle log alert monitors
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogMonitor
+    set:
+      datadogMonitor.enabled: true
+      datadogMonitor.monitors:
+        log-monitor:
+          enabled: true
+          query: 'logs("source:nginx AND status:error").index("main").rollup("count").last("5m") > 10'
+          type: "log alert"
+          name: "High Error Logs"
+          message: "Too many error logs detected"
+          options:
+            enableLogsSample: true
+            evaluationDelay: 300
+            includeTags: true
+    asserts:
+      - equal:
+          path: spec.type
+          value: "log alert"
+      - equal:
+          path: spec.options.enableLogsSample
+          value: true
+      - equal:
+          path: spec.options.evaluationDelay
+          value: 300
+
+  - it: should use fullname and namespace helpers
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogMonitor
+    set:
+      datadogMonitor.enabled: true
+      nameOverride: "my-app"
+      namespaceOverride: "monitoring"
+      datadogMonitor.monitors:
+        test:
+          enabled: true
+          query: "test"
+          type: "query alert"
+    asserts:
+      - matchRegex:
+          path: metadata.name
+          pattern: "my-app.*-test"
+      - equal:
+          path: metadata.namespace
+          value: monitoring

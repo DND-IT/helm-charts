@@ -1,0 +1,257 @@
+# Example: Security-Hardened Application
+# Maximum security settings with Pod Security Standards
+
+nameOverride: "secure-app"
+
+workload:
+  type: deployment
+  enabled: true
+  replicas: 2
+
+image:
+  repository: myorg/secure-app
+  tag: "1.0.0-distroless"  # Using distroless image
+  pullPolicy: Always
+
+# Enforce Pod Security Standards
+podSecurity:
+  podSecurityStandards:
+    enabled: true
+    enforce: restricted
+    audit: restricted
+    warn: restricted
+    namespaceEnforcement: true
+
+# Strict pod security context
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534  # nobody user
+  runAsGroup: 65534
+  fsGroup: 65534
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+  supplementalGroups: []
+  sysctls: []
+
+# Strict container security context
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65534
+  runAsGroup: 65534
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  privileged: false
+  capabilities:
+    drop:
+      - ALL
+    add: []  # No additional capabilities
+  seccompProfile:
+    type: RuntimeDefault
+  appArmorProfile:
+    type: RuntimeDefault
+
+deployment:
+  resources:
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+
+  # Security-focused probes
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+      scheme: HTTPS
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /readyz
+      port: http
+      scheme: HTTPS
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+  # Mount only necessary volumes
+  volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: cache
+      mountPath: /app/cache
+    - name: tls-certs
+      mountPath: /etc/ssl/certs
+      readOnly: true
+
+# Temporary writable volumes for read-only root filesystem
+persistence:
+  enabled: true
+  volumes:
+    tmp:
+      type: emptyDir
+      emptyDir:
+        sizeLimit: 100Mi
+    cache:
+      type: emptyDir
+      emptyDir:
+        sizeLimit: 500Mi
+    tls-certs:
+      type: secret
+      secret:
+        secretName: app-tls-certs
+        defaultMode: 0400  # Read-only for owner
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 443
+  targetPort: 8443
+  protocol: TCP
+
+# Network policy - deny all by default, allow specific
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # Only allow traffic from specific sources
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8443
+
+  # Only allow specific outbound traffic
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Database
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # External HTTPS APIs
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32  # Block IMDS
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+
+# Service account with minimal permissions
+serviceAccount:
+  enabled: true
+  automountServiceAccountToken: false  # Don't mount SA token by default
+  annotations: {}
+
+# RBAC - minimal permissions
+rbac:
+  enabled: true
+  rules:
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      resourceNames: ["app-config"]
+      verbs: ["get", "watch"]
+
+# Pod disruption budget for availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Resource quotas
+extraObjects:
+  - apiVersion: v1
+    kind: ResourceQuota
+    metadata:
+      name: secure-app-quota
+    spec:
+      hard:
+        requests.cpu: "2"
+        requests.memory: "2Gi"
+        limits.cpu: "4"
+        limits.memory: "4Gi"
+        persistentvolumeclaims: "2"
+
+# Secrets with encryption at rest
+secret:
+  enabled: true
+  annotations:
+    kubernetes.io/enforce-encryption: "true"
+  data:
+    tls.crt: "LS0tLS1CRUdJTi..."  # Base64 encoded certificate
+    tls.key: "LS0tLS1CRUdJTi..."  # Base64 encoded key
+
+# Config with non-sensitive data only
+configMap:
+  enabled: true
+  data:
+    app.properties: |
+      server.port=8443
+      server.ssl.enabled=true
+      server.ssl.key-store=/etc/ssl/certs/keystore.p12
+      logging.level.root=WARN
+      management.endpoints.enabled-by-default=false
+      management.endpoint.health.enabled=true
+
+# Monitoring with authentication
+serviceMonitor:
+  enabled: true
+  endpoints:
+    - port: metrics
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: false
+        serverName: secure-app.example.com
+      bearerTokenSecret:
+        name: prometheus-token
+        key: token
+
+# Priority class for critical workloads
+priorityClassName: high-priority
+
+# Node affinity for dedicated secure nodes
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role.kubernetes.io/secure
+              operator: In
+              values:
+                - "true"
+
+# Tolerations for dedicated nodes
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: secure
+    effect: NoSchedule

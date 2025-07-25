@@ -1,0 +1,33 @@
+{{- include "generic.validateValues" . -}}
+{{- include "generic.validateWorkload" . -}}
+{{- if and .Values.workload.enabled (eq (.Values.workload.type | default "deployment") "deployment") }}
+apiVersion: apps/v1
+kind: Deployment
+{{- include "generic.workloadMetadata" . }}
+spec:
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.workload.replicas | default 1 }}
+  {{- end }}
+  {{- with .Values.workload.revisionHistoryLimit }}
+  revisionHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.workload.progressDeadlineSeconds }}
+  progressDeadlineSeconds: {{ . }}
+  {{- end }}
+  {{- with .Values.workload.minReadySeconds }}
+  minReadySeconds: {{ . }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "generic.selectorLabels" . | nindent 6 }}
+  strategy:
+    {{- if .Values.workload.strategy }}
+    {{- toYaml .Values.workload.strategy | nindent 4 }}
+    {{- else }}
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: {{ .Values.workload.maxSurge | default "25%" }}
+      maxUnavailable: {{ .Values.workload.maxUnavailable | default "25%" }}
+    {{- end }}
+  {{- include "generic.podTemplateSpec" . | nindent 2 }}
+{{- end }}

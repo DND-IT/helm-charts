@@ -1,0 +1,1536 @@
+# Default values for generic chart
+# This is a YAML-formatted file with secure defaults
+#
+# 🔧 TEMPLATED VALUES SUPPORT:
+# Many values in this file support Helm template expressions using the generic.tplValue helper.
+# You can use template expressions like "{{ .Values.generic.branchName }}" in any field marked with "# 📝 SUPPORTS TEMPLATING"
+#
+# Examples:
+#   namespaceOverride: "{{ .Values.generic.branchName }}"
+#   serviceAccount.name: "{{ .Values.generic.branchName }}-sa"
+#   ingress.hosts[0].host: "{{ .Values.generic.branchName }}.example.com"
+#
+# Common template expressions:
+#   - {{ .Values.generic.branchName }}     # Branch name for CI/CD
+#   - {{ .Values.generic.environment }}    # Environment (dev, staging, prod)
+#   - {{ .Release.Name }}                  # Helm release name
+#   - {{ .Release.Namespace }}             # Helm release namespace
+#   - {{ now | date "2006-01-02" }}        # Current date
+
+# Global settings
+global:
+  labels: {}
+  annotations: {}
+
+# Application settings
+generic:
+  # Defaults to chart name if not specified
+  name: ""
+  # Defaults to chart appVersion if not specified
+  version: ""
+  # Common values for templating - use these in other template expressions
+  feature: true
+  branchName: ""     # e.g., "feature-123", "main", "develop"
+  environment: ""    # e.g., "dev", "staging", "production"
+
+# Workload configuration
+workload:
+  # Workload type: deployment, statefulset, daemonset, job, cronjob
+  type: deployment
+  enabled: true
+
+  # Common workload settings
+  replicas: 1
+  revisionHistoryLimit: 2
+
+  # Deployment specific
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 25%
+      maxSurge: 25%
+  progressDeadlineSeconds: 600
+
+  # StatefulSet specific
+  serviceName: ""  # Defaults to fullname
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates: {}
+
+  # DaemonSet specific
+  # updateStrategy:
+  #   type: RollingUpdate
+  #   rollingUpdate:
+  #     maxUnavailable: 1
+
+  # Job/CronJob specific
+  backoffLimit: 6
+  completions: 1
+  parallelism: 1
+  ttlSecondsAfterFinished: 300
+  restartPolicy: OnFailure
+
+  # CronJob specific
+  schedule: "0 * * * *"
+  concurrencyPolicy: Allow
+  successfulJobsHistoryLimit: 3
+  failedJobsHistoryLimit: 1
+  startingDeadlineSeconds: 200
+
+# Metadata
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+workloadLabels: {}
+workloadAnnotations: {}
+podLabels: {}
+podAnnotations: {}
+
+# Image configuration
+image:
+  repository: nginx
+  tag: "1.21-alpine"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+# - name: myregistrykey
+
+# Container configuration (backward compatibility)
+deployment:
+  command: []
+  args: []
+  env: []
+  envFrom: []
+  resources:
+    limits:
+      memory: "256Mi"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+  securityContext: {}
+  livenessProbe: {}
+  readinessProbe: {}
+  startupProbe: {}
+  lifecycle: {}
+  volumeMounts: []
+
+# Security contexts with secure defaults
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+# Default container security context (applied to all containers)
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+    - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# Security settings
+security:
+  podSecurityStandards:
+    enforce: ""
+    audit: ""
+    warn: ""
+  apparmor:
+    enabled: false
+    profile: runtime/default
+  seccomp:
+    annotations: false  # For older k8s versions
+
+# Pod Security Standards and Policy Enforcement
+podSecurity:
+  # Pod Security Standards (PSS) - Kubernetes native
+  podSecurityStandards:
+    enabled: false
+    # Pod Security Standard levels: privileged, baseline, restricted
+    enforce: ""  # restricted, baseline, privileged
+    audit: ""    # restricted, baseline, privileged
+    warn: ""     # restricted, baseline, privileged
+    labels: {}
+    annotations: {}
+    # Namespace-level enforcement (creates namespace if not exists)
+    namespaceEnforcement: false
+
+
+# Multi-container configuration
+containers: []
+# - name: main
+#   image: nginx:alpine
+#   ports:
+#   - name: http
+#     containerPort: 80
+#   env:
+#   - name: MY_VAR
+#     value: my-value
+#   resources:
+#     limits:
+#       memory: "256Mi"
+#     requests:
+#       cpu: "100m"
+#       memory: "128Mi"
+
+initContainers: []
+sidecars: []
+
+# Native Kubernetes sidecar containers (requires Kubernetes 1.29+)
+# Implemented as init containers with restartPolicy: Always
+sidecarContainers: []
+# - name: metrics-exporter
+#   image: prom/node-exporter:latest
+#   ports:
+#   - name: metrics
+#     containerPort: 9100
+#   args:
+#   - --path.rootfs=/host
+#   - --collector.filesystem.ignored-mount-points
+#   - ^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)
+#   volumeMounts:
+#   - name: proc
+#     mountPath: /host/proc
+#     readOnly: true
+#   - name: sys
+#     mountPath: /host/sys
+#     readOnly: true
+#   resources:
+#     limits:
+#       memory: "128Mi"
+#     requests:
+#       cpu: "50m"
+#       memory: "64Mi"
+#   # Native sidecar containers have these characteristics:
+#   # - Start before main containers
+#   # - Restart automatically (restartPolicy: Always)
+#   # - Continue running alongside main containers
+#   # - Share the same lifecycle as the pod
+
+# Container ports
+containerPorts: []
+# - name: http
+#   containerPort: 80
+#   protocol: TCP
+
+# Pod settings
+hostNetwork: false
+hostPID: false
+hostIPC: false
+hostname: ""
+dnsPolicy: ""
+dnsConfig: {}
+priorityClassName: ""
+priority: null
+runtimeClassName: ""
+schedulerName: ""
+terminationGracePeriodSeconds: 30
+activeDeadlineSeconds: null
+restartPolicy: null
+
+# Common environment variables
+commonEnvVars: false  # Set to true to inject POD_NAME, POD_NAMESPACE, etc.
+env: []
+envFrom: []
+
+# Scheduling
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []
+# - maxSkew: 1
+#   topologyKey: kubernetes.io/hostname
+#   whenUnsatisfiable: ScheduleAnyway
+
+# Service configuration
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 80
+    targetPort: 80
+    protocol: TCP
+  annotations: {}
+  labels: {}
+  clusterIP: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  externalTrafficPolicy: null
+  sessionAffinity: null
+  sessionAffinityConfig: {}
+  publishNotReadyAddresses: false
+
+# Additional services
+additionalServices: {}
+# metrics:
+#   enabled: true
+#   type: ClusterIP
+#   ports:
+#   - name: metrics
+#     port: 9090
+#     targetPort: 9090
+#   annotations:
+#     prometheus.io/scrape: "true"
+#     prometheus.io/port: "9090"
+# headless:
+#   enabled: true
+#   type: ClusterIP
+#   clusterIP: None
+#   ports:
+#   - name: grpc
+#     port: 50051
+#     targetPort: 50051
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: ""       # 📝 SUPPORTS TEMPLATING - Ingress class name can use templates
+  controller: ""      # alb (default), nginx
+  annotations: {}     # 📝 SUPPORTS TEMPLATING - Ingress annotations, values can use templates
+  labels: {}
+
+  # cert-manager configuration
+  certManager:
+    enabled: false
+    clusterIssuer: ""  # 📝 SUPPORTS TEMPLATING - Cert-manager cluster issuer name can use templates
+    issuer: ""         # 📝 SUPPORTS TEMPLATING - Cert-manager issuer name can use templates
+    annotations: {}    # 📝 SUPPORTS TEMPLATING - Cert-manager annotations, values can use templates
+    # acme.cert-manager.io/http01-edit-in-place: "true"
+
+  # AWS ALB Ingress Controller annotations (default)
+  alb:
+    annotations: {}    # 📝 SUPPORTS TEMPLATING - ALB annotations, values can use templates
+    # alb.ingress.kubernetes.io/scheme: internet-facing
+    # alb.ingress.kubernetes.io/target-type: ip
+    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:region:account-id:certificate/certificate-id
+    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    # alb.ingress.kubernetes.io/ssl-redirect: "443"
+    # alb.ingress.kubernetes.io/backend-protocol: HTTP
+    # alb.ingress.kubernetes.io/healthcheck-path: /health
+    # alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    # alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    # alb.ingress.kubernetes.io/success-codes: "200"
+    # alb.ingress.kubernetes.io/tags: Environment=prod,Team=platform
+    # alb.ingress.kubernetes.io/group.name: my-alb-group
+    # alb.ingress.kubernetes.io/group.order: "10"
+
+  # NGINX Ingress Controller annotations
+  nginx:
+    annotations: {}    # 📝 SUPPORTS TEMPLATING - NGINX annotations, values can use templates
+    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+    # nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    # nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    # nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    # nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
+    # nginx.ingress.kubernetes.io/rewrite-target: /$2
+    # nginx.ingress.kubernetes.io/affinity: "cookie"
+    # nginx.ingress.kubernetes.io/session-cookie-name: "route"
+    # nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+
+  # Default backend
+  defaultBackend: {}
+  # service:
+  #   name: default-backend
+  #   port:
+  #     number: 80
+
+  hosts: []             # 📝 SUPPORTS TEMPLATING - Host values can use templates
+  # - host: "{{ .Values.generic.branchName }}.example.com"  # Template example
+  #   paths:
+  #   - path: /
+  #     pathType: ImplementationSpecific
+  #     backend:
+  #       service:
+  #         name: ""  # defaults to release fullname
+  #         port:
+  #           number: 80
+  #           # or
+  #           # name: http
+
+  tls: []
+  # - hosts:
+  #   - chart-example.local
+  #   secretName: chart-example-tls  # omit for cert-manager auto-generation
+
+# Additional ingresses
+additionalIngresses: {}
+# admin:
+#   enabled: true
+#   className: nginx
+#   annotations: {}
+#   hosts:
+#   - host: admin.example.com
+#     paths:
+#     - path: /
+#       pathType: Prefix
+#       backend:
+#         service:
+#           name: admin-service
+#           port:
+#             number: 8080
+
+# ServiceAccount configuration
+serviceAccount:
+  enabled: true
+  name: ""           # 📝 SUPPORTS TEMPLATING - Service account name, e.g., "{{ .Values.generic.branchName }}-sa"
+  annotations: {}    # 📝 SUPPORTS TEMPLATING - ServiceAccount annotations, values can use templates
+  labels: {}         # 📝 SUPPORTS TEMPLATING - ServiceAccount labels, values can use templates
+  automountServiceAccountToken: true
+
+# RBAC configuration
+rbac:
+  enabled: false
+  # Use Role or ClusterRole
+  type: Role
+  rules: []
+  # - apiGroups: [""]
+  #   resources: ["pods"]
+  #   verbs: ["get", "list", "watch"]
+  aggregationRule: {}
+  # clusterRoleSelectors:
+  # - matchLabels:
+  #     rbac.example.com/aggregate-to-monitoring: "true"
+  labels: {}
+  annotations: {}
+  # Custom roleRef name (defaults to release fullname)
+  roleRef: ""
+  # Custom subjects (defaults to service account)
+  subjects: []
+  # - kind: ServiceAccount
+  #   name: custom-sa
+  #   namespace: default
+  # - kind: User
+  #   name: jane
+  #   apiGroup: rbac.authorization.k8s.io
+
+  # Additional roles and bindings
+  additionalRoles: {}
+  # reader:
+  #   enabled: true
+  #   type: Role  # or ClusterRole
+  #   createBinding: true
+  #   rules:
+  #   - apiGroups: [""]
+  #     resources: ["pods", "services"]
+  #     verbs: ["get", "list", "watch"]
+  # aggregated:
+  #   enabled: true
+  #   type: ClusterRole
+  #   createBinding: false  # Just create the role for aggregation
+  #   labels:
+  #     rbac.example.com/aggregate-to-monitoring: "true"
+  #   rules:
+  #   - apiGroups: [""]
+  #     resources: ["pods/metrics"]
+  #     verbs: ["get", "list"]
+
+# ConfigMap configuration
+configMap:
+  enabled: false
+  data: {}           # 📝 SUPPORTS TEMPLATING - ConfigMap data values can use templates
+  binaryData: {}
+  annotations: {}
+  labels: {}
+  envFrom: false
+  mountPath: ""
+  subPath: ""
+
+# Secret configuration
+secret:
+  enabled: false
+  type: Opaque
+  data: {}           # 📝 SUPPORTS TEMPLATING - Secret data values can use templates
+  stringData: {}     # 📝 SUPPORTS TEMPLATING - Secret stringData values can use templates
+  annotations: {}
+  labels: {}
+  envFrom: false
+  mountPath: ""
+  subPath: ""
+
+# Extra ConfigMaps
+extraConfigMaps: {}
+# my-config:
+#   data:
+#     config.yaml: |
+#       key: value
+#   mountPath: /config
+#   envFrom: true
+
+# Extra Secrets
+extraSecrets: {}
+# my-secret:
+#   stringData:
+#     api-key: "secret-value"
+#   mountPath: /secrets
+#   envFrom: true
+
+# Persistence configuration
+persistence:
+  enabled: false
+  # For simple single PVC (backward compatibility)
+  accessMode: ReadWriteOnce
+  size: 8Gi
+  storageClass: ""
+  volumeMode: Filesystem
+  mountPath: /data
+  subPath: ""
+  annotations: {}
+  labels: {}
+  selector: {}
+  dataSource: {}
+  # For StatefulSet
+  volumeClaimTemplate: false
+
+  # Multiple PVCs
+  volumes: {}
+  # data:
+  #   enabled: true
+  #   accessMode: ReadWriteOnce
+  #   size: 10Gi
+  #   storageClass: fast-ssd
+  #   mountPath: /data
+  # cache:
+  #   enabled: true
+  #   accessMode: ReadWriteOnce
+  #   size: 5Gi
+  #   mountPath: /cache
+
+# EmptyDir volumes
+emptyDirVolumes: {}
+# temp:
+#   medium: Memory
+#   sizeLimit: 1Gi
+#   mountPath: /tmp
+
+# HostPath volumes (use with caution)
+hostPathVolumes: {}
+# logs:
+#   path: /var/log
+#   type: Directory
+#   mountPath: /host/logs
+#   readOnly: true
+
+# Additional volumes
+extraVolumes: []
+# - name: config-volume
+#   configMap:
+#     name: my-config
+
+# Additional volume mounts
+extraVolumeMounts: []
+# - name: config-volume
+#   mountPath: /config
+
+# Host aliases
+hostAliases: []
+# - ip: "127.0.0.1"
+#   hostnames:
+#   - "foo.local"
+#   - "bar.local"
+
+# Horizontal Pod Autoscaler
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 80
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+  behavior: {}
+
+# Vertical Pod Autoscaler
+vpa:
+  enabled: false
+  updateMode: Auto  # Off, Initial, Recreate, Auto
+  labels: {}
+  annotations: {}
+  # Update policy
+  updatePolicy: {}
+  # updateMode: Auto
+  # minReplicas: 1
+
+  # Container policies
+  containerPolicies: []
+  # - containerName: "*"  # or specific container name
+  #   mode: Auto  # Off, Auto
+  #   minAllowed:
+  #     cpu: 100m
+  #     memory: 128Mi
+  #   maxAllowed:
+  #     cpu: 2
+  #     memory: 4Gi
+  #   controlledResources: ["cpu", "memory"]
+  #   controlledValues: RequestsAndLimits  # RequestsOnly, RequestsAndLimits
+
+  # Full resource policy (alternative to containerPolicies)
+  resourcePolicy: {}
+
+  # Custom recommenders
+  recommenders: []
+  # - name: custom-recommender
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1
+  unhealthyPodEvictionPolicy: ""
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  policyTypes:
+  - Ingress
+  - Egress
+  ingress: []
+  # - from:
+  #   - podSelector:
+  #       matchLabels:
+  #         role: frontend
+  #   ports:
+  #   - protocol: TCP
+  #     port: 80
+  egress: []
+  # - to:
+  #   - podSelector:
+  #       matchLabels:
+  #         role: database
+  #   ports:
+  #   - protocol: TCP
+  #     port: 5432
+
+# Monitoring
+serviceMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  path: /metrics
+  port: http
+  scheme: http
+  tlsConfig: {}
+  relabelings: []
+  metricRelabelings: []
+  labels: {}
+  annotations: {}
+
+podMonitor:
+  enabled: false
+  interval: 30s
+  scrapeTimeout: 10s
+  path: /metrics
+  port: http
+  scheme: http
+  tlsConfig: {}
+  relabelings: []
+  metricRelabelings: []
+  labels: {}
+  annotations: {}
+  # Advanced PodMonitor settings
+  jobLabel: ""
+  targetLabels: []
+  podTargetLabels: []
+  sampleLimit: 0
+  targetLimit: 0
+  labelLimit: 0
+  labelNameLengthLimit: 0
+  labelValueLengthLimit: 0
+  namespaceSelector: {}
+  selector: {}
+  # Multiple endpoints support
+  endpoints: []
+  # - port: metrics
+  #   path: /metrics
+  #   interval: 30s
+  #   scrapeTimeout: 10s
+  #   honorLabels: false
+  #   honorTimestamps: true
+  #   followRedirects: false
+  #   scheme: https
+  #   tlsConfig:
+  #     insecureSkipVerify: false
+  #   bearerTokenSecret:
+  #     name: metrics-token
+  #     key: token
+  #   basicAuth:
+  #     username:
+  #       name: metrics-auth
+  #       key: username
+  #     password:
+  #       name: metrics-auth
+  #       key: password
+  #   authorization:
+  #     type: Bearer
+  #     credentials:
+  #       name: metrics-auth
+  #       key: token
+  # Additional PodMonitors
+  additionalMonitors: {}
+  # sidecar:
+  #   enabled: true
+  #   selector:
+  #     matchLabels:
+  #       app.kubernetes.io/component: sidecar
+  #   endpoints:
+  #   - port: sidecar-metrics
+  #     path: /metrics
+
+prometheusRule:
+  enabled: false
+  labels: {}
+  annotations: {}
+  groups: []
+  # - name: example.rules
+  #   interval: 30s
+  #   limit: 0
+  #   partialResponseStrategy: ""
+  #   rules:
+  #   # Alert rule
+  #   - alert: HighErrorRate
+  #     expr: |
+  #       (
+  #         sum(rate(http_requests_total{job="{{ include "generic.fullname" . }}",status=~"5.."}[5m]))
+  #         /
+  #         sum(rate(http_requests_total{job="{{ include "generic.fullname" . }}"}[5m]))
+  #       ) > 0.05
+  #     for: 10m
+  #     labels:
+  #       severity: warning
+  #       team: platform
+  #     annotations:
+  #       summary: High error rate on {{ $labels.job }}
+  #       description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
+  #       runbook_url: https://wiki.example.com/runbooks/high-error-rate
+  #   # Recording rule
+  #   - record: job:http_requests:rate5m
+  #     expr: |
+  #       sum by (job, status) (
+  #         rate(http_requests_total[5m])
+  #       )
+  #     labels:
+  #       team: platform
+  #   # Multi-burn-rate error budget alert
+  #   - alert: ErrorBudgetBurn
+  #     expr: |
+  #       (
+  #         http_requests:burnrate5m{job="{{ include "generic.fullname" . }}"} > (14.4 * (1 - 0.99))
+  #         and
+  #         http_requests:burnrate1h{job="{{ include "generic.fullname" . }}"} > (14.4 * (1 - 0.99))
+  #       )
+  #       or
+  #       (
+  #         http_requests:burnrate30m{job="{{ include "generic.fullname" . }}"} > (6 * (1 - 0.99))
+  #         and
+  #         http_requests:burnrate6h{job="{{ include "generic.fullname" . }}"} > (6 * (1 - 0.99))
+  #       )
+  #     for: 2m
+  #     labels:
+  #       severity: critical
+  #       team: platform
+  #     annotations:
+  #       summary: High error budget burn rate
+  #       description: "Error budget is burning too fast"
+  # Additional PrometheusRules
+  additionalRules: {}
+  # slo:
+  #   enabled: true
+  #   groups:
+  #   - name: slo.rules
+  #     interval: 30s
+  #     rules:
+  #     - record: slo:service_availability:ratio_rate5m
+  #       expr: |
+  #         sum(rate(http_requests_total{job="{{ include "generic.fullname" . }}",status!~"5.."}[5m]))
+  #         /
+  #         sum(rate(http_requests_total{job="{{ include "generic.fullname" . }}"}[5m]))
+
+# Gateway API configuration
+gateway:
+  # GatewayClass configuration
+  gatewayClass:
+    enabled: false
+    name: ""                                            # 📝 SUPPORTS TEMPLATING - Gateway class name can use templates
+    controllerName: "example.com/gateway-controller"
+    description: "Gateway class for generic application"
+    labels: {}                                          # 📝 SUPPORTS TEMPLATING - Gateway class labels, values can use templates
+    annotations: {}                                     # 📝 SUPPORTS TEMPLATING - Gateway class annotations, values can use templates
+    parametersRef: {}
+    # group: ""
+    # kind: ConfigMap
+    # name: gateway-config
+    # namespace: gateway-system
+
+    # Additional GatewayClasses
+    additionalClasses: {}
+    # internal:
+    #   enabled: true
+    #   controllerName: "internal.example.com/gateway-controller"
+    #   description: "Internal gateway class"
+
+  # Gateway configuration
+  gateway:
+    enabled: false
+    name: ""              # 📝 SUPPORTS TEMPLATING - Gateway name can use templates
+    gatewayClassName: ""  # 📝 SUPPORTS TEMPLATING - Gateway class name reference can use templates
+    labels: {}            # 📝 SUPPORTS TEMPLATING - Gateway labels, values can use templates
+    annotations: {}
+
+    # Gateway addresses
+    addresses: []
+    # - type: IPAddress
+    #   value: "192.168.1.100"
+    # - type: Hostname
+    #   value: "gateway.example.com"
+
+    # Gateway listeners
+    listeners: []
+    # - name: http
+    #   port: 80
+    #   protocol: HTTP
+    #   hostname: "*.example.com"
+    # - name: https
+    #   port: 443
+    #   protocol: HTTPS
+    #   hostname: "*.example.com"
+    #   tls:
+    #     mode: Terminate
+    #     certificateRefs:
+    #     - name: example-com-tls
+    #       kind: Secret
+    #   allowedRoutes:
+    #     namespaces:
+    #       from: Same
+    #     kinds:
+    #     - group: gateway.networking.k8s.io
+    #       kind: HTTPRoute
+
+    # TLS configuration (for default listeners)
+    tls:
+      enabled: false
+      mode: Terminate  # Terminate, Passthrough
+      certificateRefs: []
+      # - name: tls-secret
+      #   kind: Secret
+      #   namespace: default
+
+    # Additional Gateways
+    additionalGateways: {}
+    # internal:
+    #   enabled: true
+    #   gatewayClassName: internal-gateway-class
+    #   listeners:
+    #   - name: internal-http
+    #     port: 8080
+    #     protocol: HTTP
+
+  # HTTPRoute configuration
+  httpRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    gatewayName: ""  # Defaults to release-name-gateway
+    gatewayNamespace: ""  # Defaults to current namespace
+
+    # Parent Gateway references
+    parentRefs: []
+    # - name: example-gateway
+    #   namespace: gateway-system
+    #   sectionName: https
+    #   port: 443
+
+    # Hostnames for routing
+    hostnames: []
+    # - "example.com"
+    # - "*.example.com"
+
+    # HTTP routing rules
+    rules: []
+    # - matches:
+    #   - path:
+    #       type: PathPrefix
+    #       value: /api
+    #     headers:
+    #     - type: Exact
+    #       name: x-version
+    #       value: v1
+    #     queryParams:
+    #     - type: Exact
+    #       name: env
+    #       value: prod
+    #     method: GET
+    #   filters:
+    #   - type: RequestHeaderModifier
+    #     requestHeaderModifier:
+    #       set:
+    #       - name: x-forwarded-proto
+    #         value: https
+    #       add:
+    #       - name: x-custom-header
+    #         value: custom-value
+    #       remove:
+    #       - x-debug
+    #   - type: ResponseHeaderModifier
+    #     responseHeaderModifier:
+    #       set:
+    #       - name: cache-control
+    #         value: no-cache
+    #   - type: RequestRedirect
+    #     requestRedirect:
+    #       scheme: https
+    #       hostname: secure.example.com
+    #       path:
+    #         type: ReplaceFullPath
+    #         replaceFullPath: /secure/api
+    #       port: 443
+    #       statusCode: 301
+    #   - type: URLRewrite
+    #     urlRewrite:
+    #       hostname: backend.example.com
+    #       path:
+    #         type: ReplacePrefixMatch
+    #         replacePrefixMatch: /v1/api
+    #   - type: RequestMirror
+    #     requestMirror:
+    #       backendRef:
+    #         name: mirror-service
+    #         port: 80
+    #   backendRefs:
+    #   - name: api-service
+    #     port: 8080
+    #     weight: 90
+    #   - name: api-service-v2
+    #     port: 8080
+    #     weight: 10
+    # - matches:
+    #   - path:
+    #       type: PathPrefix
+    #       value: /
+    #   backendRefs:
+    #   - name: web-service
+    #     port: 80
+
+    # Additional HTTPRoutes
+    additionalRoutes: {}
+    # api:
+    #   enabled: true
+    #   parentRefs:
+    #   - name: api-gateway
+    #   hostnames:
+    #   - api.example.com
+    #   rules:
+    #   - matches:
+    #     - path:
+    #         type: PathPrefix
+    #         value: /v1
+    #     backendRefs:
+    #     - name: api-v1-service
+    #       port: 8080
+
+  # TCPRoute configuration
+  tcpRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    gatewayName: ""  # Defaults to release-name-gateway
+    gatewayNamespace: ""  # Defaults to current namespace
+
+    # Parent Gateway references
+    parentRefs: []
+    # - name: tcp-gateway
+    #   namespace: gateway-system
+    #   sectionName: tcp
+    #   port: 9000
+
+    # TCP routing rules
+    rules: []
+    # - backendRefs:
+    #   - name: tcp-service
+    #     port: 9000
+    #     weight: 100
+    # - backendRefs:
+    #   - name: database-service
+    #     port: 5432
+    #     weight: 90
+    #   - name: database-replica
+    #     port: 5432
+    #     weight: 10
+
+    # Additional TCPRoutes
+    additionalRoutes: {}
+    # database:
+    #   enabled: true
+    #   parentRefs:
+    #   - name: database-gateway
+    #   rules:
+    #   - backendRefs:
+    #     - name: postgres-primary
+    #       port: 5432
+    #       weight: 70
+    #     - name: postgres-replica
+    #       port: 5432
+    #       weight: 30
+
+  # ReferenceGrant for cross-namespace access
+  referenceGrant:
+    enabled: false
+    labels: {}
+    annotations: {}
+
+    # Allow access from these resources
+    from: []
+    # - group: gateway.networking.k8s.io
+    #   kind: Gateway
+    #   namespace: gateway-system
+    # - group: gateway.networking.k8s.io
+    #   kind: HTTPRoute
+    #   namespace: app-routes
+
+    # Allow access to these resources
+    to: []
+    # - group: ""
+    #   kind: Service
+    #   name: backend-service
+    # - group: ""
+    #   kind: Secret
+    #   name: tls-cert
+
+    # Additional ReferenceGrants
+    additionalGrants: {}
+    # secrets:
+    #   enabled: true
+    #   from:
+    #   - group: gateway.networking.k8s.io
+    #     kind: Gateway
+    #     namespace: gateway-system
+    #   to:
+    #   - group: ""
+    #     kind: Secret
+
+# Helm hooks for lifecycle management
+hooks:
+  enabled: false
+
+  # Pre-install hooks (run before any resources are created)
+  preInstall: []
+  # - name: db-migration
+  #   image: migrate/migrate:latest
+  #   command:
+  #   - migrate
+  #   args:
+  #   - -path=/migrations
+  #   - -database=postgres://user:pass@db:5432/mydb?sslmode=disable
+  #   - up
+  #   weight: 1
+  #   deletePolicy: before-hook-creation
+  #   ttlSecondsAfterFinished: 300
+  #   restartPolicy: Never
+  #   env:
+  #   - name: DB_HOST
+  #     value: postgres-service
+  #   resources:
+  #     limits:
+  #       memory: "256Mi"
+  #     requests:
+  #       cpu: "100m"
+  #       memory: "128Mi"
+
+  # Post-install hooks (run after all resources are created and ready)
+  postInstall: []
+  # - name: data-seed
+  #   image: curlimages/curl:latest
+  #   command:
+  #   - sh
+  #   - -c
+  #   - |
+  #     curl -X POST http://release-name/api/seed \
+  #       -H "Content-Type: application/json" \
+  #       -d '{"action": "seed_initial_data"}'
+  #   weight: 1
+  #   deletePolicy: hook-succeeded
+  #   ttlSecondsAfterFinished: 600
+  #   restartPolicy: Never
+
+  # Pre-upgrade hooks (run before upgrade starts)
+  preUpgrade: []
+  # - name: backup-db
+  #   image: postgres:13-alpine
+  #   command:
+  #   - pg_dump
+  #   args:
+  #   - -h
+  #   - postgres-service
+  #   - -U
+  #   - postgres
+  #   - mydb
+  #   - -f
+  #   - /backup/pre-upgrade-$(date +%Y%m%d-%H%M%S).sql
+  #   weight: 1
+  #   deletePolicy: before-hook-creation
+  #   ttlSecondsAfterFinished: 3600
+  #   restartPolicy: Never
+  #   volumeMounts:
+  #   - name: backup-storage
+  #     mountPath: /backup
+
+  # Post-upgrade hooks (run after upgrade completes)
+  postUpgrade: []
+  # - name: verify-migration
+  #   image: migrate/migrate:latest
+  #   command:
+  #   - migrate
+  #   args:
+  #   - -path=/migrations
+  #   - -database=postgres://user:pass@db:5432/mydb?sslmode=disable
+  #   - version
+  #   weight: 1
+  #   deletePolicy: hook-succeeded
+  #   ttlSecondsAfterFinished: 300
+  #   restartPolicy: Never
+
+  # Pre-delete hooks (run before any resources are deleted)
+  preDelete: []
+  # - name: data-export
+  #   image: postgres:13-alpine
+  #   command:
+  #   - pg_dump
+  #   args:
+  #   - -h
+  #   - postgres-service
+  #   - -U
+  #   - postgres
+  #   - mydb
+  #   - -f
+  #   - /backup/final-backup-$(date +%Y%m%d-%H%M%S).sql
+  #   weight: 1
+  #   deletePolicy: hook-succeeded
+  #   ttlSecondsAfterFinished: 3600
+  #   restartPolicy: Never
+
+  # Post-delete hooks (run after all resources are deleted)
+  postDelete: []
+  # - name: cleanup-external
+  #   image: curlimages/curl:latest
+  #   command:
+  #   - sh
+  #   - -c
+  #   - |
+  #     curl -X DELETE http://external-service/api/cleanup \
+  #       -H "Authorization: Bearer $API_TOKEN"
+  #   weight: 1
+  #   deletePolicy: hook-succeeded
+  #   ttlSecondsAfterFinished: 300
+  #   restartPolicy: Never
+
+# Extra Kubernetes objects
+extraObjects: []       # 📝 SUPPORTS TEMPLATING - Extra objects are processed with templates
+# - apiVersion: v1
+#   kind: ConfigMap
+#   metadata:
+#     name: "{{ .Values.generic.branchName }}-extra-cm"  # Template example
+#   data:
+#     branch: "{{ .Values.generic.branchName }}"         # Template example
+#     key: value
+
+# External Secrets Operator integration
+# Allows pulling secrets from external secret management systems
+# Note: The chart automatically detects and uses the latest available API version:
+# - v1 (preferred if available)
+# - v1beta1 (fallback for older installations)
+externalSecrets: {}
+  # database-credentials:
+  #   enabled: true
+  #   labels: {}
+  #   annotations: {}
+  #
+  #   # How often to fetch the secret from the external store
+  #   refreshInterval: 15s
+  #
+  #   # Reference to the SecretStore or ClusterSecretStore
+  #   secretStoreRef:
+  #     name: vault-backend
+  #     kind: SecretStore  # or ClusterSecretStore
+  #
+  #   # Target K8s secret configuration
+  #   target:
+  #     name: db-credentials  # defaults to release-name-<external-secret-name>
+  #     creationPolicy: Owner  # Owner, Orphan, Merge, None
+  #     deletionPolicy: Retain  # Retain, Delete
+  #
+  #     # Optional: Template for the resulting secret
+  #     template:
+  #       type: Opaque  # or kubernetes.io/dockerconfigjson, kubernetes.io/tls, etc.
+  #       engineVersion: v2
+  #       metadata:
+  #         labels:
+  #           app: "{{ .Release.Name }}"
+  #         annotations:
+  #           created-by: external-secrets
+  #       data:
+  #         # Compose data from multiple sources
+  #         connection-string: "postgresql://{{ .username }}:{{ .password }}@{{ .host }}:{{ .port }}/{{ .database }}"
+  #
+  #   # Define what data to fetch
+  #   data:
+  #     - secretKey: username
+  #       remoteRef:
+  #         key: database/creds
+  #         property: username
+  #     - secretKey: password
+  #       remoteRef:
+  #         key: database/creds
+  #         property: password
+  #         version: latest  # optional version
+  #     - secretKey: host
+  #       remoteRef:
+  #         key: database/config
+  #         property: host
+  #     - secretKey: port
+  #       remoteRef:
+  #         key: database/config
+  #         property: port
+  #         decodingStrategy: Base64  # None, Base64, Base64URL, Auto
+  #     - secretKey: database
+  #       remoteRef:
+  #         key: database/config
+  #         property: dbname
+  #
+  #   # Fetch all key-value pairs from a path
+  #   dataFrom:
+  #     - extract:
+  #         key: database/creds  # fetch all key-value pairs
+  #         property: credentials  # optional: extract specific property
+  #         version: latest
+  #         conversionStrategy: Default  # Default, Unicode
+  #     - find:
+  #         path: database/  # find by path pattern
+  #         name:
+  #           regexp: "^creds-.*"  # find by name pattern
+  #         tags:
+  #           environment: production
+  #           type: database
+  #
+  # aws-secrets:
+  #   enabled: true
+  #   refreshInterval: 1h
+  #   secretStoreRef:
+  #     name: aws-secretsmanager
+  #     kind: ClusterSecretStore
+  #
+  #   target:
+  #     name: aws-app-secrets
+  #     creationPolicy: Owner
+  #
+  #   # Pull from AWS Secrets Manager
+  #   data:
+  #     - secretKey: api-key
+  #       remoteRef:
+  #         key: prod/api/external-service
+  #         property: api_key
+  #     - secretKey: client-secret
+  #       remoteRef:
+  #         key: prod/api/external-service
+  #         property: client_secret
+  #
+  #   # Pull entire secret as JSON
+  #   dataFrom:
+  #     - extract:
+  #         key: prod/api/config
+  #
+  # vault-pki:
+  #   enabled: true
+  #   refreshInterval: 24h
+  #   secretStoreRef:
+  #     name: vault-backend
+  #     kind: SecretStore
+  #
+  #   # Generate TLS certificate from Vault PKI
+  #   target:
+  #     name: app-tls
+  #     creationPolicy: Owner
+  #     template:
+  #       type: kubernetes.io/tls
+  #       data:
+  #         tls.crt: "{{ .cert | b64enc }}"
+  #         tls.key: "{{ .key | b64enc }}"
+  #         ca.crt: "{{ .ca | b64enc }}"
+  #
+  #   data:
+  #     - secretKey: cert
+  #       remoteRef:
+  #         key: pki/issue/web-cert
+  #         property: certificate
+  #     - secretKey: key
+  #       remoteRef:
+  #         key: pki/issue/web-cert
+  #         property: private_key
+  #     - secretKey: ca
+  #       remoteRef:
+  #         key: pki/issue/web-cert
+  #         property: issuing_ca
+
+# Datadog application monitoring resources
+# Note: DatadogAgent should be installed separately as a cluster-wide resource
+
+# Datadog Monitor configuration
+# Create and manage Datadog monitors as Kubernetes resources
+datadogMonitor:
+  enabled: false
+  # Define multiple monitors
+  monitors: {}
+    # high-error-rate:
+    #   enabled: true
+    #   labels: {}
+    #   annotations: {}
+    #   query: 'avg(last_5m):sum:http.requests.errors{service:my-app} by {env}.as_rate() / sum:http.requests.total{service:my-app} by {env}.as_rate() > 0.05'
+    #   type: "query alert"
+    #   name: "High Error Rate on {{ env.name }}"
+    #   message: |
+    #     Error rate is above 5% for service my-app in environment {{ env.name }}
+    #     Current value: {{ value }}
+    #     Runbook: https://wiki.example.com/runbooks/high-error-rate
+    #   tags:
+    #     - "service:my-app"
+    #     - "team:platform"
+    #     - "generated:kubernetes"
+    #   priority: 3
+    #   options:
+    #     thresholds:
+    #       critical: 0.05
+    #       warning: 0.03
+    #     notifyNoData: false
+    #     noDataTimeframe: 10
+    #     renotifyInterval: 60
+    #     evaluationDelay: 300
+    #     includeTags: true
+    #     locked: false
+    #
+    # pod-crashloop:
+    #   enabled: true
+    #   query: 'max(last_10m):max:kubernetes_state.container.status_report.count.waiting{reason:crashloopbackoff} by {kube_namespace,pod_name} >= 1'
+    #   type: "query alert"
+    #   name: "Pod {{ pod_name.name }} is in CrashLoopBackOff"
+    #   message: "Pod {{ pod_name.name }} in namespace {{ kube_namespace.name }} is crash looping"
+    #   tags:
+    #     - "integration:kubernetes"
+    #   options:
+    #     thresholds:
+    #       critical: 1
+
+# Datadog SLO configuration
+# Create and manage Service Level Objectives
+datadogSLO:
+  enabled: false
+  slos: {}
+    # api-availability:
+    #   enabled: true
+    #   labels: {}
+    #   annotations: {}
+    #   name: "API Availability SLO"
+    #   description: "99.9% of API requests should be successful"
+    #   type: "metric"
+    #   targetThreshold: "99.9"
+    #   timeframe: "30d"
+    #   query:
+    #     numerator: "sum:http.requests.success{service:api}.as_count()"
+    #     denominator: "sum:http.requests.total{service:api}.as_count()"
+    #   tags:
+    #     - "service:api"
+    #     - "team:platform"
+    #
+    # response-time:
+    #   enabled: true
+    #   name: "API Response Time SLO"
+    #   description: "95% of API requests should complete within 500ms"
+    #   type: "metric"
+    #   targetThreshold: "95"
+    #   timeframe: "7d"
+    #   query:
+    #     numerator: "sum:http.requests{service:api,response_time:<500}.as_count()"
+    #     denominator: "sum:http.requests{service:api}.as_count()"
+
+# Datadog Metric configuration
+# Define custom metrics for HPA scaling
+datadogMetric:
+  enabled: false
+  metrics: {}
+    # queue-size:
+    #   enabled: true
+    #   labels: {}
+    #   annotations: {}
+    #   query: "avg:redis.queue.size{queue:jobs}"
+    #   externalMetricName: "redis_queue_size"
+    #   maxAge: 120
+    #   returnOnlyMatched: true
+    #
+    # custom-app-metric:
+    #   enabled: true
+    #   query: "avg:app.custom.metric{env:prod}"
+    #   externalMetricName: "app_custom_metric"
+
+# Datadog Dashboard configuration
+# Create and manage Datadog dashboards as code
+datadogDashboard:
+  enabled: false
+  dashboards: {}
+    # app-overview:
+    #   enabled: true
+    #   labels: {}
+    #   annotations: {}
+    #   title: "Application Overview Dashboard"
+    #   description: "Main dashboard for application monitoring"
+    #   layout_type: "ordered"
+    #   is_read_only: false
+    #   notify_list: []
+    #   template_variables:
+    #     - name: "env"
+    #       prefix: "env"
+    #       available_values: ["prod", "staging", "dev"]
+    #       default: "prod"
+    #   widgets:
+    #     - definition:
+    #         title: "Request Rate"
+    #         type: "timeseries"
+    #         requests:
+    #           - q: "sum:http.requests{$env} by {service}.as_rate()"
+    #             display_type: "line"
+    #             style:
+    #               palette: "dog_classic"
+    #               line_type: "solid"
+    #               line_width: "normal"
+    #       layout:
+    #         x: 0
+    #         y: 0
+    #         width: 4
+    #         height: 2
+
+# ========================================
+# 📝 TEMPLATED VALUES EXAMPLES
+# ========================================
+# The following examples demonstrate how to use templated values for dynamic configurations.
+# Uncomment and modify as needed for your use case.
+
+# # Example 1: Dynamic Branch Deployment
+# generic:
+#   branchName: "feature-123"      # Set dynamically by CI/CD
+#   environment: "staging"
+#
+# namespaceOverride: "{{ .Values.generic.branchName }}"
+#
+# serviceAccount:
+#   name: "{{ .Values.generic.branchName }}-sa"
+#   annotations:
+#     eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/{{ .Values.generic.environment }}-{{ .Values.generic.branchName }}-role"
+#
+# workloadLabels:
+#   branch: "{{ .Values.generic.branchName }}"
+#   environment: "{{ .Values.generic.environment }}"
+#
+# podAnnotations:
+#   branch-url: "https://github.com/myorg/myrepo/tree/{{ .Values.generic.branchName }}"
+#   deployed-at: "{{ now | date \"2006-01-02T15:04:05Z07:00\" }}"
+#
+# ingress:
+#   enabled: true
+#   hosts:
+#     - host: "{{ .Values.generic.branchName }}.{{ .Values.generic.environment }}.example.com"
+#       paths:
+#         - path: /
+#           pathType: Prefix
+#   alb:
+#     annotations:
+#       alb.ingress.kubernetes.io/load-balancer-name: "{{ .Values.generic.branchName }}-{{ .Values.generic.environment }}"
+#       alb.ingress.kubernetes.io/group.name: "{{ .Values.generic.environment }}-branches"
+#       alb.ingress.kubernetes.io/tags: |
+#         Environment={{ .Values.generic.environment }}
+#         Branch={{ .Values.generic.branchName }}
+#         ManagedBy=ArgoCD
+#
+# configMap:
+#   enabled: true
+#   data:
+#     app.yaml: |
+#       environment: {{ .Values.generic.environment }}
+#       branch: {{ .Values.generic.branchName }}
+#       api_url: https://{{ .Values.generic.branchName }}.api.{{ .Values.generic.environment }}.example.com
+#
+# # Example 2: Multi-Environment Setup
+# generic:
+#   environment: "production"
+#   region: "us-east-1"
+#
+# workloadLabels:
+#   environment: "{{ .Values.generic.environment }}"
+#   region: "{{ .Values.generic.region }}"
+#
+# ingress:
+#   hosts:
+#     - host: "{{ if eq .Values.generic.environment \"production\" }}api.example.com{{ else }}api.{{ .Values.generic.environment }}.example.com{{ end }}"
+#       paths:
+#         - path: /
+#           pathType: Prefix
+#
+# serviceAccount:
+#   annotations:
+#     eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/{{ .Values.generic.environment }}-{{ .Values.generic.region }}-app-role"
+#
+# # Example 3: GitOps with ArgoCD Variables
+# # These values would be set by ArgoCD using parameters or valueFiles
+# generic:
+#   gitBranch: "${ARGOCD_APP_REVISION}"        # ArgoCD built-in variable
+#   gitCommit: "${ARGOCD_APP_SOURCE_REPO_URL}" # ArgoCD built-in variable
+#
+# podAnnotations:
+#   argocd.argoproj.io/tracking-id: "{{ .Values.generic.gitBranch }}:{{ .Values.generic.gitCommit }}"
+#   git-commit: "{{ .Values.generic.gitCommit }}"
+#
+# # Example 4: Dynamic External Secrets
+# externalSecrets:
+#   app-secrets:
+#     enabled: true
+#     secretStoreRef:
+#       name: "{{ .Values.generic.environment }}-secret-store"
+#       kind: SecretStore
+#     target:
+#       name: "{{ .Release.Name }}-secrets"
+#     data:
+#       - secretKey: database-password
+#         remoteRef:
+#           key: "/{{ .Values.generic.environment }}/{{ .Release.Name }}/db-password"
+#
+# # Example 5: Conditional Resource Creation
+# gateway:
+#   gateway:
+#     enabled: true
+#     name: "{{ .Release.Name }}-{{ if eq .Values.generic.environment \"production\" }}prod{{ else }}{{ .Values.generic.environment }}{{ end }}-gateway"
+#     gatewayClassName: "{{ .Values.generic.environment }}-gateway-class"
+#
+# # Example 6: Time-based Values
+# extraObjects:
+#   - apiVersion: v1
+#     kind: ConfigMap
+#     metadata:
+#       name: "{{ .Release.Name }}-build-info"
+#     data:
+#       build-date: "{{ now | date \"2006-01-02T15:04:05Z07:00\" }}"
+#       build-week: "{{ now | date \"2006-W02\" }}"
+#       expires-at: "{{ now | dateModify \"+720h\" | date \"2006-01-02T15:04:05Z07:00\" }}"  # 30 days from now

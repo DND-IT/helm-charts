@@ -1,0 +1,60 @@
+{{- if and .Values.gateway.gatewayClass.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/GatewayClass") }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: {{ .Values.gateway.gatewayClass.name | default (printf "%s-gateway-class" (include "generic.fullname" .)) }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.gateway.gatewayClass.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.gateway.gatewayClass.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  controllerName: {{ .Values.gateway.gatewayClass.controllerName }}
+  {{- with .Values.gateway.gatewayClass.description }}
+  description: {{ . }}
+  {{- end }}
+  {{- with .Values.gateway.gatewayClass.parametersRef }}
+  parametersRef:
+    {{- if .group }}
+    group: {{ .group }}
+    {{- end }}
+    kind: {{ .kind }}
+    name: {{ .name }}
+    {{- with .namespace }}
+    namespace: {{ . }}
+    {{- end }}
+  {{- end }}
+{{- if .Values.gateway.gatewayClass.additionalClasses }}
+{{- range $name, $class := .Values.gateway.gatewayClass.additionalClasses }}
+{{- if $class.enabled | default true }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GatewayClass
+metadata:
+  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $class.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $class.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  controllerName: {{ $class.controllerName }}
+  {{- with $class.description }}
+  description: {{ . }}
+  {{- end }}
+  {{- with $class.parametersRef }}
+  parametersRef:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

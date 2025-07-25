@@ -1,0 +1,192 @@
+# Example: Job for Database Migration
+# One-time job to run database migrations with hooks
+
+nameOverride: "db-migration"
+
+workload:
+  type: job
+  enabled: true
+
+  # Job specific settings
+  backoffLimit: 3
+  completions: 1
+  parallelism: 1
+  ttlSecondsAfterFinished: 600  # Clean up after 10 minutes
+  restartPolicy: OnFailure
+
+image:
+  repository: migrate/migrate
+  tag: "latest"
+  pullPolicy: Always
+
+deployment:
+  command: ["migrate"]
+  args:
+    - "-path"
+    - "/migrations"
+    - "-database"
+    - "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):5432/$(DB_NAME)?sslmode=disable"
+    - "up"
+
+  env:
+    - name: DB_HOST
+      value: "postgres-service"
+    - name: DB_NAME
+      value: "myapp"
+    - name: DB_USER
+      value: "postgres"
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: postgres-secret
+          key: password
+    - name: MIGRATION_TIMEOUT
+      value: "300s"
+
+  resources:
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+
+  volumeMounts:
+    - name: migrations
+      mountPath: /migrations
+      readOnly: true
+    - name: migration-scripts
+      mountPath: /custom-migrations
+      readOnly: true
+
+# Volume with migration files
+persistence:
+  enabled: true
+  volumes:
+    migrations:
+      type: configMap
+      configMap:
+        name: migration-files
+    migration-scripts:
+      type: configMap
+      configMap:
+        name: custom-migration-scripts
+
+configMap:
+  enabled: true
+  name: migration-files
+  data:
+    "001_initial_schema.up.sql": |
+      CREATE TABLE IF NOT EXISTS users (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
+        username VARCHAR(50) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX idx_users_email ON users(email);
+      CREATE INDEX idx_users_username ON users(username);
+
+    "001_initial_schema.down.sql": |
+      DROP TABLE IF EXISTS users;
+
+    "002_add_sessions.up.sql": |
+      CREATE TABLE IF NOT EXISTS sessions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+        token VARCHAR(255) UNIQUE NOT NULL,
+        expires_at TIMESTAMP NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+
+      CREATE INDEX idx_sessions_token ON sessions(token);
+      CREATE INDEX idx_sessions_user_id ON sessions(user_id);
+      CREATE INDEX idx_sessions_expires_at ON sessions(expires_at);
+
+    "002_add_sessions.down.sql": |
+      DROP TABLE IF EXISTS sessions;
+
+    "003_add_user_roles.up.sql": |
+      CREATE TYPE user_role AS ENUM ('admin', 'user', 'guest');
+
+      ALTER TABLE users
+      ADD COLUMN role user_role DEFAULT 'user',
+      ADD COLUMN is_active BOOLEAN DEFAULT true,
+      ADD COLUMN last_login TIMESTAMP;
+
+    "003_add_user_roles.down.sql": |
+      ALTER TABLE users
+      DROP COLUMN IF EXISTS role,
+      DROP COLUMN IF EXISTS is_active,
+      DROP COLUMN IF EXISTS last_login;
+
+      DROP TYPE IF EXISTS user_role;
+
+additionalConfigMaps:
+  custom-migration-scripts:
+    data:
+      "pre-migration.sh": |
+        #!/bin/bash
+        echo "Running pre-migration checks..."
+        # Add custom pre-migration logic here
+
+      "post-migration.sh": |
+        #!/bin/bash
+        echo "Running post-migration tasks..."
+        # Add custom post-migration logic here
+
+# Hooks to run migrations automatically
+hooks:
+  enabled: true
+  preUpgrade:
+    - name: db-migration-pre-upgrade
+      image: migrate/migrate:latest
+      command: ["migrate"]
+      args:
+        - "-path=/migrations"
+        - "-database=postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):5432/$(DB_NAME)?sslmode=disable"
+        - "up"
+      weight: 1
+      deletePolicy: before-hook-creation
+      ttlSecondsAfterFinished: 300
+      env:
+        - name: DB_HOST
+          value: "postgres-service"
+        - name: DB_NAME
+          value: "myapp"
+        - name: DB_USER
+          value: "postgres"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: password
+      volumeMounts:
+        - name: migrations
+          mountPath: /migrations
+      volumes:
+        - name: migrations
+          configMap:
+            name: migration-files
+
+# Service account with necessary permissions
+serviceAccount:
+  enabled: true
+  name: db-migration
+
+# RBAC for the migration job
+rbac:
+  enabled: true
+  rules:
+    - apiGroups: [""]
+      resources: ["secrets"]
+      resourceNames: ["postgres-secret"]
+      verbs: ["get"]
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list"]
+    - apiGroups: ["batch"]
+      resources: ["jobs"]
+      verbs: ["get", "list", "watch"]

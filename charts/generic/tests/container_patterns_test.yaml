@@ -1,0 +1,137 @@
+suite: test sidecar containers
+templates:
+  - core/deployment.yaml
+tests:
+  - it: should not render sidecar containers by default
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+      - notExists:
+          path: spec.template.spec.initContainers
+
+  - it: should render sidecar containers as native Kubernetes sidecars
+    set:
+      sidecarContainers:
+        - name: metrics-exporter
+          image: prom/node-exporter:latest
+          ports:
+            - name: metrics
+              containerPort: 9100
+          args:
+            - --path.rootfs=/host
+            - --collector.filesystem.ignored-mount-points
+          resources:
+            limits:
+              memory: "128Mi"
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1  # Only main container
+      - lengthEqual:
+          path: spec.template.spec.initContainers
+          count: 1  # Sidecar container as native Kubernetes sidecar
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: metrics-exporter
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: prom/node-exporter:latest
+      - equal:
+          path: spec.template.spec.initContainers[0].restartPolicy
+          value: Always
+      - equal:
+          path: spec.template.spec.initContainers[0].ports[0].containerPort
+          value: 9100
+
+  - it: should render multiple sidecar containers
+    set:
+      sidecarContainers:
+        - name: metrics-exporter
+          image: prom/node-exporter:latest
+          ports:
+            - name: metrics
+              containerPort: 9100
+        - name: log-shipper
+          image: fluent/fluent-bit:latest
+          ports:
+            - name: metrics
+              containerPort: 2020
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1  # Only main container
+      - lengthEqual:
+          path: spec.template.spec.initContainers
+          count: 2  # Both sidecar containers
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: metrics-exporter
+      - equal:
+          path: spec.template.spec.initContainers[0].restartPolicy
+          value: Always
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: log-shipper
+      - equal:
+          path: spec.template.spec.initContainers[1].restartPolicy
+          value: Always
+
+  - it: should combine with regular init containers
+    set:
+      initContainers:
+        - name: setup-init
+          image: busybox:latest
+          command:
+            - sh
+            - -c
+            - echo "Setting up"
+      sidecarContainers:
+        - name: metrics-sidecar
+          image: prom/node-exporter:latest
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1  # Only main container
+      - lengthEqual:
+          path: spec.template.spec.initContainers
+          count: 2  # Regular init + sidecar
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: setup-init
+      - notExists:
+          path: spec.template.spec.initContainers[0].restartPolicy  # Regular init containers don't have restartPolicy
+      - equal:
+          path: spec.template.spec.initContainers[1].name
+          value: metrics-sidecar
+      - equal:
+          path: spec.template.spec.initContainers[1].restartPolicy
+          value: Always
+
+  - it: should maintain backward compatibility with legacy sidecars
+    set:
+      sidecars:
+        - name: legacy-sidecar
+          image: nginx:alpine
+      sidecarContainers:
+        - name: native-sidecar
+          image: prom/node-exporter:latest
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 2  # main + legacy sidecar
+      - lengthEqual:
+          path: spec.template.spec.initContainers
+          count: 1  # native sidecar
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: legacy-sidecar
+      - equal:
+          path: spec.template.spec.initContainers[0].name
+          value: native-sidecar
+      - equal:
+          path: spec.template.spec.initContainers[0].restartPolicy
+          value: Always

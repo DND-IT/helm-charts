@@ -1,0 +1,180 @@
+{{- include "generic.validateValues" . -}}
+{{- include "generic.validateWorkload" . -}}
+{{- if and .Values.workload.enabled (eq (.Values.workload.type | default "deployment") "job") }}
+apiVersion: batch/v1
+kind: Job
+{{- include "generic.workloadMetadata" . }}
+spec:
+  {{- with .Values.workload.completions }}
+  completions: {{ . }}
+  {{- end }}
+  {{- with .Values.workload.parallelism }}
+  parallelism: {{ . }}
+  {{- end }}
+  {{- with .Values.workload.backoffLimit }}
+  backoffLimit: {{ . }}
+  {{- else }}
+  backoffLimit: 6
+  {{- end }}
+  {{- with .Values.workload.activeDeadlineSeconds }}
+  activeDeadlineSeconds: {{ . }}
+  {{- end }}
+  {{- with .Values.workload.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ . }}
+  {{- end }}
+  {{- with .Values.workload.completionMode }}
+  completionMode: {{ . }}
+  {{- end }}
+  {{- with .Values.workload.suspend }}
+  suspend: {{ . }}
+  {{- end }}
+  {{- with .Values.workload.manualSelector }}
+  manualSelector: {{ . }}
+  {{- end }}
+  {{- if or .Values.workload.selector .Values.workload.manualSelector }}
+  selector:
+    {{- with .Values.workload.selector }}
+    {{- toYaml . | nindent 4 }}
+    {{- else }}
+    matchLabels:
+      {{- include "generic.selectorLabels" . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "generic.labels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      annotations:
+        {{- include "generic.podAnnotations" . | nindent 8 }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.serviceAccount.enabled }}
+      serviceAccountName: {{ include "generic.serviceAccountName" . }}
+      {{- else if .Values.serviceAccount.name }}
+      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- end }}
+      {{- with .Values.hostAliases }}
+      hostAliases:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.hostNetwork }}
+      hostNetwork: true
+      {{- end }}
+      {{- if .Values.hostPID }}
+      hostPID: true
+      {{- end }}
+      {{- if .Values.hostIPC }}
+      hostIPC: true
+      {{- end }}
+      {{- with .Values.hostname }}
+      hostname: {{ . }}
+      {{- end }}
+      {{- with .Values.dnsPolicy }}
+      dnsPolicy: {{ . }}
+      {{- end }}
+      {{- with .Values.dnsConfig }}
+      dnsConfig:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.priorityClassName }}
+      priorityClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.priority }}
+      priority: {{ . }}
+      {{- end }}
+      {{- with .Values.runtimeClassName }}
+      runtimeClassName: {{ . }}
+      {{- end }}
+      {{- with .Values.schedulerName }}
+      schedulerName: {{ . }}
+      {{- end }}
+      {{- if .Values.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
+      {{- end }}
+      {{- with .Values.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- include "generic.topologySpreadConstraints" . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- include "generic.podSecurityContext" (dict "securityContext" .Values.podSecurityContext "defaults" .Values.podSecurityContextDefaults) | nindent 8 }}
+      {{- if .Values.initContainers }}
+      initContainers:
+        {{- range $container := .Values.initContainers }}
+        {{- include "generic.container" (dict "container" $container "root" $) | nindent 8 }}
+        {{- end }}
+      {{- end }}
+      containers:
+        {{- if .Values.containers }}
+        {{- range $container := .Values.containers }}
+        {{- include "generic.container" (dict "container" $container "root" $) | nindent 8 }}
+        {{- end }}
+        {{- else }}
+        {{/* Default single container configuration for backward compatibility */}}
+        - name: {{ .Values.containerName | default "main" }}
+          image: {{ include "generic.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          {{- with .Values.deployment.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.deployment.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if or .Values.deployment.env .Values.commonEnvVars .Values.deployment.envFrom }}
+          {{- if .Values.commonEnvVars }}
+          env:
+            {{- include "generic.commonEnvVars" . | nindent 12 }}
+            {{- with .Values.deployment.env }}
+            {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 12 }}
+            {{- end }}
+          {{- else if .Values.deployment.env }}
+          env:
+            {{- include "generic.envVars" (dict "envVars" .Values.deployment.env "root" $) | nindent 12 }}
+          {{- end }}
+          {{- include "generic.envFrom" . | nindent 10 }}
+          {{- end }}
+          {{- with .Values.deployment.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- include "generic.volumeMounts" (dict "container" .Values.deployment "root" $) | nindent 10 }}
+          {{- with .Values.deployment.lifecycle }}
+          lifecycle:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          securityContext:
+            {{- include "generic.containerSecurityContext" (dict "securityContext" .Values.deployment.securityContext "root" $) | nindent 12 }}
+        {{- end }}
+        {{- with .Values.sidecars }}
+        {{- range $sidecar := . }}
+        {{- include "generic.container" (dict "container" $sidecar "root" $) | nindent 8 }}
+        {{- end }}
+        {{- end }}
+      {{- include "generic.volumes" . | nindent 6 }}
+      restartPolicy: {{ .Values.workload.restartPolicy | default "OnFailure" }}
+{{- end }}

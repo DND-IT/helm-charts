@@ -18,8 +18,8 @@ chmod +x .bin/kubeconform
 curl -sSfLo .bin/semver2 https://raw.githubusercontent.com/Ariel-Rodriguez/sh-semversion-2/${SEMVER_VERSION}/semver2.sh
 chmod +x .bin/semver2
 
-
-apis=("${apis[@]}" --api-versions batch/v1/CronJob)
+# Initialize apis array
+apis=(--api-versions batch/v1/CronJob)
 
 
 # validate charts

@@ -1,0 +1,50 @@
+{{- if and .Values.datadogDashboard.enabled (.Capabilities.APIVersions.Has "datadoghq.com/v1alpha1/DatadogDashboard") }}
+{{- range $name, $dashboard := .Values.datadogDashboard.dashboards }}
+{{- if $dashboard.enabled }}
+---
+apiVersion: datadoghq.com/v1alpha1
+kind: DatadogDashboard
+metadata:
+  name: {{ include "generic.fullname" $ }}-{{ $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $dashboard.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $dashboard.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $dashboard.title }}
+  title: {{ . | quote }}
+  {{- end }}
+  {{- with $dashboard.description }}
+  description: {{ . | quote }}
+  {{- end }}
+  {{- with $dashboard.layout_type }}
+  layout_type: {{ . | quote }}
+  {{- end }}
+  {{- with $dashboard.is_read_only }}
+  is_read_only: {{ . }}
+  {{- end }}
+  {{- with $dashboard.notify_list }}
+  notify_list:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $dashboard.template_variables }}
+  template_variables:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $dashboard.template_variable_presets }}
+  template_variable_presets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $dashboard.widgets }}
+  widgets:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

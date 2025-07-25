@@ -30,8 +30,17 @@ CHART_DIR = charts
 CHARTS_AVAILABLE := $(shell find $(CHART_DIR) -maxdepth 1 -type d -not -path $(CHART_DIR) -exec basename {} \; 2>/dev/null || find . -maxdepth 1 -name "Chart.yaml" -exec dirname {} \; | sed 's|^\./||' | head -1)
 
 # Set chart path based on structure
-ifeq ($(CHART),)
-    $(error CHART is required. Use: make <target> CHART=<chart-name>. Available charts: $(CHARTS_AVAILABLE))
+# Only check for CHART if we're not running a target that doesn't need it
+TARGETS_WITHOUT_CHART := help list-charts lint-all test-all template-all package-all docs-all \
+                        integration-test-all security-scan-all clean clean-releases \
+                        repo-lint repo-test repo-package quality-all prepare-release \
+                        kind-create kind-delete kind-test-all dependency-update-all \
+                        check-tools version-all ci-setup ci-test help-chart kubeconform-all
+
+ifeq ($(filter $(MAKECMDGOALS),$(TARGETS_WITHOUT_CHART)),)
+    ifeq ($(CHART),)
+        $(error CHART is required. Use: make <target> CHART=<chart-name>. Available charts: $(CHARTS_AVAILABLE))
+    endif
 endif
 
 # Determine if we're in a multi-chart repo or single chart repo
@@ -280,6 +289,33 @@ integration-test-all: ## Run integration tests for all charts
 		$(MAKE) integration-test CHART=$chart NAMESPACE=$chart-test || exit 1; \
 	done
 
+# Validation with kubeconform
+kubeconform: validate-chart ## Run kubeconform validation on specified chart
+	@echo "Running kubeconform validation on $(CHART)..."
+	@if command -v kubeconform >/dev/null 2>&1; then \
+		for VALUES_FILE in $(CHART_PATH)/ci/*.yaml; do \
+			if [ -f "$VALUES_FILE" ]; then \
+				echo "Validating with $VALUES_FILE..."; \
+				helm template $(CHART_PATH) --values "$VALUES_FILE" | kubeconform -strict -ignore-missing-schemas -kubernetes-version 1.32.0 || exit 1; \
+			fi; \
+		done; \
+		echo "Kubeconform validation passed for $(CHART)"; \
+	else \
+		echo "kubeconform not available. Install it from: https://github.com/yannh/kubeconform"; \
+		exit 1; \
+	fi
+
+kubeconform-all: ## Run kubeconform validation on all charts
+	@echo "Running kubeconform validation on all charts..."
+	@if ! command -v kubeconform >/dev/null 2>&1; then \
+		echo "kubeconform not available. Install it from: https://github.com/yannh/kubeconform"; \
+		exit 1; \
+	fi
+	@for chart in $(shell find $(CHART_DIR) -maxdepth 1 -type d -not -path $(CHART_DIR) -exec basename {} \; 2>/dev/null | sort); do \
+		echo "Validating $$chart..."; \
+		$(MAKE) kubeconform CHART=$$chart || exit 1; \
+	done
+
 # Security scanning
 security-scan: validate-chart ## Run security scan on generated manifests for specified chart
 	@echo "Running security scan for $(CHART)..."
@@ -327,10 +363,10 @@ repo-package: package-all ## Package all charts in repository
 	@echo "Repository packaging complete"
 
 # Quality checks
-quality: validate-chart lint test security-scan ## Run all quality checks for specified chart
+quality: validate-chart lint test kubeconform security-scan ## Run all quality checks for specified chart
 	@echo "Quality checks completed for $(CHART)"
 
-quality-all: lint-all test-all security-scan-all ## Run all quality checks for all charts
+quality-all: lint-all test-all kubeconform-all security-scan-all ## Run all quality checks for all charts
 	@echo "Quality checks completed for all charts"
 
 # Release preparation
@@ -395,6 +431,7 @@ check-tools: ## Check if required tools are installed
 	@echo "✅ kubectl: $(shell kubectl version --client --short 2>/dev/null || echo 'installed')"
 	@command -v ct >/dev/null 2>&1 && echo "✅ chart-testing: available" || echo "⚠️  chart-testing: not installed (recommended)"
 	@command -v helm-docs >/dev/null 2>&1 && echo "✅ helm-docs: available" || echo "⚠️  helm-docs: not installed (recommended)"
+	@command -v kubeconform >/dev/null 2>&1 && echo "✅ kubeconform: available" || echo "⚠️  kubeconform: not installed (recommended for validation)"
 	@command -v trivy >/dev/null 2>&1 && echo "✅ trivy: available" || echo "⚠️  trivy: not installed (recommended for security scanning)"
 	@command -v kind >/dev/null 2>&1 && echo "✅ kind: available" || echo "⚠️  kind: not installed (recommended for local testing)"
 

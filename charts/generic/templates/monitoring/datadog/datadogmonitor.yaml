@@ -1,0 +1,45 @@
+{{- if and .Values.datadogMonitor.enabled (.Capabilities.APIVersions.Has "datadoghq.com/v1alpha1/DatadogMonitor") }}
+{{- range $name, $monitor := .Values.datadogMonitor.monitors }}
+{{- if $monitor.enabled }}
+---
+apiVersion: datadoghq.com/v1alpha1
+kind: DatadogMonitor
+metadata:
+  name: {{ include "generic.fullname" $ }}-{{ $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $monitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $monitor.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $monitor.query }}
+  query: {{ . | quote }}
+  {{- end }}
+  {{- with $monitor.type }}
+  type: {{ . | quote }}
+  {{- end }}
+  {{- with $monitor.name }}
+  name: {{ . | quote }}
+  {{- end }}
+  {{- with $monitor.message }}
+  message: {{ . | quote }}
+  {{- end }}
+  {{- with $monitor.tags }}
+  tags:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $monitor.priority }}
+  priority: {{ . }}
+  {{- end }}
+  {{- with $monitor.options }}
+  options:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

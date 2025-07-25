@@ -1,0 +1,151 @@
+{{- if and .Values.gateway.gateway.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/Gateway") }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ .Values.gateway.gateway.name | default (printf "%s-gateway" (include "generic.fullname" .)) }}
+  namespace: {{ include "generic.namespace" . }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.gateway.gateway.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.gateway.gateway.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.gateway.gateway.gatewayClassName }}
+  gatewayClassName: {{ . }}
+  {{- end }}
+  {{- with .Values.gateway.gateway.addresses }}
+  addresses:
+    {{- range $address := . }}
+    - {{- if $address.type }}
+      type: {{ $address.type }}
+      {{- end }}
+      value: {{ $address.value }}
+    {{- end }}
+  {{- end }}
+  listeners:
+    {{- if .Values.gateway.gateway.listeners }}
+    {{- range $listener := .Values.gateway.gateway.listeners }}
+    - name: {{ $listener.name }}
+      {{- with $listener.hostname }}
+      hostname: {{ . }}
+      {{- end }}
+      port: {{ $listener.port }}
+      protocol: {{ $listener.protocol | default "HTTP" }}
+      {{- with $listener.tls }}
+      tls:
+        {{- with .mode }}
+        mode: {{ . }}
+        {{- end }}
+        {{- with .certificateRefs }}
+        certificateRefs:
+          {{- range $certRef := . }}
+          - {{- if $certRef.group }}
+            group: {{ $certRef.group }}
+            {{- end }}
+            {{- if $certRef.kind }}
+            kind: {{ $certRef.kind }}
+            {{- end }}
+            {{- if $certRef.namespace }}
+            namespace: {{ $certRef.namespace }}
+            {{- end }}
+            name: {{ $certRef.name }}
+          {{- end }}
+        {{- end }}
+        {{- with .options }}
+        options:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+      {{- end }}
+      {{- with $listener.allowedRoutes }}
+      allowedRoutes:
+        {{- with .namespaces }}
+        namespaces:
+          {{- with .from }}
+          from: {{ . }}
+          {{- end }}
+          {{- with .selector }}
+          selector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- with .kinds }}
+        kinds:
+          {{- range $kind := . }}
+          - {{- if $kind.group }}
+            group: {{ $kind.group }}
+            {{- end }}
+            kind: {{ $kind.kind }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+    {{- end }}
+    {{- else }}
+    # Default HTTP listener
+    - name: http
+      port: 80
+      protocol: HTTP
+    {{- if .Values.gateway.gateway.tls.enabled }}
+    # Default HTTPS listener
+    - name: https
+      port: 443
+      protocol: HTTPS
+      tls:
+        mode: {{ .Values.gateway.gateway.tls.mode | default "Terminate" }}
+        {{- if .Values.gateway.gateway.tls.certificateRefs }}
+        certificateRefs:
+          {{- range $certRef := .Values.gateway.gateway.tls.certificateRefs }}
+          - {{- if $certRef.group }}
+            group: {{ $certRef.group }}
+            {{- end }}
+            {{- if $certRef.kind }}
+            kind: {{ $certRef.kind }}
+            {{- end }}
+            {{- if $certRef.namespace }}
+            namespace: {{ $certRef.namespace }}
+            {{- end }}
+            name: {{ $certRef.name }}
+          {{- end }}
+        {{- else }}
+        certificateRefs:
+          - name: {{ printf "%s-tls" (include "generic.fullname" .) }}
+        {{- end }}
+    {{- end }}
+    {{- end }}
+{{- if .Values.gateway.gateway.additionalGateways }}
+{{- range $name, $gw := .Values.gateway.gateway.additionalGateways }}
+{{- if $gw.enabled | default true }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $gw.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $gw.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $gw.gatewayClassName }}
+  gatewayClassName: {{ . }}
+  {{- end }}
+  {{- with $gw.addresses }}
+  addresses:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $gw.listeners }}
+  listeners:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

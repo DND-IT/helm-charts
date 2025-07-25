@@ -1,0 +1,305 @@
+# Example: Microservice with Gateway API
+# Modern microservice using Gateway API instead of traditional Ingress
+
+nameOverride: "api-service"
+
+workload:
+  type: deployment
+  enabled: true
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+
+image:
+  repository: myorg/api-service
+  tag: "v2.1.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: docker-registry-secret
+
+deployment:
+  env:
+    - name: SERVICE_NAME
+      value: "api-service"
+    - name: LOG_LEVEL
+      value: "info"
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://opentelemetry-collector:4317"
+    - name: DATABASE_URL
+      valueFrom:
+        secretKeyRef:
+          name: api-db-secret
+          key: connection-string
+
+  resources:
+    limits:
+      memory: "1Gi"
+      cpu: "1000m"
+    requests:
+      cpu: "200m"
+      memory: "512Mi"
+
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /readyz
+      port: http
+    initialDelaySeconds: 10
+    periodSeconds: 5
+    successThreshold: 1
+    failureThreshold: 3
+
+  startupProbe:
+    httpGet:
+      path: /startupz
+      port: http
+    initialDelaySeconds: 0
+    periodSeconds: 10
+    failureThreshold: 30
+
+containerPorts:
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+  - name: grpc
+    containerPort: 9090
+    protocol: TCP
+  - name: metrics
+    containerPort: 2112
+    protocol: TCP
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+    - name: grpc
+      port: 9090
+      targetPort: grpc
+    - name: metrics
+      port: 2112
+      targetPort: metrics
+
+# Gateway API configuration
+gateway:
+  httpRoute:
+    enabled: true
+    name: api-routes
+    labels:
+      api-version: v2
+    parentRefs:
+      - name: prod-gateway
+        namespace: gateway-system
+        sectionName: https
+
+    rules:
+      # Public API endpoints
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /api/v2/public
+          - headers:
+              - name: X-API-Version
+                value: "v2"
+        filters:
+          - type: RequestHeaderModifier
+            requestHeaderModifier:
+              add:
+                - name: X-Service-Name
+                  value: api-service
+              remove:
+                - X-Request-Id
+          - type: ResponseHeaderModifier
+            responseHeaderModifier:
+              add:
+                - name: X-API-Version
+                  value: "v2"
+        backendRefs:
+          - name: api-service
+            port: 80
+            weight: 100
+
+      # Admin API endpoints with different backend
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /api/v2/admin
+        filters:
+          - type: RequestRedirect
+            requestRedirect:
+              scheme: https
+              statusCode: 301
+        backendRefs:
+          - name: api-service-admin
+            port: 8081
+            weight: 100
+
+      # gRPC routing
+  tcpRoute:
+    enabled: true
+    name: api-grpc-route
+    parentRefs:
+      - name: prod-gateway
+        namespace: gateway-system
+        sectionName: grpc
+    rules:
+      - backendRefs:
+          - name: api-service
+            port: 9090
+            weight: 100
+
+  # Reference grant for cross-namespace access
+  referenceGrant:
+    enabled: true
+    from:
+      - group: gateway.networking.k8s.io
+        kind: HTTPRoute
+        namespace: gateway-system
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        namespace: gateway-system
+    to:
+      - group: ""
+        kind: Service
+
+# Autoscaling based on custom metrics
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Pods
+      pods:
+        metric:
+          name: http_requests_per_second
+        target:
+          type: AverageValue
+          averageValue: "1000"
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 300
+      policies:
+        - type: Percent
+          value: 50
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 0
+      policies:
+        - type: Percent
+          value: 100
+          periodSeconds: 15
+        - type: Pods
+          value: 4
+          periodSeconds: 15
+
+# Topology spread for high availability
+topologySpreadConstraints:
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: DoNotSchedule
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 1
+
+# Pod annotations
+podAnnotations:
+  prometheus.io/scrape: "true"
+  prometheus.io/port: "2112"
+  prometheus.io/path: "/metrics"
+
+# Monitoring configuration
+podMonitor:
+  enabled: true
+  interval: 15s
+  endpoints:
+    - port: metrics
+      path: /metrics
+      scheme: http
+
+prometheusRule:
+  enabled: true
+  rules:
+    - alert: APIHighLatency
+      expr: |
+        histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
+      for: 5m
+      labels:
+        severity: warning
+      annotations:
+        summary: "API high latency detected"
+        description: "95th percentile latency is above 500ms (current: {{ $value }}s)"
+
+    - alert: APIHighErrorRate
+      expr: |
+        sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.05
+      for: 5m
+      labels:
+        severity: critical
+      annotations:
+        summary: "API high error rate"
+        description: "Error rate is above 5% (current: {{ $value | humanizePercentage }})"
+
+# Secret for database connection
+secret:
+  enabled: true
+  name: api-db-secret
+  stringData:
+    connection-string: "postgresql://api_user:password@postgres:5432/api_db?sslmode=require"
+
+# ConfigMap for application configuration
+configMap:
+  enabled: true
+  data:
+    app-config.yaml: |
+      server:
+        port: 8080
+        grpcPort: 9090
+        metricsPort: 2112
+
+      features:
+        rateLimit:
+          enabled: true
+          requestsPerMinute: 1000
+
+        cache:
+          enabled: true
+          ttl: 300s
+          maxSize: 1000
+
+      observability:
+        tracing:
+          enabled: true
+          samplingRate: 0.1
+
+        metrics:
+          enabled: true
+          detailedHistograms: true

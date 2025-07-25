@@ -1,0 +1,180 @@
+{{- if and .Values.podMonitor.enabled (.Capabilities.APIVersions.Has "monitoring.coreos.com/v1/PodMonitor") }}
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ include "generic.fullname" . }}
+  namespace: {{ include "generic.namespace" . }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.podMonitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.podMonitor.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.podMonitor.jobLabel }}
+  jobLabel: {{ . }}
+  {{- end }}
+  {{- with .Values.podMonitor.targetLabels }}
+  targetLabels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.podMonitor.podTargetLabels }}
+  podTargetLabels:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with .Values.podMonitor.sampleLimit }}
+  sampleLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.podMonitor.targetLimit }}
+  targetLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.podMonitor.labelLimit }}
+  labelLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.podMonitor.labelNameLengthLimit }}
+  labelNameLengthLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.podMonitor.labelValueLengthLimit }}
+  labelValueLengthLimit: {{ . }}
+  {{- end }}
+  {{- with .Values.podMonitor.namespaceSelector }}
+  namespaceSelector:
+    {{- toYaml . | nindent 4 }}
+  {{- else }}
+  namespaceSelector:
+    matchNames:
+    - {{ include "generic.namespace" . }}
+  {{- end }}
+  selector:
+    {{- if .Values.podMonitor.selector }}
+    {{- toYaml .Values.podMonitor.selector | nindent 4 }}
+    {{- else }}
+    matchLabels:
+      {{- include "generic.selectorLabels" . | nindent 6 }}
+    {{- end }}
+  podMetricsEndpoints:
+  {{- if .Values.podMonitor.endpoints }}
+  {{- range $endpoint := .Values.podMonitor.endpoints }}
+  - port: {{ $endpoint.port | default $.Values.podMonitor.port | default "http" }}
+    {{- with $endpoint.path | default $.Values.podMonitor.path }}
+    path: {{ . }}
+    {{- end }}
+    {{- with $endpoint.scheme | default $.Values.podMonitor.scheme }}
+    scheme: {{ . }}
+    {{- end }}
+    {{- with $endpoint.interval | default $.Values.podMonitor.interval }}
+    interval: {{ . }}
+    {{- end }}
+    {{- with $endpoint.scrapeTimeout | default $.Values.podMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ . }}
+    {{- end }}
+    {{- with $endpoint.params }}
+    params:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $endpoint.honorLabels }}
+    honorLabels: {{ . }}
+    {{- end }}
+    {{- with $endpoint.honorTimestamps }}
+    honorTimestamps: {{ . }}
+    {{- end }}
+    {{- with $endpoint.followRedirects }}
+    followRedirects: {{ . }}
+    {{- end }}
+    {{- with $endpoint.proxyUrl }}
+    proxyUrl: {{ . }}
+    {{- end }}
+    {{- with $endpoint.tlsConfig | default $.Values.podMonitor.tlsConfig }}
+    tlsConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $endpoint.relabelings | default $.Values.podMonitor.relabelings }}
+    relabelings:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $endpoint.metricRelabelings | default $.Values.podMonitor.metricRelabelings }}
+    metricRelabelings:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $endpoint.bearerTokenSecret }}
+    bearerTokenSecret:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $endpoint.basicAuth }}
+    basicAuth:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with $endpoint.authorization }}
+    authorization:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+  {{- else }}
+  # Default endpoint configuration
+  - port: {{ .Values.podMonitor.port | default "http" }}
+    {{- with .Values.podMonitor.path }}
+    path: {{ . }}
+    {{- end }}
+    {{- with .Values.podMonitor.scheme }}
+    scheme: {{ . }}
+    {{- end }}
+    {{- with .Values.podMonitor.interval }}
+    interval: {{ . }}
+    {{- end }}
+    {{- with .Values.podMonitor.scrapeTimeout }}
+    scrapeTimeout: {{ . }}
+    {{- end }}
+    {{- with .Values.podMonitor.tlsConfig }}
+    tlsConfig:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.podMonitor.relabelings }}
+    relabelings:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+    {{- with .Values.podMonitor.metricRelabelings }}
+    metricRelabelings:
+      {{- toYaml . | nindent 6 }}
+    {{- end }}
+  {{- end }}
+{{- if .Values.podMonitor.additionalMonitors }}
+{{- range $name, $monitor := .Values.podMonitor.additionalMonitors }}
+{{- if $monitor.enabled | default true }}
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PodMonitor
+metadata:
+  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $monitor.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $monitor.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $monitor.jobLabel }}
+  jobLabel: {{ . }}
+  {{- end }}
+  {{- with $monitor.namespaceSelector }}
+  namespaceSelector:
+    {{- toYaml . | nindent 4 }}
+  {{- else }}
+  namespaceSelector:
+    matchNames:
+    - {{ include "generic.namespace" $ }}
+  {{- end }}
+  selector:
+    {{- toYaml $monitor.selector | nindent 4 }}
+  podMetricsEndpoints:
+    {{- toYaml $monitor.endpoints | nindent 4 }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,215 @@
+# Example: StatefulSet Database
+# PostgreSQL-like database with persistent storage and ordered deployment
+
+nameOverride: "postgres"
+
+workload:
+  type: statefulset
+  enabled: true
+  replicas: 3
+  serviceName: "postgres-headless"
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      partition: 0
+
+  # Volume claim templates for StatefulSet
+  volumeClaimTemplates:
+    data:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 10Gi
+    wal:
+      accessModes:
+        - ReadWriteOnce
+      storageClassName: fast-ssd
+      resources:
+        requests:
+          storage: 5Gi
+
+image:
+  repository: postgres
+  tag: "15-alpine"
+  pullPolicy: IfNotPresent
+
+deployment:
+  command: ["postgres"]
+  args: ["-c", "config_file=/etc/postgresql/postgresql.conf"]
+
+  env:
+    - name: POSTGRES_DB
+      value: "myapp"
+    - name: POSTGRES_USER
+      value: "postgres"
+    - name: POSTGRES_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: postgres-secret
+          key: password
+    - name: PGDATA
+      value: "/var/lib/postgresql/data/pgdata"
+
+  resources:
+    limits:
+      memory: "2Gi"
+      cpu: "2"
+    requests:
+      cpu: "500m"
+      memory: "1Gi"
+
+  livenessProbe:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - pg_isready -U postgres
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    exec:
+      command:
+        - /bin/sh
+        - -c
+        - pg_isready -U postgres
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+  volumeMounts:
+    - name: data
+      mountPath: /var/lib/postgresql/data
+    - name: wal
+      mountPath: /var/lib/postgresql/wal
+    - name: postgres-config
+      mountPath: /etc/postgresql
+    - name: init-scripts
+      mountPath: /docker-entrypoint-initdb.d
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 5432
+  targetPort: 5432
+
+# Headless service for StatefulSet
+additionalServices:
+  headless:
+    enabled: true
+    type: ClusterIP
+    clusterIP: None
+    port: 5432
+    publishNotReadyAddresses: true
+
+persistence:
+  enabled: true
+  volumes:
+    postgres-config:
+      type: configMap
+      configMap:
+        name: postgres-config
+    init-scripts:
+      type: configMap
+      configMap:
+        name: postgres-init-scripts
+        defaultMode: 0755
+
+configMap:
+  enabled: true
+  name: postgres-config
+  data:
+    postgresql.conf: |
+      # PostgreSQL configuration
+      listen_addresses = '*'
+      max_connections = 200
+      shared_buffers = 256MB
+      effective_cache_size = 1GB
+      maintenance_work_mem = 64MB
+      checkpoint_completion_target = 0.9
+      wal_buffers = 16MB
+      default_statistics_target = 100
+      random_page_cost = 1.1
+      effective_io_concurrency = 200
+      work_mem = 4MB
+      min_wal_size = 1GB
+      max_wal_size = 4GB
+
+additionalConfigMaps:
+  init-scripts:
+    data:
+      01-create-tables.sql: |
+        CREATE TABLE IF NOT EXISTS users (
+          id SERIAL PRIMARY KEY,
+          username VARCHAR(50) UNIQUE NOT NULL,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        );
+
+        CREATE TABLE IF NOT EXISTS sessions (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          token VARCHAR(255) UNIQUE NOT NULL,
+          expires_at TIMESTAMP NOT NULL
+        );
+
+secret:
+  enabled: true
+  name: postgres-secret
+  stringData:
+    password: "super-secure-password"
+    replication-password: "replication-password"
+
+# Pod disruption budget for high availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 2
+
+# Anti-affinity for spreading pods across nodes
+affinity:
+  podAntiAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      - labelSelector:
+          matchExpressions:
+            - key: app.kubernetes.io/name
+              operator: In
+              values:
+                - postgres
+        topologyKey: kubernetes.io/hostname
+
+# Network policy for database security
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: webapp
+      ports:
+        - protocol: TCP
+          port: 5432
+  egress:
+    - to:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: 53  # DNS
+    - to:
+        - podSelector:
+            matchLabels:
+              app.kubernetes.io/name: postgres
+      ports:
+        - protocol: TCP
+          port: 5432  # Replication
+
+# Monitoring
+serviceMonitor:
+  enabled: true
+  endpoints:
+    - port: postgres
+      interval: 30s
+      path: /metrics

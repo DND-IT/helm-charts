@@ -1,0 +1,218 @@
+suite: test datadog slo
+templates:
+  - monitoring/datadog/datadogslo.yaml
+tests:
+  - it: should not create DatadogSLO when disabled
+    set:
+      datadogSLO.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create DatadogSLO when enabled
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogSLO
+    set:
+      datadogSLO.enabled: true
+      datadogSLO.slos:
+        availability-slo:
+          enabled: true
+          name: "Service Availability"
+          type: "metric"
+          targetThreshold: "99.9"
+          timeframe: "30d"
+          query:
+            numerator: "sum:requests.success{service:api}.as_count()"
+            denominator: "sum:requests.total{service:api}.as_count()"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: DatadogSLO
+      - isAPIVersion:
+          of: datadoghq.com/v1alpha1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-availability-slo
+      - equal:
+          path: spec.name
+          value: "Service Availability"
+      - equal:
+          path: spec.type
+          value: "metric"
+      - equal:
+          path: spec.targetThreshold
+          value: "99.9"
+      - equal:
+          path: spec.timeframe
+          value: "30d"
+
+  - it: should create multiple SLOs
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogSLO
+    set:
+      datadogSLO.enabled: true
+      datadogSLO.slos:
+        slo1:
+          enabled: true
+          name: "SLO 1"
+          type: "metric"
+          targetThreshold: "99.9"
+          timeframe: "7d"
+          query:
+            numerator: "query1"
+            denominator: "query2"
+        slo2:
+          enabled: true
+          name: "SLO 2"
+          type: "metric"
+          targetThreshold: "95"
+          timeframe: "30d"
+          query:
+            numerator: "query3"
+            denominator: "query4"
+        slo3:
+          enabled: false
+          name: "SLO 3"
+          type: "metric"
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: should include all SLO fields
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogSLO
+    set:
+      datadogSLO.enabled: true
+      datadogSLO.slos:
+        complete-slo:
+          enabled: true
+          name: "Complete SLO Example"
+          description: "This is a complete SLO with all fields"
+          type: "metric"
+          targetThreshold: "99.95"
+          timeframe: "30d"
+          query:
+            numerator: "sum:http.requests{service:api,!status:5xx}.as_count()"
+            denominator: "sum:http.requests{service:api}.as_count()"
+          tags:
+            - "service:api"
+            - "team:platform"
+            - "tier:1"
+          groups:
+            - "monitor-group-1"
+            - "monitor-group-2"
+          labels:
+            slo-type: availability
+          annotations:
+            documentation: "https://wiki.example.com/slos"
+    asserts:
+      - equal:
+          path: spec.description
+          value: "This is a complete SLO with all fields"
+      - equal:
+          path: spec.query.numerator
+          value: "sum:http.requests{service:api,!status:5xx}.as_count()"
+      - equal:
+          path: spec.query.denominator
+          value: "sum:http.requests{service:api}.as_count()"
+      - contains:
+          path: spec.tags
+          content: "service:api"
+      - contains:
+          path: spec.tags
+          content: "team:platform"
+      - contains:
+          path: spec.tags
+          content: "tier:1"
+      - contains:
+          path: spec.groups
+          content: "monitor-group-1"
+      - contains:
+          path: spec.groups
+          content: "monitor-group-2"
+      - equal:
+          path: metadata.labels.slo-type
+          value: availability
+      - equal:
+          path: metadata.annotations.documentation
+          value: "https://wiki.example.com/slos"
+
+  - it: should handle different timeframes
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogSLO
+    set:
+      datadogSLO.enabled: true
+      datadogSLO.slos:
+        weekly-slo:
+          enabled: true
+          name: "Weekly SLO"
+          type: "metric"
+          targetThreshold: "99"
+          timeframe: "7d"
+          query:
+            numerator: "num"
+            denominator: "den"
+        monthly-slo:
+          enabled: true
+          name: "Monthly SLO"
+          type: "metric"
+          targetThreshold: "99.9"
+          timeframe: "30d"
+          query:
+            numerator: "num"
+            denominator: "den"
+        quarterly-slo:
+          enabled: true
+          name: "Quarterly SLO"
+          type: "metric"
+          targetThreshold: "99.99"
+          timeframe: "90d"
+          query:
+            numerator: "num"
+            denominator: "den"
+    asserts:
+      - hasDocuments:
+          count: 3
+      - equal:
+          path: spec.timeframe
+          value: "7d"
+        documentIndex: 0
+      - equal:
+          path: spec.timeframe
+          value: "30d"
+        documentIndex: 1
+      - equal:
+          path: spec.timeframe
+          value: "90d"
+        documentIndex: 2
+
+  - it: should use fullname and namespace helpers
+    capabilities:
+      apiVersions:
+        - datadoghq.com/v1alpha1/DatadogSLO
+    set:
+      datadogSLO.enabled: true
+      fullnameOverride: "my-service"
+      namespaceOverride: "production"
+      datadogSLO.slos:
+        test:
+          enabled: true
+          name: "Test SLO"
+          type: "metric"
+          targetThreshold: "99"
+          timeframe: "7d"
+          query:
+            numerator: "num"
+            denominator: "den"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-service-test
+      - equal:
+          path: metadata.namespace
+          value: production
