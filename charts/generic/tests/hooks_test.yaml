@@ -280,30 +280,33 @@ tests:
     asserts:
       - hasDocuments:
           count: 3
+      # First hook
       - equal:
           path: metadata.name
           value: RELEASE-NAME-pre-install-first-hook
-          documentIndex: 0
+        documentIndex: 0
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "1"
-          documentIndex: 0
+        documentIndex: 0
+      # Second hook
       - equal:
           path: metadata.name
           value: RELEASE-NAME-pre-install-second-hook
-          documentIndex: 1
+        documentIndex: 1
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "2"
-          documentIndex: 1
+        documentIndex: 1
+      # Third hook
       - equal:
           path: metadata.name
           value: RELEASE-NAME-pre-install-third-hook
-          documentIndex: 2
+        documentIndex: 2
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "3"
-          documentIndex: 2
+        documentIndex: 2
 
   - it: should apply security contexts to hook jobs
     set:

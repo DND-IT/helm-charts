@@ -125,7 +125,7 @@ allowPrivilegeEscalation: {{ $defaults.allowPrivilegeEscalation | default false 
 allowPrivilegeEscalation: {{ $securityContext.allowPrivilegeEscalation }}
 {{- end }}
 {{- if not (hasKey $securityContext "readOnlyRootFilesystem") }}
-readOnlyRootFilesystem: {{ $defaults.readOnlyRootFilesystem | default true }}
+readOnlyRootFilesystem: {{ $defaults.readOnlyRootFilesystem }}
 {{- else }}
 readOnlyRootFilesystem: {{ $securityContext.readOnlyRootFilesystem }}
 {{- end }}

@@ -2,36 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "properties": {
-    "global": {
+    "deployment": {
       "type": "object",
       "properties": {
-        "labels": {
-          "type": "object"
-        },
-        "annotations": {
-          "type": "object"
-        }
-      }
-    },
-    "generic": {
-      "type": "object",
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "version": {
-          "type": "string"
-        }
-      }
-    },
-    "workload": {
-      "type": "object",
-      "required": ["type"],
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": ["deployment", "statefulset", "daemonset", "job", "cronjob"]
-        },
         "enabled": {
           "type": "boolean"
         },
@@ -60,50 +33,55 @@
         "updateStrategy": {
           "type": "object"
         },
-        "volumeClaimTemplates": {
+        "command": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "env": {
+          "type": "array"
+        },
+        "envFrom": {
+          "type": "array"
+        },
+        "resources": {
           "type": "object"
         },
-        "backoffLimit": {
-          "type": "integer",
-          "minimum": 0
+        "securityContext": {
+          "type": "object"
         },
-        "completions": {
-          "type": "integer",
-          "minimum": 1
+        "livenessProbe": {
+          "type": "object"
         },
-        "parallelism": {
-          "type": "integer",
-          "minimum": 1
+        "readinessProbe": {
+          "type": "object"
         },
-        "ttlSecondsAfterFinished": {
-          "type": "integer",
-          "minimum": 0
+        "startupProbe": {
+          "type": "object"
         },
-        "restartPolicy": {
-          "type": "string",
-          "enum": ["Always", "OnFailure", "Never"]
+        "lifecycle": {
+          "type": "object"
         },
-        "schedule": {
-          "type": "string",
-          "pattern": "^(@(annually|yearly|monthly|weekly|daily|hourly|reboot))|(@every (\\d+(ns|us|µs|ms|s|m|h))+)|((((\\d+,)+\\d+|(\\d+(\\/|-)\\d+)|\\d+|\\*) ?){5,7})$"
-        },
-        "concurrencyPolicy": {
-          "type": "string",
-          "enum": ["Allow", "Forbid", "Replace"]
-        },
-        "successfulJobsHistoryLimit": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "failedJobsHistoryLimit": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "startingDeadlineSeconds": {
-          "type": "integer",
-          "minimum": 0
+        "volumeMounts": {
+          "type": "array"
         }
       }
+    },
+    "extraDeployments": {
+      "type": "object"
+    },
+    "cronjobs": {
+      "type": "object"
+    },
+    "jobs": {
+      "type": "object"
     },
     "nameOverride": {
       "type": "string"
@@ -153,9 +131,6 @@
           }
         }
       }
-    },
-    "deployment": {
-      "type": "object"
     },
     "podSecurityContext": {
       "type": "object",
@@ -238,87 +213,6 @@
       "type": "array",
       "items": {
         "type": "object"
-      }
-    },
-    "sidecars": {
-      "type": "array",
-      "items": {
-        "type": "object"
-      }
-    },
-    "containerPatterns": {
-      "type": "object",
-      "properties": {
-        "adapter": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "containers": {
-              "type": "array",
-              "items": {
-                "type": "object"
-              }
-            }
-          }
-        },
-        "ambassador": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "containers": {
-              "type": "array",
-              "items": {
-                "type": "object"
-              }
-            }
-          }
-        },
-        "sidecar": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "containers": {
-              "type": "array",
-              "items": {
-                "type": "object"
-              }
-            }
-          }
-        },
-        "init": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "containers": {
-              "type": "array",
-              "items": {
-                "type": "object"
-              }
-            }
-          }
-        },
-        "debug": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "containers": {
-              "type": "array",
-              "items": {
-                "type": "object"
-              }
-            }
-          }
-        }
       }
     },
     "containerPorts": {
@@ -467,7 +361,7 @@
         }
       }
     },
-    "additionalServices": {
+    "extraServices": {
       "type": "object"
     },
     "ingress": {
@@ -478,11 +372,6 @@
         },
         "className": {
           "type": "string"
-        },
-        "controller": {
-          "type": "string",
-          "enum": ["", "alb", "nginx"],
-          "description": "Ingress controller type (default: alb)"
         },
         "hosts": {
           "type": "array",
@@ -627,7 +516,7 @@
     "hostAliases": {
       "type": "array"
     },
-    "autoscaling": {
+    "hpa": {
       "type": "object",
       "properties": {
         "enabled": {
@@ -655,33 +544,6 @@
         "updateMode": {
           "type": "string",
           "enum": ["Off", "Initial", "Recreate", "Auto"]
-        }
-      }
-    },
-    "keda": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "pollingInterval": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "cooldownPeriod": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "minReplicaCount": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "maxReplicaCount": {
-          "type": "integer",
-          "minimum": 1
-        },
-        "triggers": {
-          "type": "array"
         }
       }
     },
@@ -828,75 +690,7 @@
             "type": "object"
           }
         },
-        "additionalMonitors": {
-          "type": "object"
-        }
-      }
-    },
-    "prometheusRule": {
-      "type": "object",
-      "properties": {
-        "enabled": {
-          "type": "boolean"
-        },
-        "labels": {
-          "type": "object"
-        },
-        "annotations": {
-          "type": "object"
-        },
-        "groups": {
-          "type": "array",
-          "items": {
-            "type": "object",
-            "required": ["name", "rules"],
-            "properties": {
-              "name": {
-                "type": "string"
-              },
-              "interval": {
-                "type": "string",
-                "pattern": "^[0-9]+(ms|s|m|h)$"
-              },
-              "limit": {
-                "type": "integer",
-                "minimum": 0
-              },
-              "partialResponseStrategy": {
-                "type": "string"
-              },
-              "rules": {
-                "type": "array",
-                "items": {
-                  "type": "object",
-                  "required": ["expr"],
-                  "properties": {
-                    "alert": {
-                      "type": "string"
-                    },
-                    "record": {
-                      "type": "string"
-                    },
-                    "expr": {
-                      "type": "string"
-                    },
-                    "for": {
-                      "type": "string",
-                      "pattern": "^[0-9]+(ms|s|m|h)$"
-                    },
-                    "labels": {
-                      "type": "object"
-                    },
-                    "annotations": {
-                      "type": "object"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "additionalRules": {
+        "extraMonitors": {
           "type": "object"
         }
       }
@@ -904,119 +698,6 @@
     "gateway": {
       "type": "object",
       "properties": {
-        "gatewayClass": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "name": {
-              "type": "string"
-            },
-            "controllerName": {
-              "type": "string"
-            },
-            "description": {
-              "type": "string"
-            },
-            "labels": {
-              "type": "object"
-            },
-            "annotations": {
-              "type": "object"
-            },
-            "parametersRef": {
-              "type": "object"
-            },
-            "additionalClasses": {
-              "type": "object"
-            }
-          }
-        },
-        "gateway": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean"
-            },
-            "name": {
-              "type": "string"
-            },
-            "gatewayClassName": {
-              "type": "string"
-            },
-            "labels": {
-              "type": "object"
-            },
-            "annotations": {
-              "type": "object"
-            },
-            "addresses": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "type": {
-                    "type": "string",
-                    "enum": ["IPAddress", "Hostname"]
-                  },
-                  "value": {
-                    "type": "string"
-                  }
-                },
-                "required": ["value"]
-              }
-            },
-            "listeners": {
-              "type": "array",
-              "items": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "hostname": {
-                    "type": "string"
-                  },
-                  "port": {
-                    "type": "integer",
-                    "minimum": 1,
-                    "maximum": 65535
-                  },
-                  "protocol": {
-                    "type": "string",
-                    "enum": ["HTTP", "HTTPS", "TLS", "TCP", "UDP"]
-                  },
-                  "tls": {
-                    "type": "object"
-                  },
-                  "allowedRoutes": {
-                    "type": "object"
-                  }
-                },
-                "required": ["name", "port"]
-              }
-            },
-            "tls": {
-              "type": "object",
-              "properties": {
-                "enabled": {
-                  "type": "boolean"
-                },
-                "mode": {
-                  "type": "string",
-                  "enum": ["Terminate", "Passthrough"]
-                },
-                "certificateRefs": {
-                  "type": "array"
-                }
-              }
-            },
-            "additionalGateways": {
-              "type": "object"
-            }
-          }
-        },
         "httpRoute": {
           "type": "object",
           "properties": {
@@ -1028,12 +709,6 @@
             },
             "annotations": {
               "type": "object"
-            },
-            "gatewayName": {
-              "type": "string"
-            },
-            "gatewayNamespace": {
-              "type": "string"
             },
             "parentRefs": {
               "type": "array"
@@ -1047,7 +722,7 @@
             "rules": {
               "type": "array"
             },
-            "additionalRoutes": {
+            "extraRoutes": {
               "type": "object"
             }
           }
@@ -1064,19 +739,13 @@
             "annotations": {
               "type": "object"
             },
-            "gatewayName": {
-              "type": "string"
-            },
-            "gatewayNamespace": {
-              "type": "string"
-            },
             "parentRefs": {
               "type": "array"
             },
             "rules": {
               "type": "array"
             },
-            "additionalRoutes": {
+            "extraRoutes": {
               "type": "object"
             }
           }
@@ -1099,7 +768,7 @@
             "to": {
               "type": "array"
             },
-            "additionalGrants": {
+            "extraGrants": {
               "type": "object"
             }
           }

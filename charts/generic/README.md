@@ -2,20 +2,19 @@
 
 ![Version: 0.0.2](https://img.shields.io/badge/Version-0.0.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-A highly flexible and unopinionated Helm chart for deploying any Kubernetes workload.
-Supports Deployments, StatefulSets, DaemonSets, Jobs, and CronJobs with extensive
-configuration options. Designed for maximum flexibility while maintaining security
-best practices by default. Optimized for AWS with ALB ingress controller as default.
+A highly flexible and unopinionated Helm chart for deploying Kubernetes workloads.
+Supports Deployments, CronJobs, and Jobs with extensive configuration options.
+Designed for maximum flexibility while maintaining security best practices by default.
+Optimized for AWS with ALB ingress controller support.
 
 ## Features
 
-- **All Workload Types**: Supports Deployment, StatefulSet, DaemonSet, Job, and CronJob
-- **Flexible Networking**: Service, Ingress (ALB/NGINX), and Gateway API support
-- **Advanced Scaling**: HPA, VPA, and KEDA autoscaling options
-- **Comprehensive Security**: RBAC, NetworkPolicy, Pod Security Standards, and secure defaults
-- **Persistence**: Multiple volume types, CSI snapshots, and StatefulSet volume claims
-- **Observability**: Prometheus, Datadog, and custom metrics integration
-- **Cloud Native**: External Secrets, workload identity, and native sidecar containers
+- **Multiple Workload Types**: Supports deployments, cronjobs, and jobs
+- **Flexible Networking**: Service, Ingress (ALB), and Gateway API support
+- **Advanced Scaling**: HPA and VPA autoscaling options
+- **Security**: RBAC, NetworkPolicy, Pod Security Standards, and secure defaults
+- **Persistence**: Multiple volume types, CSI snapshots, and volume claim templates
+- **Cloud Native**: External Secrets
 - **High Availability**: PDB, topology spread, and anti-affinity configurations
 - **Extensibility**: Helm hooks, extra objects, and modular template architecture
 
@@ -37,106 +36,19 @@ helm install my-release dnd-it/generic
 # With custom values
 helm install my-release dnd-it/generic -f values.yaml
 
-# Deploy as StatefulSet
+# Deploy with custom image
 helm install my-release dnd-it/generic \
-  --set workload.type=statefulset \
-  --set image.repository=postgres \
-  --set image.tag=15-alpine
+  --set deployment.enabled=true \
+  --set image.repository=myorg/myapp \
+  --set image.tag=v1.0.0
 
-# Deploy as CronJob
+# Deploy a CronJob
 helm install my-release dnd-it/generic \
-  --set workload.type=cronjob \
-  --set workload.schedule="0 * * * *" \
-  --set image.repository=myorg/backup-job
+  --set deployment.enabled=false \
+  --set cronjobs.backup.enabled=true \
+  --set cronjobs.backup.schedule="0 * * * *" \
+  --set cronjobs.backup.image.repository=myorg/backup-job
 ```
-
-## Configuration
-
-### Core Application Settings
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `app.name` | Application name | `""` (chart name) |
-| `app.version` | Application version | `""` (chart appVersion) |
-| `image.repository` | Container image repository | `nginx` |
-| `image.tag` | Container image tag | `1.21` |
-| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
-
-### Deployment Configuration
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `deployment.enabled` | Enable deployment | `true` |
-| `deployment.replicas` | Number of replicas | `1` |
-| `deployment.strategy.type` | Deployment strategy | `RollingUpdate` |
-| `deployment.resources` | Resource limits and requests | `{}` |
-| `deployment.nodeSelector` | Node selector | `{}` |
-| `deployment.tolerations` | Pod tolerations | `[]` |
-| `deployment.affinity` | Pod affinity rules | `{}` |
-
-### Service Configuration
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `service.enabled` | Enable service | `true` |
-| `service.type` | Service type | `ClusterIP` |
-| `service.port` | Service port | `80` |
-| `service.targetPort` | Target port | `http` |
-
-### Ingress Configuration
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `ingress.enabled` | Enable ingress | `false` |
-| `ingress.className` | Ingress class name | `""` |
-| `ingress.hosts` | Ingress hosts configuration | See values.yaml |
-| `ingress.tls` | TLS configuration | `[]` |
-
-### Persistence Configuration
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `persistence.enabled` | Enable persistent storage | `false` |
-| `persistence.size` | Storage size | `8Gi` |
-| `persistence.accessMode` | Access mode | `ReadWriteOnce` |
-| `persistence.storageClass` | Storage class | `""` |
-| `persistence.mountPath` | Mount path in container | `/data` |
-
-### Health Checks
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `deployment.livenessProbe.enabled` | Enable liveness probe | `false` |
-| `deployment.readinessProbe.enabled` | Enable readiness probe | `false` |
-| `deployment.startupProbe.enabled` | Enable startup probe | `false` |
-
-### Autoscaling
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `autoscaling.enabled` | Enable HPA | `false` |
-| `autoscaling.minReplicas` | Minimum replicas | `1` |
-| `autoscaling.maxReplicas` | Maximum replicas | `100` |
-| `autoscaling.targetCPUUtilizationPercentage` | CPU target | `80` |
-| `autoscaling.targetMemoryUtilizationPercentage` | Memory target | `80` |
-
-### Security
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `serviceAccount.enabled` | Enable service account | `true` |
-| `serviceAccount.create` | Create service account | `true` |
-| `rbac.enabled` | Enable RBAC | `false` |
-| `networkPolicy.enabled` | Enable network policy | `false` |
-| `podDisruptionBudget.enabled` | Enable PDB | `false` |
-
-### Monitoring
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `serviceMonitor.enabled` | Enable ServiceMonitor | `false` |
-| `serviceMonitor.interval` | Scrape interval | `30s` |
-| `serviceMonitor.path` | Metrics path | `/metrics` |
 
 ## Examples
 
@@ -145,7 +57,7 @@ helm install my-release dnd-it/generic \
 ```yaml
 image:
   repository: nginx
-  tag: "1.21"
+  tag: "1.21-alpine"
 
 service:
   port: 80
@@ -153,6 +65,11 @@ service:
 
 ingress:
   enabled: true
+  className: alb
+  alb:
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
   hosts:
     - host: myapp.example.com
       paths:
@@ -169,119 +86,184 @@ deployment:
       memory: 128Mi
 ```
 
-### Application with Database
+### Application with ALB Ingress
 
 ```yaml
-image:
-  repository: myapp
-  tag: "v1.0.0"
-
-persistence:
-  enabled: true
-  size: 20Gi
-  mountPath: /var/lib/data
-
-configMap:
-  enabled: true
-  data:
-    database.conf: |
-      host=postgres.default.svc.cluster.local
-      port=5432
-
-secret:
-  enabled: true
-  stringData:
-    db-password: "supersecret"
-
 deployment:
-  env:
-    - name: DB_HOST
-      valueFrom:
-        configMapKeyRef:
-          name: myapp-config
-          key: database.host
-    - name: DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: myapp-secret
-          key: db-password
+  enabled: true
+  replicas: 2
+
+image:
+  repository: myorg/webapp
+  tag: "v2.0.0"
+
+ingress:
+  enabled: true
+  className: alb
+  alb:
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/group.name: shared-alb
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
 ```
 
-### High Availability Setup
+### CronJob Example
 
 ```yaml
 deployment:
-  replicas: 3
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+  enabled: false  # Disable main deployment
 
-autoscaling:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 70
+cronjobs:
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 1
+    image:
+      repository: myorg/backup-tool
+      tag: "v1.0.0"
+    command: ["/bin/sh"]
+    args: ["-c", "backup-script.sh"]
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    env:
+      - name: BACKUP_BUCKET
+        value: "s3://my-backups"
 
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 2
+  cleanup:
+    enabled: true
+    schedule: "0 */6 * * *"  # Every 6 hours
+    image:
+      repository: myorg/cleanup-tool
+      tag: "latest"
+    command: ["python", "cleanup.py"]
+```
 
+### Job Example
+
+```yaml
 deployment:
-  affinity:
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/name
-                  operator: In
-                  values:
-                    - myapp
-            topologyKey: kubernetes.io/hostname
+  enabled: false  # Disable main deployment
+
+jobs:
+  migration:
+    enabled: true
+    backoffLimit: 3
+    completions: 1
+    parallelism: 1
+    ttlSecondsAfterFinished: 300
+    image:
+      repository: myorg/migration-tool
+      tag: "v2.0.0"
+    command: ["python", "migrate.py"]
+    env:
+      - name: DATABASE_URL
+        value: "postgresql://localhost/myapp"
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+```
+
+### Multiple Deployments Example
+
+```yaml
+# Main deployment
+deployment:
+  enabled: true
+  replicas: 3
+  env:
+    - name: SERVICE_TYPE
+      value: "api"
+
+image:
+  repository: myorg/api
+  tag: "v1.0.0"
+
+# Additional deployments
+extraDeployments:
+  worker:
+    replicas: 2
+    image:
+      repository: myorg/worker
+      tag: "v1.0.0"
+    env:
+      - name: SERVICE_TYPE
+        value: "worker"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+
+  admin:
+    replicas: 1
+    image:
+      repository: myorg/admin
+      tag: "v1.0.0"
+    env:
+      - name: SERVICE_TYPE
+        value: "admin"
+    ports:
+      - name: http
+        containerPort: 8080
 ```
 
 ## Upgrading
 
-### From v0.x to v1.x
+### Breaking Changes in v0.0.2
 
-- Update values file structure according to new schema
-- Review breaking changes in CHANGELOG.md
+1. **Workload Structure Changed**:
+   - Removed `workload.type` configuration
+   - StatefulSet and DaemonSet no longer supported
+   - Use `deployment.enabled`, `cronjobs`, and `jobs` instead
 
-## Development
+2. **Monitoring Resources Removed**:
+   - ServiceMonitor, PodMonitor, PrometheusRule removed
+   - Datadog custom resources moved to separate `datadog-resources` chart
 
-### Testing
+3. **Ingress Controller**:
+   - Removed `ingress.controller` field
+   - Only ALB ingress controller is supported
+   - Removed `ingress.nginx` configuration section
 
-```bash
-# Lint the chart
-helm lint .
+### Migration Guide
 
-# Test template rendering
-helm template test-release . -f values-example.yaml
+```yaml
+# Old structure
+workload:
+  type: deployment
+  enabled: true
+  replicas: 3
 
-# Test installation
-helm install test-release . --dry-run --debug
+# New structure
+deployment:
+  enabled: true
+  replicas: 3
+
+# Old CronJob
+workload:
+  type: cronjob
+  schedule: "0 * * * *"
+
+# New CronJob
+deployment:
+  enabled: false
+cronjobs:
+  mycron:
+    enabled: true
+    schedule: "0 * * * *"
 ```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This chart is licensed under the MIT License. See LICENSE file for details.
-
-## Support
-
-- Documentation: [Chart Documentation](https://github.com/dnd-it/helm-charts/tree/main/charts/generic)
-- Issues: [GitHub Issues](https://github.com/dnd-it/helm-charts/issues)
-- Discussions: [GitHub Discussions](https://github.com/dnd-it/helm-charts/discussions)
 
 **Homepage:** <https://github.com/dnd-it/helm-charts>
 
@@ -304,21 +286,7 @@ Kubernetes: `>=1.29.0-0`
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | activeDeadlineSeconds | string | `nil` |  |
-| additionalIngresses | object | `{}` |  |
-| additionalServices | object | `{}` |  |
 | affinity | object | `{}` |  |
-| autoscaling.behavior | object | `{}` |  |
-| autoscaling.enabled | bool | `false` |  |
-| autoscaling.maxReplicas | int | `10` |  |
-| autoscaling.metrics[0].resource.name | string | `"cpu"` |  |
-| autoscaling.metrics[0].resource.target.averageUtilization | int | `80` |  |
-| autoscaling.metrics[0].resource.target.type | string | `"Utilization"` |  |
-| autoscaling.metrics[0].type | string | `"Resource"` |  |
-| autoscaling.metrics[1].resource.name | string | `"memory"` |  |
-| autoscaling.metrics[1].resource.target.averageUtilization | int | `80` |  |
-| autoscaling.metrics[1].resource.target.type | string | `"Utilization"` |  |
-| autoscaling.metrics[1].type | string | `"Resource"` |  |
-| autoscaling.minReplicas | int | `1` |  |
 | commonEnvVars | bool | `false` |  |
 | configMap.annotations | object | `{}` |  |
 | configMap.binaryData | object | `{}` |  |
@@ -336,26 +304,26 @@ Kubernetes: `>=1.29.0-0`
 | containerSecurityContext.runAsUser | int | `1000` |  |
 | containerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | containers | list | `[]` |  |
-| datadogDashboard.dashboards | object | `{}` |  |
-| datadogDashboard.enabled | bool | `false` |  |
-| datadogMetric.enabled | bool | `false` |  |
-| datadogMetric.metrics | object | `{}` |  |
-| datadogMonitor.enabled | bool | `false` |  |
-| datadogMonitor.monitors | object | `{}` |  |
-| datadogSLO.enabled | bool | `false` |  |
-| datadogSLO.slos | object | `{}` |  |
+| cronjobs | object | `{}` |  |
 | deployment.args | list | `[]` |  |
 | deployment.command | list | `[]` |  |
+| deployment.enabled | bool | `true` |  |
 | deployment.env | list | `[]` |  |
 | deployment.envFrom | list | `[]` |  |
 | deployment.lifecycle | object | `{}` |  |
 | deployment.livenessProbe | object | `{}` |  |
+| deployment.progressDeadlineSeconds | int | `600` |  |
 | deployment.readinessProbe | object | `{}` |  |
+| deployment.replicas | int | `1` |  |
 | deployment.resources.limits.memory | string | `"256Mi"` |  |
 | deployment.resources.requests.cpu | string | `"100m"` |  |
 | deployment.resources.requests.memory | string | `"128Mi"` |  |
+| deployment.revisionHistoryLimit | int | `2` |  |
 | deployment.securityContext | object | `{}` |  |
 | deployment.startupProbe | object | `{}` |  |
+| deployment.strategy.rollingUpdate.maxSurge | string | `"25%"` |  |
+| deployment.strategy.rollingUpdate.maxUnavailable | string | `"25%"` |  |
+| deployment.strategy.type | string | `"RollingUpdate"` |  |
 | deployment.volumeMounts | list | `[]` |  |
 | dnsConfig | object | `{}` |  |
 | dnsPolicy | string | `""` |  |
@@ -364,58 +332,35 @@ Kubernetes: `>=1.29.0-0`
 | envFrom | list | `[]` |  |
 | externalSecrets | object | `{}` |  |
 | extraConfigMaps | object | `{}` |  |
+| extraDeployments | object | `{}` |  |
+| extraIngresses | object | `{}` |  |
 | extraObjects | list | `[]` |  |
 | extraSecrets | object | `{}` |  |
+| extraServices | object | `{}` |  |
 | extraVolumeMounts | list | `[]` |  |
 | extraVolumes | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
-| gateway.gateway.additionalGateways | object | `{}` |  |
-| gateway.gateway.addresses | list | `[]` |  |
-| gateway.gateway.annotations | object | `{}` |  |
-| gateway.gateway.enabled | bool | `false` |  |
-| gateway.gateway.gatewayClassName | string | `""` |  |
-| gateway.gateway.labels | object | `{}` |  |
-| gateway.gateway.listeners | list | `[]` |  |
-| gateway.gateway.name | string | `""` |  |
-| gateway.gateway.tls.certificateRefs | list | `[]` |  |
-| gateway.gateway.tls.enabled | bool | `false` |  |
-| gateway.gateway.tls.mode | string | `"Terminate"` |  |
-| gateway.gatewayClass.additionalClasses | object | `{}` |  |
-| gateway.gatewayClass.annotations | object | `{}` |  |
-| gateway.gatewayClass.controllerName | string | `"example.com/gateway-controller"` |  |
-| gateway.gatewayClass.description | string | `"Gateway class for generic application"` |  |
-| gateway.gatewayClass.enabled | bool | `false` |  |
-| gateway.gatewayClass.labels | object | `{}` |  |
-| gateway.gatewayClass.name | string | `""` |  |
-| gateway.gatewayClass.parametersRef | object | `{}` |  |
-| gateway.httpRoute.additionalRoutes | object | `{}` |  |
 | gateway.httpRoute.annotations | object | `{}` |  |
 | gateway.httpRoute.enabled | bool | `false` |  |
-| gateway.httpRoute.gatewayName | string | `""` |  |
-| gateway.httpRoute.gatewayNamespace | string | `""` |  |
+| gateway.httpRoute.extraRoutes | object | `{}` |  |
 | gateway.httpRoute.hostnames | list | `[]` |  |
 | gateway.httpRoute.labels | object | `{}` |  |
 | gateway.httpRoute.parentRefs | list | `[]` |  |
 | gateway.httpRoute.rules | list | `[]` |  |
-| gateway.referenceGrant.additionalGrants | object | `{}` |  |
 | gateway.referenceGrant.annotations | object | `{}` |  |
 | gateway.referenceGrant.enabled | bool | `false` |  |
+| gateway.referenceGrant.extraGrants | object | `{}` |  |
 | gateway.referenceGrant.from | list | `[]` |  |
 | gateway.referenceGrant.labels | object | `{}` |  |
 | gateway.referenceGrant.to | list | `[]` |  |
-| gateway.tcpRoute.additionalRoutes | object | `{}` |  |
 | gateway.tcpRoute.annotations | object | `{}` |  |
 | gateway.tcpRoute.enabled | bool | `false` |  |
-| gateway.tcpRoute.gatewayName | string | `""` |  |
-| gateway.tcpRoute.gatewayNamespace | string | `""` |  |
+| gateway.tcpRoute.extraRoutes | object | `{}` |  |
 | gateway.tcpRoute.labels | object | `{}` |  |
 | gateway.tcpRoute.parentRefs | list | `[]` |  |
 | gateway.tcpRoute.rules | list | `[]` |  |
 | generic.branchName | string | `""` |  |
 | generic.environment | string | `""` |  |
-| generic.feature | bool | `true` |  |
-| generic.name | string | `""` |  |
-| generic.version | string | `""` |  |
 | global.annotations | object | `{}` |  |
 | global.labels | object | `{}` |  |
 | hooks.enabled | bool | `false` |  |
@@ -431,25 +376,30 @@ Kubernetes: `>=1.29.0-0`
 | hostPID | bool | `false` |  |
 | hostPathVolumes | object | `{}` |  |
 | hostname | string | `""` |  |
+| hpa.behavior | object | `{}` |  |
+| hpa.enabled | bool | `false` |  |
+| hpa.maxReplicas | int | `10` |  |
+| hpa.metrics[0].resource.name | string | `"cpu"` |  |
+| hpa.metrics[0].resource.target.averageUtilization | int | `80` |  |
+| hpa.metrics[0].resource.target.type | string | `"Utilization"` |  |
+| hpa.metrics[0].type | string | `"Resource"` |  |
+| hpa.metrics[1].resource.name | string | `"memory"` |  |
+| hpa.metrics[1].resource.target.averageUtilization | int | `80` |  |
+| hpa.metrics[1].resource.target.type | string | `"Utilization"` |  |
+| hpa.metrics[1].type | string | `"Resource"` |  |
+| hpa.minReplicas | int | `1` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
-| image.repository | string | `"nginx"` |  |
-| image.tag | string | `"1.21-alpine"` |  |
+| image.repository | string | `"registry.k8s.io/pause"` |  |
+| image.tag | string | `"3.10"` |  |
 | imagePullSecrets | list | `[]` |  |
-| ingress.alb.annotations | object | `{}` |  |
 | ingress.annotations | object | `{}` |  |
-| ingress.certManager.annotations | object | `{}` |  |
-| ingress.certManager.clusterIssuer | string | `""` |  |
-| ingress.certManager.enabled | bool | `false` |  |
-| ingress.certManager.issuer | string | `""` |  |
-| ingress.className | string | `""` |  |
-| ingress.controller | string | `""` |  |
+| ingress.className | string | `"alb"` |  |
 | ingress.defaultBackend | object | `{}` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.hosts | list | `[]` |  |
 | ingress.labels | object | `{}` |  |
-| ingress.nginx.annotations | object | `{}` |  |
-| ingress.tls | list | `[]` |  |
 | initContainers | list | `[]` |  |
+| jobs | object | `{}` |  |
 | nameOverride | string | `""` |  |
 | namespaceOverride | string | `""` |  |
 | networkPolicy.egress | list | `[]` |  |
@@ -468,7 +418,6 @@ Kubernetes: `>=1.29.0-0`
 | persistence.size | string | `"8Gi"` |  |
 | persistence.storageClass | string | `""` |  |
 | persistence.subPath | string | `""` |  |
-| persistence.volumeClaimTemplate | bool | `false` |  |
 | persistence.volumeMode | string | `"Filesystem"` |  |
 | persistence.volumes | object | `{}` |  |
 | podAnnotations | object | `{}` |  |
@@ -476,29 +425,6 @@ Kubernetes: `>=1.29.0-0`
 | podDisruptionBudget.minAvailable | int | `1` |  |
 | podDisruptionBudget.unhealthyPodEvictionPolicy | string | `""` |  |
 | podLabels | object | `{}` |  |
-| podMonitor.additionalMonitors | object | `{}` |  |
-| podMonitor.annotations | object | `{}` |  |
-| podMonitor.enabled | bool | `false` |  |
-| podMonitor.endpoints | list | `[]` |  |
-| podMonitor.interval | string | `"30s"` |  |
-| podMonitor.jobLabel | string | `""` |  |
-| podMonitor.labelLimit | int | `0` |  |
-| podMonitor.labelNameLengthLimit | int | `0` |  |
-| podMonitor.labelValueLengthLimit | int | `0` |  |
-| podMonitor.labels | object | `{}` |  |
-| podMonitor.metricRelabelings | list | `[]` |  |
-| podMonitor.namespaceSelector | object | `{}` |  |
-| podMonitor.path | string | `"/metrics"` |  |
-| podMonitor.podTargetLabels | list | `[]` |  |
-| podMonitor.port | string | `"http"` |  |
-| podMonitor.relabelings | list | `[]` |  |
-| podMonitor.sampleLimit | int | `0` |  |
-| podMonitor.scheme | string | `"http"` |  |
-| podMonitor.scrapeTimeout | string | `"10s"` |  |
-| podMonitor.selector | object | `{}` |  |
-| podMonitor.targetLabels | list | `[]` |  |
-| podMonitor.targetLimit | int | `0` |  |
-| podMonitor.tlsConfig | object | `{}` |  |
 | podSecurity.podSecurityStandards.annotations | object | `{}` |  |
 | podSecurity.podSecurityStandards.audit | string | `""` |  |
 | podSecurity.podSecurityStandards.enabled | bool | `false` |  |
@@ -514,15 +440,10 @@ Kubernetes: `>=1.29.0-0`
 | podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
 | priority | string | `nil` |  |
 | priorityClassName | string | `""` |  |
-| prometheusRule.additionalRules | object | `{}` |  |
-| prometheusRule.annotations | object | `{}` |  |
-| prometheusRule.enabled | bool | `false` |  |
-| prometheusRule.groups | list | `[]` |  |
-| prometheusRule.labels | object | `{}` |  |
-| rbac.additionalRoles | object | `{}` |  |
 | rbac.aggregationRule | object | `{}` |  |
 | rbac.annotations | object | `{}` |  |
 | rbac.enabled | bool | `false` |  |
+| rbac.extraRoles | object | `{}` |  |
 | rbac.labels | object | `{}` |  |
 | rbac.roleRef | string | `""` |  |
 | rbac.rules | list | `[]` |  |
@@ -545,7 +466,6 @@ Kubernetes: `>=1.29.0-0`
 | security.podSecurityStandards.audit | string | `""` |  |
 | security.podSecurityStandards.enforce | string | `""` |  |
 | security.podSecurityStandards.warn | string | `""` |  |
-| security.seccomp.annotations | bool | `false` |  |
 | service.annotations | object | `{}` |  |
 | service.clusterIP | string | `""` |  |
 | service.enabled | bool | `true` |  |
@@ -566,22 +486,15 @@ Kubernetes: `>=1.29.0-0`
 | serviceAccount.enabled | bool | `true` |  |
 | serviceAccount.labels | object | `{}` |  |
 | serviceAccount.name | string | `""` |  |
-| serviceMonitor.annotations | object | `{}` |  |
-| serviceMonitor.enabled | bool | `false` |  |
-| serviceMonitor.interval | string | `"30s"` |  |
-| serviceMonitor.labels | object | `{}` |  |
-| serviceMonitor.metricRelabelings | list | `[]` |  |
-| serviceMonitor.path | string | `"/metrics"` |  |
-| serviceMonitor.port | string | `"http"` |  |
-| serviceMonitor.relabelings | list | `[]` |  |
-| serviceMonitor.scheme | string | `"http"` |  |
-| serviceMonitor.scrapeTimeout | string | `"10s"` |  |
-| serviceMonitor.tlsConfig | object | `{}` |  |
 | sidecarContainers | list | `[]` |  |
-| sidecars | list | `[]` |  |
 | terminationGracePeriodSeconds | int | `30` |  |
 | tolerations | list | `[]` |  |
-| topologySpreadConstraints | list | `[]` |  |
+| topologySpreadConstraints[0].maxSkew | int | `1` |  |
+| topologySpreadConstraints[0].topologyKey | string | `"kubernetes.io/hostname"` |  |
+| topologySpreadConstraints[0].whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
+| topologySpreadConstraints[1].maxSkew | int | `1` |  |
+| topologySpreadConstraints[1].topologyKey | string | `"topology.kubernetes.io/zone"` |  |
+| topologySpreadConstraints[1].whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
 | vpa.annotations | object | `{}` |  |
 | vpa.containerPolicies | list | `[]` |  |
 | vpa.enabled | bool | `false` |  |
@@ -590,27 +503,6 @@ Kubernetes: `>=1.29.0-0`
 | vpa.resourcePolicy | object | `{}` |  |
 | vpa.updateMode | string | `"Auto"` |  |
 | vpa.updatePolicy | object | `{}` |  |
-| workload.backoffLimit | int | `6` |  |
-| workload.completions | int | `1` |  |
-| workload.concurrencyPolicy | string | `"Allow"` |  |
-| workload.enabled | bool | `true` |  |
-| workload.failedJobsHistoryLimit | int | `1` |  |
-| workload.parallelism | int | `1` |  |
-| workload.podManagementPolicy | string | `"OrderedReady"` |  |
-| workload.progressDeadlineSeconds | int | `600` |  |
-| workload.replicas | int | `1` |  |
-| workload.restartPolicy | string | `"OnFailure"` |  |
-| workload.revisionHistoryLimit | int | `2` |  |
-| workload.schedule | string | `"0 * * * *"` |  |
-| workload.serviceName | string | `""` |  |
-| workload.startingDeadlineSeconds | int | `200` |  |
-| workload.strategy.rollingUpdate.maxSurge | string | `"25%"` |  |
-| workload.strategy.rollingUpdate.maxUnavailable | string | `"25%"` |  |
-| workload.strategy.type | string | `"RollingUpdate"` |  |
-| workload.successfulJobsHistoryLimit | int | `3` |  |
-| workload.ttlSecondsAfterFinished | int | `300` |  |
-| workload.type | string | `"deployment"` |  |
-| workload.updateStrategy.type | string | `"RollingUpdate"` |  |
-| workload.volumeClaimTemplates | object | `{}` |  |
-| workloadAnnotations | object | `{}` |  |
-| workloadLabels | object | `{}` |  |
+
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v0.0.2](https://github.com/norwoodj/helm-docs/releases/v0.0.2)

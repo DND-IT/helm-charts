@@ -1,0 +1,81 @@
+# Example: AWS ALB Ingress Configuration
+# Demonstrates ALB-specific ingress settings
+
+nameOverride: "alb-app"
+
+deployment:
+  enabled: true
+  replicas: 3
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  className: alb
+
+  annotations:
+    # Target type for ALB
+    alb.ingress.kubernetes.io/target-type: ip
+
+    # Scheme (internet-facing or internal)
+    alb.ingress.kubernetes.io/scheme: internet-facing
+
+    # SSL Certificate
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
+
+    # Listen ports configuration
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+
+    # SSL redirect
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+
+    # Health check settings
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/unhealthy-threshold-count: "2"
+    alb.ingress.kubernetes.io/success-codes: "200,404"
+
+    # Backend protocol
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+
+    # Target group attributes
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
+
+    # Load balancer attributes
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=60
+
+    # Tags
+    alb.ingress.kubernetes.io/tags: Environment=production,Team=platform,Application=alb-app
+
+    # ALB group (for sharing ALBs)
+    alb.ingress.kubernetes.io/group.name: shared-alb
+    alb.ingress.kubernetes.io/group.order: "10"
+
+    # WAF association
+    alb.ingress.kubernetes.io/wafv2-acl-arn: arn:aws:wafv2:us-east-1:123456789012:regional/webacl/example/12345678
+
+    # IP address type
+    alb.ingress.kubernetes.io/ip-address-type: ipv4
+
+    # Security groups
+    alb.ingress.kubernetes.io/security-groups: sg-12345678,sg-87654321
+
+    # Subnets (optional - uses auto-discovery by default)
+    # alb.ingress.kubernetes.io/subnets: subnet-12345,subnet-67890
+
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+    - host: api.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+        - path: /v1
+          pathType: Prefix

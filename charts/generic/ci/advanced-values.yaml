@@ -1,0 +1,148 @@
+# Advanced features test
+# Tests: Multi-container, Gateway API, External Secrets, persistence, network policies
+
+nameOverride: advanced-test
+
+deployment:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "32Mi"
+
+# Multi-container pod
+containers:
+  - name: main
+    image: registry.k8s.io/pause:3.9
+    resources:
+      requests:
+        cpu: "1m"
+        memory: "4Mi"
+  - name: sidecar
+    image: busybox:1.36
+    command: ["sh", "-c", "while true; do echo 'Sidecar running'; sleep 30; done"]
+    resources:
+      requests:
+        cpu: "1m"
+        memory: "4Mi"
+
+# Init container
+initContainers:
+  - name: init-check
+    image: busybox:1.36
+    command: ["sh", "-c", "echo 'Initialization complete'"]
+    resources:
+      requests:
+        cpu: "1m"
+        memory: "4Mi"
+
+# Gateway API
+gateway:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: api-gateway
+        namespace: gateway-system
+    hostnames:
+      - api.example.com
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /v1
+        backendRefs:
+          - name: api-service
+            port: 8080
+
+  referenceGrant:
+    enabled: true
+    from:
+      - group: gateway.networking.k8s.io
+        kind: Gateway
+        namespace: gateway-system
+    to:
+      - group: ""
+        kind: Service
+
+# External Secrets
+externalSecrets:
+  app-secrets:
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: vault-backend
+      kind: ClusterSecretStore
+    target:
+      name: app-secrets
+      creationPolicy: Owner
+    data:
+      - secretKey: api-key
+        remoteRef:
+          key: secret/data/api
+          property: key
+
+# Persistence
+persistence:
+  enabled: false  # Disabled by default
+  volumes:
+    data:
+      enabled: true
+      size: 1Gi
+      mountPath: /data
+    cache:
+      enabled: true
+      size: 500Mi
+      mountPath: /cache
+
+# Network Policy
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: default
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 53
+        - protocol: UDP
+          port: 53
+
+# Extra objects
+extraObjects:
+  - apiVersion: v1
+    kind: ConfigMap
+    metadata:
+      name: extra-config
+    data:
+      config: "test"
+
+# Multiple services
+extraServices:
+  metrics:
+    enabled: true
+    type: ClusterIP
+    ports:
+      - name: metrics
+        port: 9090
+        targetPort: 9090
+
+# Security policies
+podSecurity:
+  podSecurityStandards:
+    enabled: false  # Disabled for ct install testing
+    enforce: "baseline"
+    audit: "restricted"
+    warn: "restricted"

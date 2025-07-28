@@ -1,202 +1,168 @@
-{{- include "generic.validateValues" . -}}
-{{- include "generic.validateWorkload" . -}}
-{{- if and .Values.workload.enabled (eq (.Values.workload.type | default "deployment") "cronjob") }}
+{{- range $name, $cronjob := .Values.cronjobs }}
+{{- if $cronjob.enabled }}
+---
 apiVersion: batch/v1
 kind: CronJob
-{{- include "generic.workloadMetadata" . }}
-spec:
-  schedule: {{ .Values.workload.schedule | quote }}
-  {{- with .Values.workload.timeZone }}
-  timeZone: {{ . }}
+metadata:
+  name: {{ include "generic.fullname" $ }}-{{ $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+    {{- with $cronjob.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $cronjob.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with .Values.workload.startingDeadlineSeconds }}
+spec:
+  schedule: {{ $cronjob.schedule | quote }}
+  {{- with $cronjob.timeZone }}
+  timeZone: {{ . | quote }}
+  {{- end }}
+  {{- with $cronjob.startingDeadlineSeconds }}
   startingDeadlineSeconds: {{ . }}
   {{- end }}
-  {{- with .Values.workload.concurrencyPolicy }}
+  {{- with $cronjob.concurrencyPolicy }}
   concurrencyPolicy: {{ . }}
-  {{- else }}
-  concurrencyPolicy: Allow
   {{- end }}
-  {{- with .Values.workload.suspend }}
-  suspend: {{ . }}
-  {{- end }}
-  {{- with .Values.workload.successfulJobsHistoryLimit }}
+  {{- with $cronjob.successfulJobsHistoryLimit }}
   successfulJobsHistoryLimit: {{ . }}
-  {{- else }}
-  successfulJobsHistoryLimit: 3
   {{- end }}
-  {{- with .Values.workload.failedJobsHistoryLimit }}
+  {{- with $cronjob.failedJobsHistoryLimit }}
   failedJobsHistoryLimit: {{ . }}
-  {{- else }}
-  failedJobsHistoryLimit: 1
+  {{- end }}
+  {{- with $cronjob.suspend }}
+  suspend: {{ . }}
   {{- end }}
   jobTemplate:
     metadata:
       labels:
-        {{- include "generic.labels" . | nindent 8 }}
-        {{- with .Values.jobLabels }}
+        {{- include "generic.labels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $name }}
+        {{- with $cronjob.jobLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
-      {{- with .Values.jobAnnotations }}
+      {{- with $cronjob.jobAnnotations }}
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
     spec:
-      {{- with .Values.workload.completions }}
-      completions: {{ . }}
-      {{- end }}
-      {{- with .Values.workload.parallelism }}
-      parallelism: {{ . }}
-      {{- end }}
-      {{- with .Values.workload.backoffLimit }}
+      {{- with $cronjob.backoffLimit }}
       backoffLimit: {{ . }}
-      {{- else }}
-      backoffLimit: 6
       {{- end }}
-      {{- with .Values.workload.activeDeadlineSeconds }}
+      {{- with $cronjob.activeDeadlineSeconds }}
       activeDeadlineSeconds: {{ . }}
       {{- end }}
-      {{- with .Values.workload.ttlSecondsAfterFinished }}
+      {{- with $cronjob.ttlSecondsAfterFinished }}
       ttlSecondsAfterFinished: {{ . }}
       {{- end }}
-      {{- with .Values.workload.completionMode }}
+      {{- with $cronjob.completionMode }}
       completionMode: {{ . }}
+      {{- end }}
+      {{- with $cronjob.completions }}
+      completions: {{ . }}
+      {{- end }}
+      {{- with $cronjob.parallelism }}
+      parallelism: {{ . }}
+      {{- end }}
+      {{- with $cronjob.podFailurePolicy }}
+      podFailurePolicy:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       template:
         metadata:
           labels:
-            {{- include "generic.labels" . | nindent 12 }}
-            {{- with .Values.podLabels }}
+            {{- include "generic.labels" $ | nindent 12 }}
+            app.kubernetes.io/component: {{ $name }}
+            {{- with $cronjob.podLabels }}
             {{- toYaml . | nindent 12 }}
             {{- end }}
+          {{- with $cronjob.podAnnotations }}
           annotations:
-            {{- include "generic.podAnnotations" . | nindent 12 }}
-            {{- with .Values.podAnnotations }}
             {{- toYaml . | nindent 12 }}
-            {{- end }}
+          {{- end }}
         spec:
-          {{- with .Values.imagePullSecrets }}
+          {{- if $cronjob.imagePullSecrets }}
           imagePullSecrets:
-            {{- toYaml . | nindent 12 }}
+            {{- toYaml $cronjob.imagePullSecrets | nindent 12 }}
+          {{- else if $.Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml $.Values.imagePullSecrets | nindent 12 }}
           {{- end }}
-          {{- if .Values.serviceAccount.enabled }}
-          serviceAccountName: {{ include "generic.serviceAccountName" . }}
-          {{- else if .Values.serviceAccount.name }}
-          serviceAccountName: {{ .Values.serviceAccount.name }}
+          {{- if $cronjob.serviceAccountName }}
+          serviceAccountName: {{ $cronjob.serviceAccountName }}
+          {{- else if $.Values.serviceAccount.enabled }}
+          serviceAccountName: {{ include "generic.serviceAccountName" $ }}
           {{- end }}
-          {{- with .Values.hostAliases }}
-          hostAliases:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- if .Values.hostNetwork }}
-          hostNetwork: true
-          {{- end }}
-          {{- if .Values.hostPID }}
-          hostPID: true
-          {{- end }}
-          {{- if .Values.hostIPC }}
-          hostIPC: true
-          {{- end }}
-          {{- with .Values.hostname }}
-          hostname: {{ . }}
-          {{- end }}
-          {{- with .Values.dnsPolicy }}
-          dnsPolicy: {{ . }}
-          {{- end }}
-          {{- with .Values.dnsConfig }}
-          dnsConfig:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.priorityClassName }}
-          priorityClassName: {{ . }}
-          {{- end }}
-          {{- with .Values.priority }}
-          priority: {{ . }}
-          {{- end }}
-          {{- with .Values.runtimeClassName }}
-          runtimeClassName: {{ . }}
-          {{- end }}
-          {{- with .Values.schedulerName }}
-          schedulerName: {{ . }}
-          {{- end }}
-          {{- if .Values.terminationGracePeriodSeconds }}
-          terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
-          {{- end }}
-          {{- with .Values.activeDeadlineSeconds }}
-          activeDeadlineSeconds: {{ . }}
-          {{- end }}
-          {{- with .Values.nodeSelector }}
-          nodeSelector:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.affinity }}
-          affinity:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- with .Values.tolerations }}
-          tolerations:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
-          {{- if .Values.topologySpreadConstraints }}
-          topologySpreadConstraints:
-            {{- include "generic.topologySpreadConstraints" . | nindent 12 }}
-          {{- end }}
+          restartPolicy: {{ $cronjob.restartPolicy | default "OnFailure" }}
+          {{- if $cronjob.podSecurityContext }}
           securityContext:
-            {{- include "generic.podSecurityContext" (dict "securityContext" .Values.podSecurityContext "defaults" .Values.podSecurityContextDefaults) | nindent 12 }}
-          {{- if .Values.initContainers }}
-          initContainers:
-            {{- range $container := .Values.initContainers }}
-            {{- include "generic.container" (dict "container" $container "root" $) | nindent 12 }}
-            {{- end }}
+            {{- toYaml $cronjob.podSecurityContext | nindent 12 }}
+          {{- else if $.Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml $.Values.podSecurityContext | nindent 12 }}
+          {{- end }}
+          {{- if $cronjob.nodeSelector }}
+          nodeSelector:
+            {{- toYaml $cronjob.nodeSelector | nindent 12 }}
+          {{- else if $.Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml $.Values.nodeSelector | nindent 12 }}
+          {{- end }}
+          {{- if $cronjob.affinity }}
+          affinity:
+            {{- toYaml $cronjob.affinity | nindent 12 }}
+          {{- else if $.Values.affinity }}
+          affinity:
+            {{- toYaml $.Values.affinity | nindent 12 }}
+          {{- end }}
+          {{- if $cronjob.tolerations }}
+          tolerations:
+            {{- toYaml $cronjob.tolerations | nindent 12 }}
+          {{- else if $.Values.tolerations }}
+          tolerations:
+            {{- toYaml $.Values.tolerations | nindent 12 }}
+          {{- end }}
+          {{- with $cronjob.volumes }}
+          volumes:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
           containers:
-            {{- if .Values.containers }}
-            {{- range $container := .Values.containers }}
-            {{- include "generic.container" (dict "container" $container "root" $) | nindent 12 }}
-            {{- end }}
-            {{- else }}
-            {{/* Default single container configuration for backward compatibility */}}
-            - name: {{ .Values.containerName | default "main" }}
-              image: {{ include "generic.image" . }}
-              imagePullPolicy: {{ .Values.image.pullPolicy }}
-              {{- with .Values.deployment.command }}
+            - name: {{ $name }}
+              image: {{ $cronjob.image.repository | default $.Values.image.repository }}:{{ $cronjob.image.tag | default $.Values.image.tag }}
+              imagePullPolicy: {{ $cronjob.image.pullPolicy | default $.Values.image.pullPolicy }}
+              {{- with $cronjob.command }}
               command:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- with .Values.deployment.args }}
+              {{- with $cronjob.args }}
               args:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- if or .Values.deployment.env .Values.commonEnvVars .Values.deployment.envFrom }}
-              {{- if .Values.commonEnvVars }}
+              {{- with $cronjob.env }}
               env:
-                {{- include "generic.commonEnvVars" . | nindent 16 }}
-                {{- with .Values.deployment.env }}
-                {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 16 }}
-                {{- end }}
-              {{- else if .Values.deployment.env }}
-              env:
-                {{- include "generic.envVars" (dict "envVars" .Values.deployment.env "root" $) | nindent 16 }}
+                {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- include "generic.envFrom" . | nindent 14 }}
+              {{- with $cronjob.envFrom }}
+              envFrom:
+                {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- with .Values.deployment.resources }}
+              {{- with $cronjob.resources }}
               resources:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
-              {{- include "generic.volumeMounts" (dict "container" .Values.deployment "root" $) | nindent 14 }}
-              {{- with .Values.deployment.lifecycle }}
-              lifecycle:
+              {{- with $cronjob.volumeMounts }}
+              volumeMounts:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
+              {{- if $cronjob.securityContext }}
               securityContext:
-                {{- include "generic.containerSecurityContext" (dict "securityContext" .Values.deployment.securityContext "root" $) | nindent 16 }}
-            {{- end }}
-            {{- with .Values.sidecars }}
-            {{- range $sidecar := . }}
-            {{- include "generic.container" (dict "container" $sidecar "root" $) | nindent 12 }}
-            {{- end }}
-            {{- end }}
-          {{- include "generic.volumes" . | nindent 10 }}
-          restartPolicy: {{ .Values.workload.restartPolicy | default "OnFailure" }}
+                {{- toYaml $cronjob.securityContext | nindent 16 }}
+              {{- else if $.Values.containerSecurityContext }}
+              securityContext:
+                {{- toYaml $.Values.containerSecurityContext | nindent 16 }}
+              {{- end }}
+{{- end }}
 {{- end }}

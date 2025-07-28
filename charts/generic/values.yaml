@@ -1,103 +1,44 @@
 # Default values for generic chart
 # This is a YAML-formatted file with secure defaults
-#
-# 🔧 TEMPLATED VALUES SUPPORT:
-# Many values in this file support Helm template expressions using the generic.tplValue helper.
-# You can use template expressions like "{{ .Values.generic.branchName }}" in any field marked with "# 📝 SUPPORTS TEMPLATING"
-#
-# Examples:
-#   namespaceOverride: "{{ .Values.generic.branchName }}"
-#   serviceAccount.name: "{{ .Values.generic.branchName }}-sa"
-#   ingress.hosts[0].host: "{{ .Values.generic.branchName }}.example.com"
-#
-# Common template expressions:
-#   - {{ .Values.generic.branchName }}     # Branch name for CI/CD
-#   - {{ .Values.generic.environment }}    # Environment (dev, staging, prod)
-#   - {{ .Release.Name }}                  # Helm release name
-#   - {{ .Release.Namespace }}             # Helm release namespace
-#   - {{ now | date "2006-01-02" }}        # Current date
 
 # Global settings
 global:
   labels: {}
   annotations: {}
 
-# Application settings
 generic:
-  # Defaults to chart name if not specified
-  name: ""
-  # Defaults to chart appVersion if not specified
-  version: ""
-  # Common values for templating - use these in other template expressions
-  feature: true
+  # Values for templating - use these in other template expressions
   branchName: ""     # e.g., "feature-123", "main", "develop"
   environment: ""    # e.g., "dev", "staging", "production"
 
-# Workload configuration
-workload:
-  # Workload type: deployment, statefulset, daemonset, job, cronjob
-  type: deployment
-  enabled: true
+# Metadata
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+podLabels: {}
+podAnnotations: {}
 
-  # Common workload settings
+# Image configuration
+image:
+  repository: registry.k8s.io/pause
+  tag: "3.10"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+# - name: myregistrykey
+
+# Main deployment configuration
+deployment:
+  enabled: true
   replicas: 1
   revisionHistoryLimit: 2
-
-  # Deployment specific
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 25%
       maxSurge: 25%
   progressDeadlineSeconds: 600
-
-  # StatefulSet specific
-  serviceName: ""  # Defaults to fullname
-  podManagementPolicy: OrderedReady
-  updateStrategy:
-    type: RollingUpdate
-  volumeClaimTemplates: {}
-
-  # DaemonSet specific
-  # updateStrategy:
-  #   type: RollingUpdate
-  #   rollingUpdate:
-  #     maxUnavailable: 1
-
-  # Job/CronJob specific
-  backoffLimit: 6
-  completions: 1
-  parallelism: 1
-  ttlSecondsAfterFinished: 300
-  restartPolicy: OnFailure
-
-  # CronJob specific
-  schedule: "0 * * * *"
-  concurrencyPolicy: Allow
-  successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 1
-  startingDeadlineSeconds: 200
-
-# Metadata
-nameOverride: ""
-fullnameOverride: ""
-namespaceOverride: ""
-workloadLabels: {}
-workloadAnnotations: {}
-podLabels: {}
-podAnnotations: {}
-
-# Image configuration
-image:
-  repository: nginx
-  tag: "1.21-alpine"
-  pullPolicy: IfNotPresent
-
-imagePullSecrets: []
-# - name: myregistrykey
-
-# Container configuration (backward compatibility)
-deployment:
+  # Container configuration
   command: []
   args: []
   env: []
@@ -114,6 +55,39 @@ deployment:
   startupProbe: {}
   lifecycle: {}
   volumeMounts: []
+
+# Extra deployments (key is deployment name suffix)
+extraDeployments: {}
+# worker:
+#   replicas: 2
+#   image:
+#     repository: myapp
+#     tag: worker-1.0.0
+#   resources:
+#     requests:
+#       cpu: 200m
+#       memory: 256Mi
+#   env:
+#     - name: WORKER_TYPE
+#       value: background
+#   # Override scheduling for this specific deployment
+#   nodeSelector:
+#     workload-type: batch
+#   tolerations:
+#     - key: batch-processing
+#       operator: Equal
+#       value: "true"
+#       effect: NoSchedule
+#   affinity:
+#     nodeAffinity:
+#       requiredDuringSchedulingIgnoredDuringExecution:
+#         nodeSelectorTerms:
+#           - matchExpressions:
+#               - key: node.kubernetes.io/instance-type
+#                 operator: In
+#                 values:
+#                   - m5.xlarge
+#                   - m5.2xlarge
 
 # Security contexts with secure defaults
 podSecurityContext:
@@ -136,6 +110,10 @@ containerSecurityContext:
     - ALL
   seccompProfile:
     type: RuntimeDefault
+# To override for specific containers that need writable filesystem:
+# deployment:
+#   securityContext:
+#     readOnlyRootFilesystem: false
 
 # Security settings
 security:
@@ -146,8 +124,6 @@ security:
   apparmor:
     enabled: false
     profile: runtime/default
-  seccomp:
-    annotations: false  # For older k8s versions
 
 # Pod Security Standards and Policy Enforcement
 podSecurity:
@@ -162,7 +138,6 @@ podSecurity:
     annotations: {}
     # Namespace-level enforcement (creates namespace if not exists)
     namespaceEnforcement: false
-
 
 # Multi-container configuration
 containers: []
@@ -182,9 +157,25 @@ containers: []
 #       memory: "128Mi"
 
 initContainers: []
-sidecars: []
+# - name: wait-for-db
+#   image: busybox:1.35
+#   command: ['sh', '-c']
+#   args:
+#     - |
+#       echo "Waiting for database to be ready..."
+#       until nc -z postgres-service 5432; do
+#         echo "Database is unavailable - sleeping"
+#         sleep 2
+#       done
+#       echo "Database is up - continuing"
+#   resources:
+#     requests:
+#       cpu: 10m
+#       memory: 16Mi
+#     limits:
+#       cpu: 50m
+#       memory: 64Mi
 
-# Native Kubernetes sidecar containers (requires Kubernetes 1.29+)
 # Implemented as init containers with restartPolicy: Always
 sidecarContainers: []
 # - name: metrics-exporter
@@ -243,12 +234,124 @@ envFrom: []
 
 # Scheduling
 nodeSelector: {}
+# nodeSelector:
+#   kubernetes.io/arch: amd64
+#   node.kubernetes.io/instance-type: m5.large
+#   environment: production
+#   team: backend
+
 tolerations: []
+# # Allow pods on nodes marked for GPU workloads
+# - key: nvidia.com/gpu
+#   operator: Exists
+#   effect: NoSchedule
+# # Allow pods on nodes being drained (for 5 minutes)
+# - key: node.kubernetes.io/unschedulable
+#   operator: Exists
+#   effect: NoSchedule
+#   tolerationSeconds: 300
+# # Allow pods on spot instances
+# - key: spot-instance
+#   operator: Equal
+#   value: "true"
+#   effect: NoSchedule
+# # Allow pods on dedicated nodes
+# - key: dedicated
+#   operator: Equal
+#   value: backend
+#   effect: NoSchedule
+
 affinity: {}
-topologySpreadConstraints: []
-# - maxSkew: 1
-#   topologyKey: kubernetes.io/hostname
-#   whenUnsatisfiable: ScheduleAnyway
+# # Prefer to schedule pods on nodes in specific zones
+# nodeAffinity:
+#   preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 100
+#       preference:
+#         matchExpressions:
+#           - key: topology.kubernetes.io/zone
+#             operator: In
+#             values:
+#               - us-east-1a
+#               - us-east-1b
+#   # Require pods to run on nodes with SSD storage
+#   requiredDuringSchedulingIgnoredDuringExecution:
+#     nodeSelectorTerms:
+#       - matchExpressions:
+#           - key: storage-type
+#             operator: In
+#             values:
+#               - ssd
+#               - nvme
+# # Prefer to co-locate with cache pods
+# podAffinity:
+#   preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 100
+#       podAffinityTerm:
+#         labelSelector:
+#           matchExpressions:
+#             - key: app.kubernetes.io/name
+#               operator: In
+#               values:
+#                 - redis
+#                 - memcached
+#         topologyKey: kubernetes.io/hostname
+# # Ensure pods are spread across nodes (anti-affinity)
+# podAntiAffinity:
+#   # Soft anti-affinity (preferred)
+#   preferredDuringSchedulingIgnoredDuringExecution:
+#     - weight: 100
+#       podAffinityTerm:
+#         labelSelector:
+#           matchExpressions:
+#             - key: app.kubernetes.io/name
+#               operator: In
+#               values:
+#                 - myapp
+#         topologyKey: kubernetes.io/hostname
+
+# Default topology spread constraints for better pod distribution
+# Note: These will be automatically configured with proper labelSelector in the template
+topologySpreadConstraints:
+  # Spread pods evenly across nodes
+  - maxSkew: 1
+    topologyKey: kubernetes.io/hostname
+    whenUnsatisfiable: ScheduleAnyway
+  # Spread pods evenly across zones (if using multi-zone clusters)
+  - maxSkew: 1
+    topologyKey: topology.kubernetes.io/zone
+    whenUnsatisfiable: ScheduleAnyway
+# To disable default topology spread constraints, set to empty array:
+# topologySpreadConstraints: []
+# Custom topology spread constraints examples:
+# topologySpreadConstraints:
+#   # Strict node spreading - fail scheduling if constraint can't be met
+#   - maxSkew: 1
+#     topologyKey: kubernetes.io/hostname
+#     whenUnsatisfiable: DoNotSchedule
+#     # labelSelector is automatically added by the template if not specified
+#   # Spread across zones with minimum 2 zones
+#   - maxSkew: 1
+#     topologyKey: topology.kubernetes.io/zone
+#     whenUnsatisfiable: DoNotSchedule
+#     minDomains: 2  # Requires at least 2 zones
+#   # Custom label selector for specific component
+#   - maxSkew: 1
+#     topologyKey: kubernetes.io/hostname
+#     whenUnsatisfiable: ScheduleAnyway
+#     labelSelector:
+#       matchLabels:
+#         app.kubernetes.io/component: web
+#       matchExpressions:
+#         - key: tier
+#           operator: In
+#           values:
+#             - frontend
+#   # Advanced: Consider node affinity when spreading
+#   - maxSkew: 2
+#     topologyKey: rack
+#     whenUnsatisfiable: ScheduleAnyway
+#     nodeAffinityPolicy: Honor  # Consider nodeAffinity when calculating spread
+#     nodeTaintsPolicy: Ignore   # Ignore taints when calculating spread
 
 # Service configuration
 service:
@@ -269,8 +372,8 @@ service:
   sessionAffinityConfig: {}
   publishNotReadyAddresses: false
 
-# Additional services
-additionalServices: {}
+# Extra services
+extraServices: {}
 # metrics:
 #   enabled: true
 #   type: ClusterIP
@@ -293,50 +396,23 @@ additionalServices: {}
 # Ingress configuration
 ingress:
   enabled: false
-  className: ""       # 📝 SUPPORTS TEMPLATING - Ingress class name can use templates
-  controller: ""      # alb (default), nginx
-  annotations: {}     # 📝 SUPPORTS TEMPLATING - Ingress annotations, values can use templates
+  className: "alb"
   labels: {}
-
-  # cert-manager configuration
-  certManager:
-    enabled: false
-    clusterIssuer: ""  # 📝 SUPPORTS TEMPLATING - Cert-manager cluster issuer name can use templates
-    issuer: ""         # 📝 SUPPORTS TEMPLATING - Cert-manager issuer name can use templates
-    annotations: {}    # 📝 SUPPORTS TEMPLATING - Cert-manager annotations, values can use templates
-    # acme.cert-manager.io/http01-edit-in-place: "true"
-
-  # AWS ALB Ingress Controller annotations (default)
-  alb:
-    annotations: {}    # 📝 SUPPORTS TEMPLATING - ALB annotations, values can use templates
-    # alb.ingress.kubernetes.io/scheme: internet-facing
-    # alb.ingress.kubernetes.io/target-type: ip
-    # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:region:account-id:certificate/certificate-id
-    # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    # alb.ingress.kubernetes.io/ssl-redirect: "443"
-    # alb.ingress.kubernetes.io/backend-protocol: HTTP
-    # alb.ingress.kubernetes.io/healthcheck-path: /health
-    # alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
-    # alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
-    # alb.ingress.kubernetes.io/success-codes: "200"
-    # alb.ingress.kubernetes.io/tags: Environment=prod,Team=platform
-    # alb.ingress.kubernetes.io/group.name: my-alb-group
-    # alb.ingress.kubernetes.io/group.order: "10"
-
-  # NGINX Ingress Controller annotations
-  nginx:
-    annotations: {}    # 📝 SUPPORTS TEMPLATING - NGINX annotations, values can use templates
-    # nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    # nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
-    # nginx.ingress.kubernetes.io/proxy-body-size: "100m"
-    # nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
-    # nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
-    # nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
-    # nginx.ingress.kubernetes.io/backend-protocol: "HTTPS"
-    # nginx.ingress.kubernetes.io/rewrite-target: /$2
-    # nginx.ingress.kubernetes.io/affinity: "cookie"
-    # nginx.ingress.kubernetes.io/session-cookie-name: "route"
-    # nginx.ingress.kubernetes.io/session-cookie-max-age: "86400"
+  annotations: {}
+  # Example ALB annotations for AWS Load Balancer Controller
+  # alb.ingress.kubernetes.io/scheme: internet-facing
+  # alb.ingress.kubernetes.io/target-type: ip
+  # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:region:account-id:certificate/certificate-id
+  # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+  # alb.ingress.kubernetes.io/ssl-redirect: "443"
+  # alb.ingress.kubernetes.io/backend-protocol: HTTP
+  # alb.ingress.kubernetes.io/healthcheck-path: /health
+  # alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
+  # alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+  # alb.ingress.kubernetes.io/success-codes: "200"
+  # alb.ingress.kubernetes.io/tags: Environment=prod,Team=platform
+  # alb.ingress.kubernetes.io/group.name: my-alb-group
+  # alb.ingress.kubernetes.io/group.order: "10"
 
   # Default backend
   defaultBackend: {}
@@ -345,7 +421,7 @@ ingress:
   #   port:
   #     number: 80
 
-  hosts: []             # 📝 SUPPORTS TEMPLATING - Host values can use templates
+  hosts: []
   # - host: "{{ .Values.generic.branchName }}.example.com"  # Template example
   #   paths:
   #   - path: /
@@ -358,13 +434,8 @@ ingress:
   #           # or
   #           # name: http
 
-  tls: []
-  # - hosts:
-  #   - chart-example.local
-  #   secretName: chart-example-tls  # omit for cert-manager auto-generation
-
-# Additional ingresses
-additionalIngresses: {}
+# Extra ingresses
+extraIngresses: {}
 # admin:
 #   enabled: true
 #   className: nginx
@@ -383,9 +454,9 @@ additionalIngresses: {}
 # ServiceAccount configuration
 serviceAccount:
   enabled: true
-  name: ""           # 📝 SUPPORTS TEMPLATING - Service account name, e.g., "{{ .Values.generic.branchName }}-sa"
-  annotations: {}    # 📝 SUPPORTS TEMPLATING - ServiceAccount annotations, values can use templates
-  labels: {}         # 📝 SUPPORTS TEMPLATING - ServiceAccount labels, values can use templates
+  name: ""
+  annotations: {}
+  labels: {}
   automountServiceAccountToken: true
 
 # RBAC configuration
@@ -414,8 +485,8 @@ rbac:
   #   name: jane
   #   apiGroup: rbac.authorization.k8s.io
 
-  # Additional roles and bindings
-  additionalRoles: {}
+  # Extra roles and bindings
+  extraRoles: {}
   # reader:
   #   enabled: true
   #   type: Role  # or ClusterRole
@@ -438,7 +509,7 @@ rbac:
 # ConfigMap configuration
 configMap:
   enabled: false
-  data: {}           # 📝 SUPPORTS TEMPLATING - ConfigMap data values can use templates
+  data: {}
   binaryData: {}
   annotations: {}
   labels: {}
@@ -450,8 +521,8 @@ configMap:
 secret:
   enabled: false
   type: Opaque
-  data: {}           # 📝 SUPPORTS TEMPLATING - Secret data values can use templates
-  stringData: {}     # 📝 SUPPORTS TEMPLATING - Secret stringData values can use templates
+  data: {}
+  stringData: {}
   annotations: {}
   labels: {}
   envFrom: false
@@ -489,8 +560,6 @@ persistence:
   labels: {}
   selector: {}
   dataSource: {}
-  # For StatefulSet
-  volumeClaimTemplate: false
 
   # Multiple PVCs
   volumes: {}
@@ -512,6 +581,26 @@ emptyDirVolumes: {}
 #   medium: Memory
 #   sizeLimit: 1Gi
 #   mountPath: /tmp
+# Example: Fix for nginx permission errors when running as non-root
+# IMPORTANT: Standard nginx images need these directories to be writable
+# nginx-cache:
+#   mountPath: /var/cache/nginx
+#   sizeLimit: 100Mi
+# nginx-run:
+#   mountPath: /var/run
+#   sizeLimit: 10Mi
+# nginx-pid:
+#   mountPath: /tmp
+#   sizeLimit: 10Mi
+# Note: For nginx, also consider:
+# 1. Using nginxinc/nginx-unprivileged image (recommended)
+# 2. Setting runAsUser: 101 (nginx user in Alpine images)
+# 3. Or use bitnami/nginx which handles non-root better
+# Example: In-memory cache for better performance
+# app-cache:
+#   medium: Memory  # Uses RAM instead of disk
+#   sizeLimit: 256Mi
+#   mountPath: /app/cache
 
 # HostPath volumes (use with caution)
 hostPathVolumes: {}
@@ -521,13 +610,13 @@ hostPathVolumes: {}
 #   mountPath: /host/logs
 #   readOnly: true
 
-# Additional volumes
+# Extra volumes
 extraVolumes: []
 # - name: config-volume
 #   configMap:
 #     name: my-config
 
-# Additional volume mounts
+# Extra volume mounts
 extraVolumeMounts: []
 # - name: config-volume
 #   mountPath: /config
@@ -540,7 +629,7 @@ hostAliases: []
 #   - "bar.local"
 
 # Horizontal Pod Autoscaler
-autoscaling:
+hpa:
   enabled: false
   minReplicas: 1
   maxReplicas: 10
@@ -620,238 +709,15 @@ networkPolicy:
   #   - protocol: TCP
   #     port: 5432
 
-# Monitoring
-serviceMonitor:
-  enabled: false
-  interval: 30s
-  scrapeTimeout: 10s
-  path: /metrics
-  port: http
-  scheme: http
-  tlsConfig: {}
-  relabelings: []
-  metricRelabelings: []
-  labels: {}
-  annotations: {}
-
-podMonitor:
-  enabled: false
-  interval: 30s
-  scrapeTimeout: 10s
-  path: /metrics
-  port: http
-  scheme: http
-  tlsConfig: {}
-  relabelings: []
-  metricRelabelings: []
-  labels: {}
-  annotations: {}
-  # Advanced PodMonitor settings
-  jobLabel: ""
-  targetLabels: []
-  podTargetLabels: []
-  sampleLimit: 0
-  targetLimit: 0
-  labelLimit: 0
-  labelNameLengthLimit: 0
-  labelValueLengthLimit: 0
-  namespaceSelector: {}
-  selector: {}
-  # Multiple endpoints support
-  endpoints: []
-  # - port: metrics
-  #   path: /metrics
-  #   interval: 30s
-  #   scrapeTimeout: 10s
-  #   honorLabels: false
-  #   honorTimestamps: true
-  #   followRedirects: false
-  #   scheme: https
-  #   tlsConfig:
-  #     insecureSkipVerify: false
-  #   bearerTokenSecret:
-  #     name: metrics-token
-  #     key: token
-  #   basicAuth:
-  #     username:
-  #       name: metrics-auth
-  #       key: username
-  #     password:
-  #       name: metrics-auth
-  #       key: password
-  #   authorization:
-  #     type: Bearer
-  #     credentials:
-  #       name: metrics-auth
-  #       key: token
-  # Additional PodMonitors
-  additionalMonitors: {}
-  # sidecar:
-  #   enabled: true
-  #   selector:
-  #     matchLabels:
-  #       app.kubernetes.io/component: sidecar
-  #   endpoints:
-  #   - port: sidecar-metrics
-  #     path: /metrics
-
-prometheusRule:
-  enabled: false
-  labels: {}
-  annotations: {}
-  groups: []
-  # - name: example.rules
-  #   interval: 30s
-  #   limit: 0
-  #   partialResponseStrategy: ""
-  #   rules:
-  #   # Alert rule
-  #   - alert: HighErrorRate
-  #     expr: |
-  #       (
-  #         sum(rate(http_requests_total{job="{{ include "generic.fullname" . }}",status=~"5.."}[5m]))
-  #         /
-  #         sum(rate(http_requests_total{job="{{ include "generic.fullname" . }}"}[5m]))
-  #       ) > 0.05
-  #     for: 10m
-  #     labels:
-  #       severity: warning
-  #       team: platform
-  #     annotations:
-  #       summary: High error rate on {{ $labels.job }}
-  #       description: "Error rate is {{ $value | humanizePercentage }} for {{ $labels.job }}"
-  #       runbook_url: https://wiki.example.com/runbooks/high-error-rate
-  #   # Recording rule
-  #   - record: job:http_requests:rate5m
-  #     expr: |
-  #       sum by (job, status) (
-  #         rate(http_requests_total[5m])
-  #       )
-  #     labels:
-  #       team: platform
-  #   # Multi-burn-rate error budget alert
-  #   - alert: ErrorBudgetBurn
-  #     expr: |
-  #       (
-  #         http_requests:burnrate5m{job="{{ include "generic.fullname" . }}"} > (14.4 * (1 - 0.99))
-  #         and
-  #         http_requests:burnrate1h{job="{{ include "generic.fullname" . }}"} > (14.4 * (1 - 0.99))
-  #       )
-  #       or
-  #       (
-  #         http_requests:burnrate30m{job="{{ include "generic.fullname" . }}"} > (6 * (1 - 0.99))
-  #         and
-  #         http_requests:burnrate6h{job="{{ include "generic.fullname" . }}"} > (6 * (1 - 0.99))
-  #       )
-  #     for: 2m
-  #     labels:
-  #       severity: critical
-  #       team: platform
-  #     annotations:
-  #       summary: High error budget burn rate
-  #       description: "Error budget is burning too fast"
-  # Additional PrometheusRules
-  additionalRules: {}
-  # slo:
-  #   enabled: true
-  #   groups:
-  #   - name: slo.rules
-  #     interval: 30s
-  #     rules:
-  #     - record: slo:service_availability:ratio_rate5m
-  #       expr: |
-  #         sum(rate(http_requests_total{job="{{ include "generic.fullname" . }}",status!~"5.."}[5m]))
-  #         /
-  #         sum(rate(http_requests_total{job="{{ include "generic.fullname" . }}"}[5m]))
-
-# Gateway API configuration
+# Gateway API configuration (for applications)
+# Note: GatewayClass and Gateway resources should be managed by platform teams
 gateway:
-  # GatewayClass configuration
-  gatewayClass:
-    enabled: false
-    name: ""                                            # 📝 SUPPORTS TEMPLATING - Gateway class name can use templates
-    controllerName: "example.com/gateway-controller"
-    description: "Gateway class for generic application"
-    labels: {}                                          # 📝 SUPPORTS TEMPLATING - Gateway class labels, values can use templates
-    annotations: {}                                     # 📝 SUPPORTS TEMPLATING - Gateway class annotations, values can use templates
-    parametersRef: {}
-    # group: ""
-    # kind: ConfigMap
-    # name: gateway-config
-    # namespace: gateway-system
-
-    # Additional GatewayClasses
-    additionalClasses: {}
-    # internal:
-    #   enabled: true
-    #   controllerName: "internal.example.com/gateway-controller"
-    #   description: "Internal gateway class"
-
-  # Gateway configuration
-  gateway:
-    enabled: false
-    name: ""              # 📝 SUPPORTS TEMPLATING - Gateway name can use templates
-    gatewayClassName: ""  # 📝 SUPPORTS TEMPLATING - Gateway class name reference can use templates
-    labels: {}            # 📝 SUPPORTS TEMPLATING - Gateway labels, values can use templates
-    annotations: {}
-
-    # Gateway addresses
-    addresses: []
-    # - type: IPAddress
-    #   value: "192.168.1.100"
-    # - type: Hostname
-    #   value: "gateway.example.com"
-
-    # Gateway listeners
-    listeners: []
-    # - name: http
-    #   port: 80
-    #   protocol: HTTP
-    #   hostname: "*.example.com"
-    # - name: https
-    #   port: 443
-    #   protocol: HTTPS
-    #   hostname: "*.example.com"
-    #   tls:
-    #     mode: Terminate
-    #     certificateRefs:
-    #     - name: example-com-tls
-    #       kind: Secret
-    #   allowedRoutes:
-    #     namespaces:
-    #       from: Same
-    #     kinds:
-    #     - group: gateway.networking.k8s.io
-    #       kind: HTTPRoute
-
-    # TLS configuration (for default listeners)
-    tls:
-      enabled: false
-      mode: Terminate  # Terminate, Passthrough
-      certificateRefs: []
-      # - name: tls-secret
-      #   kind: Secret
-      #   namespace: default
-
-    # Additional Gateways
-    additionalGateways: {}
-    # internal:
-    #   enabled: true
-    #   gatewayClassName: internal-gateway-class
-    #   listeners:
-    #   - name: internal-http
-    #     port: 8080
-    #     protocol: HTTP
-
   # HTTPRoute configuration
   httpRoute:
     enabled: false
     labels: {}
     annotations: {}
-    gatewayName: ""  # Defaults to release-name-gateway
-    gatewayNamespace: ""  # Defaults to current namespace
-
-    # Parent Gateway references
+    # Parent Gateway references (references existing gateways managed by platform team)
     parentRefs: []
     # - name: example-gateway
     #   namespace: gateway-system
@@ -929,8 +795,8 @@ gateway:
     #   - name: web-service
     #     port: 80
 
-    # Additional HTTPRoutes
-    additionalRoutes: {}
+    # Extra HTTPRoutes
+    extraRoutes: {}
     # api:
     #   enabled: true
     #   parentRefs:
@@ -951,10 +817,7 @@ gateway:
     enabled: false
     labels: {}
     annotations: {}
-    gatewayName: ""  # Defaults to release-name-gateway
-    gatewayNamespace: ""  # Defaults to current namespace
-
-    # Parent Gateway references
+    # Parent Gateway references (references existing gateways managed by platform team)
     parentRefs: []
     # - name: tcp-gateway
     #   namespace: gateway-system
@@ -975,8 +838,8 @@ gateway:
     #     port: 5432
     #     weight: 10
 
-    # Additional TCPRoutes
-    additionalRoutes: {}
+    # Extra TCPRoutes
+    extraRoutes: {}
     # database:
     #   enabled: true
     #   parentRefs:
@@ -1014,8 +877,8 @@ gateway:
     #   kind: Secret
     #   name: tls-cert
 
-    # Additional ReferenceGrants
-    additionalGrants: {}
+    # Extra ReferenceGrants
+    extraGrants: {}
     # secrets:
     #   enabled: true
     #   from:
@@ -1025,6 +888,62 @@ gateway:
     #   to:
     #   - group: ""
     #     kind: Secret
+
+# CronJobs configuration (key is cronjob name suffix)
+cronjobs: {}
+# backup:
+#   enabled: true
+#   schedule: "0 2 * * *"
+#   concurrencyPolicy: Forbid
+#   successfulJobsHistoryLimit: 3
+#   failedJobsHistoryLimit: 1
+#   startingDeadlineSeconds: 200
+#   image:
+#     repository: myapp
+#     tag: backup-1.0.0
+#   command: ["/bin/sh"]
+#   args: ["-c", "backup.sh"]
+#   resources:
+#     requests:
+#       cpu: 100m
+#       memory: 128Mi
+#   # Schedule on nodes with local storage for faster backups
+#   nodeSelector:
+#     storage-type: local-ssd
+#   tolerations:
+#     - key: dedicated
+#       operator: Equal
+#       value: backup
+#       effect: NoSchedule
+
+# Jobs configuration (key is job name suffix)
+jobs: {}
+# migration:
+#   enabled: true
+#   backoffLimit: 6
+#   completions: 1
+#   parallelism: 1
+#   ttlSecondsAfterFinished: 300
+#   restartPolicy: OnFailure
+#   image:
+#     repository: myapp
+#     tag: migration-1.0.0
+#   command: ["/bin/sh"]
+#   args: ["-c", "migrate.sh"]
+#   resources:
+#     requests:
+#       cpu: 100m
+#       memory: 256Mi
+#   # Ensure migration runs on same zone as database
+#   affinity:
+#     nodeAffinity:
+#       requiredDuringSchedulingIgnoredDuringExecution:
+#         nodeSelectorTerms:
+#           - matchExpressions:
+#               - key: topology.kubernetes.io/zone
+#                 operator: In
+#                 values:
+#                   - us-east-1a  # Same zone as primary database
 
 # Helm hooks for lifecycle management
 hooks:
@@ -1141,94 +1060,12 @@ hooks:
   #   ttlSecondsAfterFinished: 300
   #   restartPolicy: Never
 
-# Extra Kubernetes objects
-extraObjects: []       # 📝 SUPPORTS TEMPLATING - Extra objects are processed with templates
-# - apiVersion: v1
-#   kind: ConfigMap
-#   metadata:
-#     name: "{{ .Values.generic.branchName }}-extra-cm"  # Template example
-#   data:
-#     branch: "{{ .Values.generic.branchName }}"         # Template example
-#     key: value
-
 # External Secrets Operator integration
 # Allows pulling secrets from external secret management systems
 # Note: The chart automatically detects and uses the latest available API version:
 # - v1 (preferred if available)
 # - v1beta1 (fallback for older installations)
 externalSecrets: {}
-  # database-credentials:
-  #   enabled: true
-  #   labels: {}
-  #   annotations: {}
-  #
-  #   # How often to fetch the secret from the external store
-  #   refreshInterval: 15s
-  #
-  #   # Reference to the SecretStore or ClusterSecretStore
-  #   secretStoreRef:
-  #     name: vault-backend
-  #     kind: SecretStore  # or ClusterSecretStore
-  #
-  #   # Target K8s secret configuration
-  #   target:
-  #     name: db-credentials  # defaults to release-name-<external-secret-name>
-  #     creationPolicy: Owner  # Owner, Orphan, Merge, None
-  #     deletionPolicy: Retain  # Retain, Delete
-  #
-  #     # Optional: Template for the resulting secret
-  #     template:
-  #       type: Opaque  # or kubernetes.io/dockerconfigjson, kubernetes.io/tls, etc.
-  #       engineVersion: v2
-  #       metadata:
-  #         labels:
-  #           app: "{{ .Release.Name }}"
-  #         annotations:
-  #           created-by: external-secrets
-  #       data:
-  #         # Compose data from multiple sources
-  #         connection-string: "postgresql://{{ .username }}:{{ .password }}@{{ .host }}:{{ .port }}/{{ .database }}"
-  #
-  #   # Define what data to fetch
-  #   data:
-  #     - secretKey: username
-  #       remoteRef:
-  #         key: database/creds
-  #         property: username
-  #     - secretKey: password
-  #       remoteRef:
-  #         key: database/creds
-  #         property: password
-  #         version: latest  # optional version
-  #     - secretKey: host
-  #       remoteRef:
-  #         key: database/config
-  #         property: host
-  #     - secretKey: port
-  #       remoteRef:
-  #         key: database/config
-  #         property: port
-  #         decodingStrategy: Base64  # None, Base64, Base64URL, Auto
-  #     - secretKey: database
-  #       remoteRef:
-  #         key: database/config
-  #         property: dbname
-  #
-  #   # Fetch all key-value pairs from a path
-  #   dataFrom:
-  #     - extract:
-  #         key: database/creds  # fetch all key-value pairs
-  #         property: credentials  # optional: extract specific property
-  #         version: latest
-  #         conversionStrategy: Default  # Default, Unicode
-  #     - find:
-  #         path: database/  # find by path pattern
-  #         name:
-  #           regexp: "^creds-.*"  # find by name pattern
-  #         tags:
-  #           environment: production
-  #           type: database
-  #
   # aws-secrets:
   #   enabled: true
   #   refreshInterval: 1h
@@ -1256,281 +1093,13 @@ externalSecrets: {}
   #     - extract:
   #         key: prod/api/config
   #
-  # vault-pki:
-  #   enabled: true
-  #   refreshInterval: 24h
-  #   secretStoreRef:
-  #     name: vault-backend
-  #     kind: SecretStore
-  #
-  #   # Generate TLS certificate from Vault PKI
-  #   target:
-  #     name: app-tls
-  #     creationPolicy: Owner
-  #     template:
-  #       type: kubernetes.io/tls
-  #       data:
-  #         tls.crt: "{{ .cert | b64enc }}"
-  #         tls.key: "{{ .key | b64enc }}"
-  #         ca.crt: "{{ .ca | b64enc }}"
-  #
-  #   data:
-  #     - secretKey: cert
-  #       remoteRef:
-  #         key: pki/issue/web-cert
-  #         property: certificate
-  #     - secretKey: key
-  #       remoteRef:
-  #         key: pki/issue/web-cert
-  #         property: private_key
-  #     - secretKey: ca
-  #       remoteRef:
-  #         key: pki/issue/web-cert
-  #         property: issuing_ca
 
-# Datadog application monitoring resources
-# Note: DatadogAgent should be installed separately as a cluster-wide resource
-
-# Datadog Monitor configuration
-# Create and manage Datadog monitors as Kubernetes resources
-datadogMonitor:
-  enabled: false
-  # Define multiple monitors
-  monitors: {}
-    # high-error-rate:
-    #   enabled: true
-    #   labels: {}
-    #   annotations: {}
-    #   query: 'avg(last_5m):sum:http.requests.errors{service:my-app} by {env}.as_rate() / sum:http.requests.total{service:my-app} by {env}.as_rate() > 0.05'
-    #   type: "query alert"
-    #   name: "High Error Rate on {{ env.name }}"
-    #   message: |
-    #     Error rate is above 5% for service my-app in environment {{ env.name }}
-    #     Current value: {{ value }}
-    #     Runbook: https://wiki.example.com/runbooks/high-error-rate
-    #   tags:
-    #     - "service:my-app"
-    #     - "team:platform"
-    #     - "generated:kubernetes"
-    #   priority: 3
-    #   options:
-    #     thresholds:
-    #       critical: 0.05
-    #       warning: 0.03
-    #     notifyNoData: false
-    #     noDataTimeframe: 10
-    #     renotifyInterval: 60
-    #     evaluationDelay: 300
-    #     includeTags: true
-    #     locked: false
-    #
-    # pod-crashloop:
-    #   enabled: true
-    #   query: 'max(last_10m):max:kubernetes_state.container.status_report.count.waiting{reason:crashloopbackoff} by {kube_namespace,pod_name} >= 1'
-    #   type: "query alert"
-    #   name: "Pod {{ pod_name.name }} is in CrashLoopBackOff"
-    #   message: "Pod {{ pod_name.name }} in namespace {{ kube_namespace.name }} is crash looping"
-    #   tags:
-    #     - "integration:kubernetes"
-    #   options:
-    #     thresholds:
-    #       critical: 1
-
-# Datadog SLO configuration
-# Create and manage Service Level Objectives
-datadogSLO:
-  enabled: false
-  slos: {}
-    # api-availability:
-    #   enabled: true
-    #   labels: {}
-    #   annotations: {}
-    #   name: "API Availability SLO"
-    #   description: "99.9% of API requests should be successful"
-    #   type: "metric"
-    #   targetThreshold: "99.9"
-    #   timeframe: "30d"
-    #   query:
-    #     numerator: "sum:http.requests.success{service:api}.as_count()"
-    #     denominator: "sum:http.requests.total{service:api}.as_count()"
-    #   tags:
-    #     - "service:api"
-    #     - "team:platform"
-    #
-    # response-time:
-    #   enabled: true
-    #   name: "API Response Time SLO"
-    #   description: "95% of API requests should complete within 500ms"
-    #   type: "metric"
-    #   targetThreshold: "95"
-    #   timeframe: "7d"
-    #   query:
-    #     numerator: "sum:http.requests{service:api,response_time:<500}.as_count()"
-    #     denominator: "sum:http.requests{service:api}.as_count()"
-
-# Datadog Metric configuration
-# Define custom metrics for HPA scaling
-datadogMetric:
-  enabled: false
-  metrics: {}
-    # queue-size:
-    #   enabled: true
-    #   labels: {}
-    #   annotations: {}
-    #   query: "avg:redis.queue.size{queue:jobs}"
-    #   externalMetricName: "redis_queue_size"
-    #   maxAge: 120
-    #   returnOnlyMatched: true
-    #
-    # custom-app-metric:
-    #   enabled: true
-    #   query: "avg:app.custom.metric{env:prod}"
-    #   externalMetricName: "app_custom_metric"
-
-# Datadog Dashboard configuration
-# Create and manage Datadog dashboards as code
-datadogDashboard:
-  enabled: false
-  dashboards: {}
-    # app-overview:
-    #   enabled: true
-    #   labels: {}
-    #   annotations: {}
-    #   title: "Application Overview Dashboard"
-    #   description: "Main dashboard for application monitoring"
-    #   layout_type: "ordered"
-    #   is_read_only: false
-    #   notify_list: []
-    #   template_variables:
-    #     - name: "env"
-    #       prefix: "env"
-    #       available_values: ["prod", "staging", "dev"]
-    #       default: "prod"
-    #   widgets:
-    #     - definition:
-    #         title: "Request Rate"
-    #         type: "timeseries"
-    #         requests:
-    #           - q: "sum:http.requests{$env} by {service}.as_rate()"
-    #             display_type: "line"
-    #             style:
-    #               palette: "dog_classic"
-    #               line_type: "solid"
-    #               line_width: "normal"
-    #       layout:
-    #         x: 0
-    #         y: 0
-    #         width: 4
-    #         height: 2
-
-# ========================================
-# 📝 TEMPLATED VALUES EXAMPLES
-# ========================================
-# The following examples demonstrate how to use templated values for dynamic configurations.
-# Uncomment and modify as needed for your use case.
-
-# # Example 1: Dynamic Branch Deployment
-# generic:
-#   branchName: "feature-123"      # Set dynamically by CI/CD
-#   environment: "staging"
-#
-# namespaceOverride: "{{ .Values.generic.branchName }}"
-#
-# serviceAccount:
-#   name: "{{ .Values.generic.branchName }}-sa"
-#   annotations:
-#     eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/{{ .Values.generic.environment }}-{{ .Values.generic.branchName }}-role"
-#
-# workloadLabels:
-#   branch: "{{ .Values.generic.branchName }}"
-#   environment: "{{ .Values.generic.environment }}"
-#
-# podAnnotations:
-#   branch-url: "https://github.com/myorg/myrepo/tree/{{ .Values.generic.branchName }}"
-#   deployed-at: "{{ now | date \"2006-01-02T15:04:05Z07:00\" }}"
-#
-# ingress:
-#   enabled: true
-#   hosts:
-#     - host: "{{ .Values.generic.branchName }}.{{ .Values.generic.environment }}.example.com"
-#       paths:
-#         - path: /
-#           pathType: Prefix
-#   alb:
-#     annotations:
-#       alb.ingress.kubernetes.io/load-balancer-name: "{{ .Values.generic.branchName }}-{{ .Values.generic.environment }}"
-#       alb.ingress.kubernetes.io/group.name: "{{ .Values.generic.environment }}-branches"
-#       alb.ingress.kubernetes.io/tags: |
-#         Environment={{ .Values.generic.environment }}
-#         Branch={{ .Values.generic.branchName }}
-#         ManagedBy=ArgoCD
-#
-# configMap:
-#   enabled: true
+# Extra Kubernetes objects
+extraObjects: []
+# - apiVersion: v1
+#   kind: ConfigMap
+#   metadata:
+#     name: "{{ .Values.generic.branchName }}-extra-cm"  # Template example
 #   data:
-#     app.yaml: |
-#       environment: {{ .Values.generic.environment }}
-#       branch: {{ .Values.generic.branchName }}
-#       api_url: https://{{ .Values.generic.branchName }}.api.{{ .Values.generic.environment }}.example.com
-#
-# # Example 2: Multi-Environment Setup
-# generic:
-#   environment: "production"
-#   region: "us-east-1"
-#
-# workloadLabels:
-#   environment: "{{ .Values.generic.environment }}"
-#   region: "{{ .Values.generic.region }}"
-#
-# ingress:
-#   hosts:
-#     - host: "{{ if eq .Values.generic.environment \"production\" }}api.example.com{{ else }}api.{{ .Values.generic.environment }}.example.com{{ end }}"
-#       paths:
-#         - path: /
-#           pathType: Prefix
-#
-# serviceAccount:
-#   annotations:
-#     eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/{{ .Values.generic.environment }}-{{ .Values.generic.region }}-app-role"
-#
-# # Example 3: GitOps with ArgoCD Variables
-# # These values would be set by ArgoCD using parameters or valueFiles
-# generic:
-#   gitBranch: "${ARGOCD_APP_REVISION}"        # ArgoCD built-in variable
-#   gitCommit: "${ARGOCD_APP_SOURCE_REPO_URL}" # ArgoCD built-in variable
-#
-# podAnnotations:
-#   argocd.argoproj.io/tracking-id: "{{ .Values.generic.gitBranch }}:{{ .Values.generic.gitCommit }}"
-#   git-commit: "{{ .Values.generic.gitCommit }}"
-#
-# # Example 4: Dynamic External Secrets
-# externalSecrets:
-#   app-secrets:
-#     enabled: true
-#     secretStoreRef:
-#       name: "{{ .Values.generic.environment }}-secret-store"
-#       kind: SecretStore
-#     target:
-#       name: "{{ .Release.Name }}-secrets"
-#     data:
-#       - secretKey: database-password
-#         remoteRef:
-#           key: "/{{ .Values.generic.environment }}/{{ .Release.Name }}/db-password"
-#
-# # Example 5: Conditional Resource Creation
-# gateway:
-#   gateway:
-#     enabled: true
-#     name: "{{ .Release.Name }}-{{ if eq .Values.generic.environment \"production\" }}prod{{ else }}{{ .Values.generic.environment }}{{ end }}-gateway"
-#     gatewayClassName: "{{ .Values.generic.environment }}-gateway-class"
-#
-# # Example 6: Time-based Values
-# extraObjects:
-#   - apiVersion: v1
-#     kind: ConfigMap
-#     metadata:
-#       name: "{{ .Release.Name }}-build-info"
-#     data:
-#       build-date: "{{ now | date \"2006-01-02T15:04:05Z07:00\" }}"
-#       build-week: "{{ now | date \"2006-W02\" }}"
-#       expires-at: "{{ now | dateModify \"+720h\" | date \"2006-01-02T15:04:05Z07:00\" }}"  # 30 days from now
+#     branch: "{{ .Values.generic.branchName }}"         # Template example
+#     key: value

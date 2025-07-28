@@ -11,9 +11,6 @@ metadata:
     {{- end }}
   annotations:
     {{- include "generic.podAnnotations" . | nindent 4 }}
-    {{- range $key, $value := .Values.podAnnotations }}
-    {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
-    {{- end }}
 spec:
   {{- with .Values.imagePullSecrets }}
   imagePullSecrets:
@@ -161,12 +158,6 @@ spec:
       securityContext:
         {{- include "generic.containerSecurityContext" (dict "securityContext" .Values.deployment.securityContext "root" $root) | nindent 8 }}
     {{- end }}
-    {{- with .Values.sidecars }}
-    {{- range $sidecar := . }}
-    {{- include "generic.container" (dict "container" $sidecar "root" $root) | nindent 4 }}
-    {{- end }}
-    {{- end }}
-    {{/* Sidecar containers are now handled as init containers with restartPolicy: Always */}}
   {{- include "generic.volumes" . | nindent 2 }}
   {{- with .Values.restartPolicy }}
   restartPolicy: {{ . }}
@@ -221,4 +212,131 @@ Topology spread constraints with label selector
   nodeTaintsPolicy: {{ . }}
   {{- end }}
 {{- end }}
+{{- end -}}
+
+{{/*
+Generic pod template that can be used for both main and extra deployments
+Parameters:
+- root: The root context
+- deployment: The deployment configuration
+- componentName: Optional component name for extra deployments
+*/}}
+{{- define "generic.deploymentPodTemplate" -}}
+{{- $root := .root -}}
+{{- $deployment := .deployment -}}
+{{- $componentName := .componentName | default "" -}}
+metadata:
+  labels:
+    {{- include "generic.labels" $root | nindent 4 }}
+    {{- if $componentName }}
+    app.kubernetes.io/component: {{ $componentName }}
+    {{- end }}
+    {{- with $deployment.podLabels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  annotations:
+    {{- with $deployment.podAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  {{- if $deployment.imagePullSecrets }}
+  imagePullSecrets:
+    {{- toYaml $deployment.imagePullSecrets | nindent 4 }}
+  {{- else if $root.Values.imagePullSecrets }}
+  imagePullSecrets:
+    {{- toYaml $root.Values.imagePullSecrets | nindent 4 }}
+  {{- end }}
+  {{- if $deployment.serviceAccountName }}
+  serviceAccountName: {{ $deployment.serviceAccountName }}
+  {{- else if $root.Values.serviceAccount.enabled }}
+  serviceAccountName: {{ include "generic.serviceAccountName" $root }}
+  {{- end }}
+  {{- if $deployment.podSecurityContext }}
+  securityContext:
+    {{- toYaml $deployment.podSecurityContext | nindent 4 }}
+  {{- else if $root.Values.podSecurityContext }}
+  securityContext:
+    {{- toYaml $root.Values.podSecurityContext | nindent 4 }}
+  {{- end }}
+  {{- if $deployment.nodeSelector }}
+  nodeSelector:
+    {{- toYaml $deployment.nodeSelector | nindent 4 }}
+  {{- else if $root.Values.nodeSelector }}
+  nodeSelector:
+    {{- toYaml $root.Values.nodeSelector | nindent 4 }}
+  {{- end }}
+  {{- if $deployment.affinity }}
+  affinity:
+    {{- toYaml $deployment.affinity | nindent 4 }}
+  {{- else if $root.Values.affinity }}
+  affinity:
+    {{- toYaml $root.Values.affinity | nindent 4 }}
+  {{- end }}
+  {{- if $deployment.tolerations }}
+  tolerations:
+    {{- toYaml $deployment.tolerations | nindent 4 }}
+  {{- else if $root.Values.tolerations }}
+  tolerations:
+    {{- toYaml $root.Values.tolerations | nindent 4 }}
+  {{- end }}
+  {{- if or $deployment.topologySpreadConstraints $root.Values.topologySpreadConstraints }}
+  topologySpreadConstraints:
+    {{- $constraints := $deployment.topologySpreadConstraints | default $root.Values.topologySpreadConstraints }}
+    {{- include "generic.topologySpreadConstraints" (dict "context" $root "componentName" $componentName "Values" (dict "topologySpreadConstraints" $constraints)) | nindent 4 }}
+  {{- end }}
+  {{- with $deployment.volumes }}
+  volumes:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  containers:
+    - name: {{ $componentName | default "main" }}
+      image: {{ $deployment.image.repository }}:{{ $deployment.image.tag | default $root.Values.image.tag }}
+      imagePullPolicy: {{ $deployment.image.pullPolicy | default $root.Values.image.pullPolicy }}
+      {{- with $deployment.command }}
+      command:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.args }}
+      args:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.env }}
+      env:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.envFrom }}
+      envFrom:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.ports }}
+      ports:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.livenessProbe }}
+      livenessProbe:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.readinessProbe }}
+      readinessProbe:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.startupProbe }}
+      startupProbe:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.resources }}
+      resources:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $deployment.volumeMounts }}
+      volumeMounts:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- if $deployment.securityContext }}
+      securityContext:
+        {{- toYaml $deployment.securityContext | nindent 8 }}
+      {{- else if $root.Values.containerSecurityContext }}
+      securityContext:
+        {{- toYaml $root.Values.containerSecurityContext | nindent 8 }}
+      {{- end }}
 {{- end -}}

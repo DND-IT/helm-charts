@@ -3,74 +3,73 @@
 
 nameOverride: "db-migration"
 
-workload:
-  type: job
-  enabled: true
-
-  # Job specific settings
-  backoffLimit: 3
-  completions: 1
-  parallelism: 1
-  ttlSecondsAfterFinished: 600  # Clean up after 10 minutes
-  restartPolicy: OnFailure
-
-image:
-  repository: migrate/migrate
-  tag: "latest"
-  pullPolicy: Always
-
+# Disable main deployment for this job example
 deployment:
-  command: ["migrate"]
-  args:
-    - "-path"
-    - "/migrations"
-    - "-database"
-    - "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):5432/$(DB_NAME)?sslmode=disable"
-    - "up"
+  enabled: false
 
-  env:
-    - name: DB_HOST
-      value: "postgres-service"
-    - name: DB_NAME
-      value: "myapp"
-    - name: DB_USER
-      value: "postgres"
-    - name: DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: postgres-secret
-          key: password
-    - name: MIGRATION_TIMEOUT
-      value: "300s"
+# Define the migration job
+jobs:
+  migration:
+    enabled: true
+    backoffLimit: 3
+    completions: 1
+    parallelism: 1
+    ttlSecondsAfterFinished: 600  # Clean up after 10 minutes
+    restartPolicy: OnFailure
 
-  resources:
-    limits:
-      memory: "256Mi"
-      cpu: "200m"
-    requests:
-      cpu: "100m"
-      memory: "128Mi"
+    # Container image
+    image:
+      repository: migrate/migrate
+      tag: "latest"
+      pullPolicy: Always
 
-  volumeMounts:
-    - name: migrations
-      mountPath: /migrations
-      readOnly: true
-    - name: migration-scripts
-      mountPath: /custom-migrations
-      readOnly: true
+    command: ["migrate"]
+    args:
+      - "-path"
+      - "/migrations"
+      - "-database"
+      - "postgres://$(DB_USER):$(DB_PASSWORD)@$(DB_HOST):5432/$(DB_NAME)?sslmode=disable"
+      - "up"
 
-# Volume with migration files
-persistence:
-  enabled: true
-  volumes:
-    migrations:
-      type: configMap
-      configMap:
-        name: migration-files
-    migration-scripts:
-      type: configMap
-      configMap:
-        name: custom-migration-scripts
+    env:
+      - name: DB_HOST
+        value: "postgres-service"
+      - name: DB_NAME
+        value: "myapp"
+      - name: DB_USER
+        value: "postgres"
+      - name: DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: postgres-secret
+            key: password
+      - name: MIGRATION_TIMEOUT
+        value: "300s"
+
+    resources:
+      limits:
+        memory: "256Mi"
+        cpu: "200m"
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+
+    volumeMounts:
+      - name: migrations
+        mountPath: /migrations
+        readOnly: true
+      - name: migration-scripts
+        mountPath: /custom-migrations
+        readOnly: true
+
+    # Volumes for this job
+    volumes:
+      - name: migrations
+        configMap:
+          name: migration-files
+      - name: migration-scripts
+        configMap:
+          name: custom-migration-scripts
 
 configMap:
   enabled: true
@@ -124,7 +123,7 @@ configMap:
 
       DROP TYPE IF EXISTS user_role;
 
-additionalConfigMaps:
+extraConfigMaps:
   custom-migration-scripts:
     data:
       "pre-migration.sh": |

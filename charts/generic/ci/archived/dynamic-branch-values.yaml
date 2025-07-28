@@ -11,33 +11,9 @@ generic:
 # Override namespace for branch isolation
 namespaceOverride: "{{ .Values.generic.branchName }}"
 
-workload:
-  type: deployment
+deployment:
   enabled: true
   replicas: 1
-
-image:
-  repository: myorg/myapp
-  tag: "{{ .Values.generic.branchName }}"  # Use branch name as image tag
-  pullPolicy: Always
-
-# Labels for tracking
-workloadLabels:
-  branch: "{{ .Values.generic.branchName }}"
-  environment: "{{ .Values.generic.environment }}"
-  managed-by: "argocd"
-
-podLabels:
-  version: "{{ .Values.generic.version }}"
-  branch: "{{ .Values.generic.branchName }}"
-
-# Annotations with dynamic values
-podAnnotations:
-  deployed-by: "ci-pipeline"
-  branch-url: "https://github.com/myorg/myrepo/tree/{{ .Values.generic.branchName }}"
-  deployment-time: "{{ now | date \"2006-01-02T15:04:05Z07:00\" }}"
-
-deployment:
   resources:
     limits:
       memory: "512Mi"
@@ -73,25 +49,23 @@ service:
 # Dynamic ingress configuration with ALB
 ingress:
   enabled: true
-  controller: alb  # AWS ALB is default
   className: alb
-  alb:
-    annotations:
-      # Dynamic ALB configuration
-      alb.ingress.kubernetes.io/load-balancer-name: "{{ .Values.generic.branchName }}-{{ .Values.generic.environment }}"
-      alb.ingress.kubernetes.io/group.name: "{{ .Values.generic.environment }}-branches"
-      alb.ingress.kubernetes.io/scheme: internet-facing
-      alb.ingress.kubernetes.io/target-type: ip
-      alb.ingress.kubernetes.io/healthcheck-path: /health
-      alb.ingress.kubernetes.io/tags: |
-        Environment={{ .Values.generic.environment }}
-        Branch={{ .Values.generic.branchName }}
-        ManagedBy=ArgoCD
-        CreatedAt={{ now | date "2006-01-02" }}
-      # SSL configuration
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-      alb.ingress.kubernetes.io/ssl-redirect: '443'
-      alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:123456789012:certificate/{{ .Values.generic.environment }}-wildcard"
+  annotations:
+    # Dynamic ALB configuration
+    alb.ingress.kubernetes.io/load-balancer-name: "{{ .Values.generic.branchName }}-{{ .Values.generic.environment }}"
+    alb.ingress.kubernetes.io/group.name: "{{ .Values.generic.environment }}-branches"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/tags: |
+      Environment={{ .Values.generic.environment }}
+      Branch={{ .Values.generic.branchName }}
+      ManagedBy=ArgoCD
+      CreatedAt={{ now | date "2006-01-02" }}
+    # SSL configuration
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:123456789012:certificate/{{ .Values.generic.environment }}-wildcard"
 
   hosts:
     - host: "{{ .Values.generic.branchName }}.{{ .Values.generic.environment }}.example.com"
@@ -118,21 +92,6 @@ configMap:
         api: https://{{ .Values.generic.branchName }}.api.{{ .Values.generic.environment }}.example.com
         frontend: https://{{ .Values.generic.branchName }}.{{ .Values.generic.environment }}.example.com
         cdn: https://cdn.{{ .Values.generic.environment }}.example.com/{{ .Values.generic.branchName }}
-
-    nginx.conf: |
-      server {
-        listen 8080;
-        server_name {{ .Values.generic.branchName }}.{{ .Values.generic.environment }}.example.com;
-
-        location / {
-          root /usr/share/nginx/html;
-          try_files $uri $uri/ /index.html;
-        }
-
-        location /api {
-          proxy_pass https://{{ .Values.generic.branchName }}.api.{{ .Values.generic.environment }}.example.com;
-        }
-      }
 
 # External secret for branch-specific credentials
 externalSecret:
@@ -162,40 +121,8 @@ serviceAccount:
   annotations:
     eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/{{ .Values.generic.environment }}-{{ .Values.generic.branchName }}-role"
 
-# Monitoring configuration
-serviceMonitor:
-  enabled: true
-  labels:
-    prometheus: kube-prometheus
-    environment: "{{ .Values.generic.environment }}"
-    branch: "{{ .Values.generic.branchName }}"
-  interval: 30s
-  path: /metrics
-
-# Datadog monitoring with dynamic tags
-datadog:
-  monitor:
-    enabled: true
-    spec:
-      name: "{{ .Values.generic.branchName }} - High Error Rate"
-      type: "query alert"
-      query: "avg(last_5m):avg:app.errors{branch:{{ .Values.generic.branchName }},env:{{ .Values.generic.environment }}} > 10"
-      message: |
-        High error rate detected in branch {{ .Values.generic.branchName }}
-        Environment: {{ .Values.generic.environment }}
-        Check dashboard: https://app.datadoghq.com/dashboard/{{ .Values.generic.branchName }}
-      tags:
-        - "branch:{{ .Values.generic.branchName }}"
-        - "env:{{ .Values.generic.environment }}"
-        - "team:platform"
-      options:
-        thresholds:
-          critical: 10
-          warning: 5
-        notifyNoData: false
-
 # Auto-scaling for popular branches
-autoscaling:
+hpa:
   enabled: true
   minReplicas: 1
   maxReplicas: 5

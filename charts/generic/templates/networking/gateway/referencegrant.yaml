@@ -27,15 +27,15 @@ spec:
   {{- with .Values.gateway.referenceGrant.to }}
   to:
     {{- range $to := . }}
-    - group: {{ $to.group | default "" }}
+    - group: {{ $to.group | default "" | quote }}
       kind: {{ $to.kind }}
       {{- with $to.name }}
       name: {{ . }}
       {{- end }}
     {{- end }}
   {{- end }}
-{{- if .Values.gateway.referenceGrant.additionalGrants }}
-{{- range $name, $grant := .Values.gateway.referenceGrant.additionalGrants }}
+{{- if .Values.gateway.referenceGrant.extraGrants }}
+{{- range $name, $grant := .Values.gateway.referenceGrant.extraGrants }}
 {{- if $grant.enabled | default true }}
 ---
 apiVersion: gateway.networking.k8s.io/v1

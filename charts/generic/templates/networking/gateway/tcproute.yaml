@@ -14,9 +14,9 @@ metadata:
     {{- toYaml . | nindent 4 }}
   {{- end }}
 spec:
-  {{- with .Values.gateway.tcpRoute.parentRefs }}
+  {{- if .Values.gateway.tcpRoute.parentRefs }}
   parentRefs:
-    {{- range $parentRef := . }}
+    {{- range $parentRef := .Values.gateway.tcpRoute.parentRefs }}
     - {{- if $parentRef.group }}
       group: {{ $parentRef.group }}
       {{- end }}
@@ -34,12 +34,6 @@ spec:
       port: {{ . }}
       {{- end }}
     {{- end }}
-  {{- else }}
-  parentRefs:
-    - name: {{ .Values.gateway.tcpRoute.gatewayName | default (printf "%s-gateway" (include "generic.fullname" .)) }}
-      {{- with .Values.gateway.tcpRoute.gatewayNamespace }}
-      namespace: {{ . }}
-      {{- end }}
   {{- end }}
   rules:
     {{- if .Values.gateway.tcpRoute.rules }}
@@ -70,8 +64,8 @@ spec:
         - name: {{ include "generic.fullname" . }}
           port: {{ (index .Values.service.ports 0).port | default 80 }}
     {{- end }}
-{{- if .Values.gateway.tcpRoute.additionalRoutes }}
-{{- range $name, $route := .Values.gateway.tcpRoute.additionalRoutes }}
+{{- if .Values.gateway.tcpRoute.extraRoutes }}
+{{- range $name, $route := .Values.gateway.tcpRoute.extraRoutes }}
 {{- if $route.enabled | default true }}
 ---
 apiVersion: gateway.networking.k8s.io/v1alpha2

@@ -28,7 +28,7 @@ tests:
     asserts:
       - equal:
           path: metadata.labels["helm.sh/chart"]
-          value: generic-0.1.0
+          value: generic-0.0.2
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
           value: generic
@@ -93,10 +93,11 @@ tests:
 
   - it: should handle template values in env
     set:
-      generic.name: myapp
-      env:
-        - name: APP_NAME
-          value: "{{ .Values.generic.name }}"
+      nameOverride: myapp
+      deployment:
+        env:
+          - name: APP_NAME
+            value: "{{ .Values.nameOverride }}"
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env

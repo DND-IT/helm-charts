@@ -103,8 +103,8 @@ spec:
     {{- include "generic.selectorLabels" . | nindent 4 }}
   {{- end }}
 {{- end }}
-{{- if .Values.additionalServices }}
-{{- range $name, $service := .Values.additionalServices }}
+{{- if .Values.extraServices }}
+{{- range $name, $service := .Values.extraServices }}
 {{- if $service.enabled }}
 ---
 apiVersion: v1

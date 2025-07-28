@@ -14,16 +14,16 @@ tests:
           value: RELEASE-NAME
           documentIndex: 0
 
-  - it: should not create deployment for statefulset
+  - it: should not create deployment when disabled
     set:
-      workload.type: statefulset
+      deployment.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
   - it: should set replicas
     set:
-      workload.replicas: 5
+      deployment.replicas: 5
     asserts:
       - equal:
           path: spec.replicas

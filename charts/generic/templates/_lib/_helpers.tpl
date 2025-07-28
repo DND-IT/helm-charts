@@ -2,7 +2,7 @@
 Expand the name of the chart.
 */}}
 {{- define "generic.name" -}}
-{{- default .Release.Name .Values.generic.name | trunc 63 | trimSuffix "-" }}
+{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -107,8 +107,6 @@ Create image name
 {{- define "generic.image" -}}
 {{- if .Values.image.tag }}
 {{- printf "%s:%s" .Values.image.repository .Values.image.tag }}
-{{- else }}
-{{- printf "%s:%s" .Values.image.repository .Chart.AppVersion }}
 {{- end }}
 {{- end }}
 
@@ -183,4 +181,47 @@ Usage: {{ include "generic.apiVersion" (dict "kind" "ExternalSecret" "group" "ex
   {{- end -}}
 {{- end -}}
 {{- $preferredVersion -}}
+{{- end }}
+
+{{/*
+Process topology spread constraints to add labelSelector if not specified
+Usage:
+  {{- include "generic.topologySpreadConstraints" . }}
+Or with component name:
+  {{- include "generic.topologySpreadConstraints" (dict "context" . "componentName" "worker") }}
+*/}}
+{{- define "generic.topologySpreadConstraints" -}}
+{{- $context := .context | default . -}}
+{{- $componentName := .componentName | default "" -}}
+{{- $constraints := .Values.topologySpreadConstraints | default $context.Values.topologySpreadConstraints -}}
+{{- $selectorLabels := include "generic.selectorLabels" $context | fromYaml -}}
+{{- if $componentName -}}
+  {{- $selectorLabels = merge $selectorLabels (dict "app.kubernetes.io/component" $componentName) -}}
+{{- end -}}
+{{- range $constraint := $constraints }}
+- maxSkew: {{ $constraint.maxSkew }}
+  topologyKey: {{ $constraint.topologyKey }}
+  whenUnsatisfiable: {{ $constraint.whenUnsatisfiable }}
+  {{- if $constraint.labelSelector }}
+  labelSelector:
+    {{- toYaml $constraint.labelSelector | nindent 4 }}
+  {{- else }}
+  labelSelector:
+    matchLabels:
+      {{- toYaml $selectorLabels | nindent 6 }}
+  {{- end }}
+  {{- if $constraint.minDomains }}
+  minDomains: {{ $constraint.minDomains }}
+  {{- end }}
+  {{- if $constraint.nodeAffinityPolicy }}
+  nodeAffinityPolicy: {{ $constraint.nodeAffinityPolicy }}
+  {{- end }}
+  {{- if $constraint.nodeTaintsPolicy }}
+  nodeTaintsPolicy: {{ $constraint.nodeTaintsPolicy }}
+  {{- end }}
+  {{- if $constraint.matchLabelKeys }}
+  matchLabelKeys:
+    {{- toYaml $constraint.matchLabelKeys | nindent 4 }}
+  {{- end }}
+{{- end -}}
 {{- end }}

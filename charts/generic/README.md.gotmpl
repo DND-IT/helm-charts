@@ -7,13 +7,12 @@
 
 ## Features
 
-- **All Workload Types**: Supports Deployment, StatefulSet, DaemonSet, Job, and CronJob
-- **Flexible Networking**: Service, Ingress (ALB/NGINX), and Gateway API support
-- **Advanced Scaling**: HPA, VPA, and KEDA autoscaling options
-- **Comprehensive Security**: RBAC, NetworkPolicy, Pod Security Standards, and secure defaults
-- **Persistence**: Multiple volume types, CSI snapshots, and StatefulSet volume claims
-- **Observability**: Prometheus, Datadog, and custom metrics integration
-- **Cloud Native**: External Secrets, workload identity, and native sidecar containers
+- **Multiple Workload Types**: Supports deployments, cronjobs, and jobs
+- **Flexible Networking**: Service, Ingress (ALB), and Gateway API support
+- **Advanced Scaling**: HPA and VPA autoscaling options
+- **Security**: RBAC, NetworkPolicy, Pod Security Standards, and secure defaults
+- **Persistence**: Multiple volume types, CSI snapshots, and volume claim templates
+- **Cloud Native**: External Secrets
 - **High Availability**: PDB, topology spread, and anti-affinity configurations
 - **Extensibility**: Helm hooks, extra objects, and modular template architecture
 
@@ -35,106 +34,19 @@ helm install my-release dnd-it/generic
 # With custom values
 helm install my-release dnd-it/generic -f values.yaml
 
-# Deploy as StatefulSet
+# Deploy with custom image
 helm install my-release dnd-it/generic \
-  --set workload.type=statefulset \
-  --set image.repository=postgres \
-  --set image.tag=15-alpine
+  --set deployment.enabled=true \
+  --set image.repository=myorg/myapp \
+  --set image.tag=v1.0.0
 
-# Deploy as CronJob
+# Deploy a CronJob
 helm install my-release dnd-it/generic \
-  --set workload.type=cronjob \
-  --set workload.schedule="0 * * * *" \
-  --set image.repository=myorg/backup-job
+  --set deployment.enabled=false \
+  --set cronjobs.backup.enabled=true \
+  --set cronjobs.backup.schedule="0 * * * *" \
+  --set cronjobs.backup.image.repository=myorg/backup-job
 ```
-
-## Configuration
-
-### Core Application Settings
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `app.name` | Application name | `""` (chart name) |
-| `app.version` | Application version | `""` (chart appVersion) |
-| `image.repository` | Container image repository | `nginx` |
-| `image.tag` | Container image tag | `1.21` |
-| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
-
-### Deployment Configuration
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `deployment.enabled` | Enable deployment | `true` |
-| `deployment.replicas` | Number of replicas | `1` |
-| `deployment.strategy.type` | Deployment strategy | `RollingUpdate` |
-| `deployment.resources` | Resource limits and requests | `{}` |
-| `deployment.nodeSelector` | Node selector | `{}` |
-| `deployment.tolerations` | Pod tolerations | `[]` |
-| `deployment.affinity` | Pod affinity rules | `{}` |
-
-### Service Configuration
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `service.enabled` | Enable service | `true` |
-| `service.type` | Service type | `ClusterIP` |
-| `service.port` | Service port | `80` |
-| `service.targetPort` | Target port | `http` |
-
-### Ingress Configuration
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `ingress.enabled` | Enable ingress | `false` |
-| `ingress.className` | Ingress class name | `""` |
-| `ingress.hosts` | Ingress hosts configuration | See values.yaml |
-| `ingress.tls` | TLS configuration | `[]` |
-
-### Persistence Configuration
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `persistence.enabled` | Enable persistent storage | `false` |
-| `persistence.size` | Storage size | `8Gi` |
-| `persistence.accessMode` | Access mode | `ReadWriteOnce` |
-| `persistence.storageClass` | Storage class | `""` |
-| `persistence.mountPath` | Mount path in container | `/data` |
-
-### Health Checks
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `deployment.livenessProbe.enabled` | Enable liveness probe | `false` |
-| `deployment.readinessProbe.enabled` | Enable readiness probe | `false` |
-| `deployment.startupProbe.enabled` | Enable startup probe | `false` |
-
-### Autoscaling
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `autoscaling.enabled` | Enable HPA | `false` |
-| `autoscaling.minReplicas` | Minimum replicas | `1` |
-| `autoscaling.maxReplicas` | Maximum replicas | `100` |
-| `autoscaling.targetCPUUtilizationPercentage` | CPU target | `80` |
-| `autoscaling.targetMemoryUtilizationPercentage` | Memory target | `80` |
-
-### Security
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `serviceAccount.enabled` | Enable service account | `true` |
-| `serviceAccount.create` | Create service account | `true` |
-| `rbac.enabled` | Enable RBAC | `false` |
-| `networkPolicy.enabled` | Enable network policy | `false` |
-| `podDisruptionBudget.enabled` | Enable PDB | `false` |
-
-### Monitoring
-
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `serviceMonitor.enabled` | Enable ServiceMonitor | `false` |
-| `serviceMonitor.interval` | Scrape interval | `30s` |
-| `serviceMonitor.path` | Metrics path | `/metrics` |
 
 ## Examples
 
@@ -143,7 +55,7 @@ helm install my-release dnd-it/generic \
 ```yaml
 image:
   repository: nginx
-  tag: "1.21"
+  tag: "1.21-alpine"
 
 service:
   port: 80
@@ -151,6 +63,11 @@ service:
 
 ingress:
   enabled: true
+  className: alb
+  alb:
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
   hosts:
     - host: myapp.example.com
       paths:
@@ -167,119 +84,184 @@ deployment:
       memory: 128Mi
 ```
 
-### Application with Database
+### Application with ALB Ingress
 
 ```yaml
-image:
-  repository: myapp
-  tag: "v1.0.0"
-
-persistence:
-  enabled: true
-  size: 20Gi
-  mountPath: /var/lib/data
-
-configMap:
-  enabled: true
-  data:
-    database.conf: |
-      host=postgres.default.svc.cluster.local
-      port=5432
-
-secret:
-  enabled: true
-  stringData:
-    db-password: "supersecret"
-
 deployment:
-  env:
-    - name: DB_HOST
-      valueFrom:
-        configMapKeyRef:
-          name: myapp-config
-          key: database.host
-    - name: DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: myapp-secret
-          key: db-password
+  enabled: true
+  replicas: 2
+
+image:
+  repository: myorg/webapp
+  tag: "v2.0.0"
+
+ingress:
+  enabled: true
+  className: alb
+  alb:
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/group.name: shared-alb
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
 ```
 
-### High Availability Setup
+### CronJob Example
 
 ```yaml
 deployment:
-  replicas: 3
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+  enabled: false  # Disable main deployment
 
-autoscaling:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 10
-  targetCPUUtilizationPercentage: 70
+cronjobs:
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 1
+    image:
+      repository: myorg/backup-tool
+      tag: "v1.0.0"
+    command: ["/bin/sh"]
+    args: ["-c", "backup-script.sh"]
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    env:
+      - name: BACKUP_BUCKET
+        value: "s3://my-backups"
 
-podDisruptionBudget:
-  enabled: true
-  minAvailable: 2
+  cleanup:
+    enabled: true
+    schedule: "0 */6 * * *"  # Every 6 hours
+    image:
+      repository: myorg/cleanup-tool
+      tag: "latest"
+    command: ["python", "cleanup.py"]
+```
 
+### Job Example
+
+```yaml
 deployment:
-  affinity:
-    podAntiAffinity:
-      preferredDuringSchedulingIgnoredDuringExecution:
-        - weight: 100
-          podAffinityTerm:
-            labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/name
-                  operator: In
-                  values:
-                    - myapp
-            topologyKey: kubernetes.io/hostname
+  enabled: false  # Disable main deployment
+
+jobs:
+  migration:
+    enabled: true
+    backoffLimit: 3
+    completions: 1
+    parallelism: 1
+    ttlSecondsAfterFinished: 300
+    image:
+      repository: myorg/migration-tool
+      tag: "v2.0.0"
+    command: ["python", "migrate.py"]
+    env:
+      - name: DATABASE_URL
+        value: "postgresql://localhost/myapp"
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+```
+
+### Multiple Deployments Example
+
+```yaml
+# Main deployment
+deployment:
+  enabled: true
+  replicas: 3
+  env:
+    - name: SERVICE_TYPE
+      value: "api"
+
+image:
+  repository: myorg/api
+  tag: "v1.0.0"
+
+# Additional deployments
+extraDeployments:
+  worker:
+    replicas: 2
+    image:
+      repository: myorg/worker
+      tag: "v1.0.0"
+    env:
+      - name: SERVICE_TYPE
+        value: "worker"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+
+  admin:
+    replicas: 1
+    image:
+      repository: myorg/admin
+      tag: "v1.0.0"
+    env:
+      - name: SERVICE_TYPE
+        value: "admin"
+    ports:
+      - name: http
+        containerPort: 8080
 ```
 
 ## Upgrading
 
-### From v0.x to v1.x
+### Breaking Changes in v0.0.2
 
-- Update values file structure according to new schema
-- Review breaking changes in CHANGELOG.md
+1. **Workload Structure Changed**:
+   - Removed `workload.type` configuration
+   - StatefulSet and DaemonSet no longer supported
+   - Use `deployment.enabled`, `cronjobs`, and `jobs` instead
 
-## Development
+2. **Monitoring Resources Removed**:
+   - ServiceMonitor, PodMonitor, PrometheusRule removed
+   - Datadog custom resources moved to separate `datadog-resources` chart
 
-### Testing
+3. **Ingress Controller**:
+   - Removed `ingress.controller` field
+   - Only ALB ingress controller is supported
+   - Removed `ingress.nginx` configuration section
 
-```bash
-# Lint the chart
-helm lint .
+### Migration Guide
 
-# Test template rendering
-helm template test-release . -f values-example.yaml
+```yaml
+# Old structure
+workload:
+  type: deployment
+  enabled: true
+  replicas: 3
 
-# Test installation
-helm install test-release . --dry-run --debug
+# New structure
+deployment:
+  enabled: true
+  replicas: 3
+
+# Old CronJob
+workload:
+  type: cronjob
+  schedule: "0 * * * *"
+
+# New CronJob
+deployment:
+  enabled: false
+cronjobs:
+  mycron:
+    enabled: true
+    schedule: "0 * * * *"
 ```
-
-### Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This chart is licensed under the MIT License. See LICENSE file for details.
-
-## Support
-
-- Documentation: [Chart Documentation](https://github.com/dnd-it/helm-charts/tree/main/charts/generic)
-- Issues: [GitHub Issues](https://github.com/dnd-it/helm-charts/issues)
-- Discussions: [GitHub Discussions](https://github.com/dnd-it/helm-charts/discussions)
 
 {{ template "chart.homepageLine" . }}
 
@@ -290,3 +272,6 @@ This chart is licensed under the MIT License. See LICENSE file for details.
 {{ template "chart.requirementsSection" . }}
 
 {{ template "chart.valuesSection" . }}
+
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v{{ .Version }}](https://github.com/norwoodj/helm-docs/releases/v{{ .Version }})

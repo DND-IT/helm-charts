@@ -3,8 +3,7 @@
 
 nameOverride: "api-service"
 
-workload:
-  type: deployment
+deployment:
   enabled: true
   replicas: 3
   strategy:
@@ -12,16 +11,6 @@ workload:
     rollingUpdate:
       maxUnavailable: 0
       maxSurge: 1
-
-image:
-  repository: myorg/api-service
-  tag: "v2.1.0"
-  pullPolicy: IfNotPresent
-
-imagePullSecrets:
-  - name: docker-registry-secret
-
-deployment:
   env:
     - name: SERVICE_NAME
       value: "api-service"
@@ -175,7 +164,7 @@ gateway:
         kind: Service
 
 # Autoscaling based on custom metrics
-autoscaling:
+hpa:
   enabled: true
   minReplicas: 3
   maxReplicas: 20
@@ -235,38 +224,6 @@ podAnnotations:
   prometheus.io/scrape: "true"
   prometheus.io/port: "2112"
   prometheus.io/path: "/metrics"
-
-# Monitoring configuration
-podMonitor:
-  enabled: true
-  interval: 15s
-  endpoints:
-    - port: metrics
-      path: /metrics
-      scheme: http
-
-prometheusRule:
-  enabled: true
-  rules:
-    - alert: APIHighLatency
-      expr: |
-        histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le)) > 0.5
-      for: 5m
-      labels:
-        severity: warning
-      annotations:
-        summary: "API high latency detected"
-        description: "95th percentile latency is above 500ms (current: {{ $value }}s)"
-
-    - alert: APIHighErrorRate
-      expr: |
-        sum(rate(http_requests_total{status=~"5.."}[5m])) / sum(rate(http_requests_total[5m])) > 0.05
-      for: 5m
-      labels:
-        severity: critical
-      annotations:
-        summary: "API high error rate"
-        description: "Error rate is above 5% (current: {{ $value | humanizePercentage }})"
 
 # Secret for database connection
 secret:

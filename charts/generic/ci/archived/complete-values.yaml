@@ -1,7 +1,6 @@
 # Example values for deploying a web application with nginx non-root container
-nameOverride: "my-web-app"
-
 generic:
+  name: "my-web-app"
   version: "1.0.0"
 
 # Use nginx-unprivileged image for non-root execution

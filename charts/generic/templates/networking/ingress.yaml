@@ -12,62 +12,14 @@ metadata:
     {{- with .Values.ingress.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- $annotations := dict -}}
-  {{- with .Values.ingress.annotations -}}
-    {{- range $key, $value := . -}}
-      {{- $_ := set $annotations $key (include "generic.tplValue" (dict "value" $value "context" $)) -}}
-    {{- end -}}
-  {{- end -}}
-  {{/* cert-manager annotations */}}
-  {{- if .Values.ingress.certManager.enabled -}}
-    {{- if .Values.ingress.certManager.clusterIssuer -}}
-      {{- $_ := set $annotations "cert-manager.io/cluster-issuer" (include "generic.tplValue" (dict "value" .Values.ingress.certManager.clusterIssuer "context" .)) -}}
-    {{- else if .Values.ingress.certManager.issuer -}}
-      {{- $_ := set $annotations "cert-manager.io/issuer" (include "generic.tplValue" (dict "value" .Values.ingress.certManager.issuer "context" .)) -}}
-    {{- end -}}
-    {{- range $key, $value := .Values.ingress.certManager.annotations -}}
-      {{- $_ := set $annotations $key (include "generic.tplValue" (dict "value" $value "context" $)) -}}
-    {{- end -}}
-  {{- end -}}
-  {{/* Controller-specific annotations */}}
-  {{- if eq (.Values.ingress.controller | default "alb") "nginx" -}}
-    {{- range $key, $value := .Values.ingress.nginx.annotations -}}
-      {{- $_ := set $annotations $key (include "generic.tplValue" (dict "value" $value "context" $)) -}}
-    {{- end -}}
-  {{- else if eq (.Values.ingress.controller | default "alb") "alb" -}}
-    {{- range $key, $value := .Values.ingress.alb.annotations -}}
-      {{- $_ := set $annotations $key (include "generic.tplValue" (dict "value" $value "context" $)) -}}
-    {{- end -}}
-  {{- end -}}
-  {{- with $annotations }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+    {{- end }}
   {{- end }}
 spec:
-  {{- with .Values.ingress.className }}
-  ingressClassName: {{ include "generic.tplValue" (dict "value" . "context" $) }}
-  {{- end }}
-  {{- if .Values.ingress.tls }}
-  tls:
-    {{- range .Values.ingress.tls }}
-    - hosts:
-        {{- range .hosts }}
-        - {{ include "generic.tplValue" (dict "value" . "context" $) | quote }}
-        {{- end }}
-      {{- if .secretName }}
-      secretName: {{ .secretName }}
-      {{- else if $.Values.ingress.certManager.enabled }}
-      secretName: {{ printf "%s-%s-tls" $fullName (first .hosts | replace "." "-" | replace "*" "wildcard") }}
-      {{- end }}
-    {{- end }}
-  {{- else if and .Values.ingress.certManager.enabled .Values.ingress.hosts }}
-  tls:
-    - hosts:
-        {{- range .Values.ingress.hosts }}
-        - {{ include "generic.tplValue" (dict "value" .host "context" $) | quote }}
-        {{- end }}
-      secretName: {{ printf "%s-tls" $fullName }}
-  {{- end }}
+  ingressClassName: {{ .Values.ingress.className }}
   {{- if .Values.ingress.defaultBackend }}
   defaultBackend:
     service:
@@ -108,8 +60,8 @@ spec:
           {{- end }}
     {{- end }}
 {{- end }}
-{{- if .Values.additionalIngresses }}
-{{- range $name, $ingress := .Values.additionalIngresses }}
+{{- if .Values.extraIngresses }}
+{{- range $name, $ingress := .Values.extraIngresses }}
 {{- if $ingress.enabled }}
 ---
 apiVersion: networking.k8s.io/v1
@@ -122,17 +74,15 @@ metadata:
     {{- with $ingress.labels }}
     {{- toYaml . | nindent 4 }}
     {{- end }}
-  {{- with $ingress.annotations }}
+  {{- with .Values.ingress.annotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+    {{- end }}
   {{- end }}
 spec:
   {{- with $ingress.className }}
   ingressClassName: {{ . }}
-  {{- end }}
-  {{- if $ingress.tls }}
-  tls:
-    {{- toYaml $ingress.tls | nindent 4 }}
   {{- end }}
   rules:
     {{- range $ingress.hosts }}

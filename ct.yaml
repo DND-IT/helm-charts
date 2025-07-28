@@ -8,7 +8,7 @@ additional-charts:
 chart-dirs:
   - charts
 
-helm-extra-args: --timeout 10m
+helm-extra-args: --timeout 2m
 
 check-version-increment: true
 validate-yaml: true

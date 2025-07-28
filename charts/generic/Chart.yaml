@@ -1,10 +1,10 @@
 apiVersion: v2
 name: generic
 description: |
-  A highly flexible and unopinionated Helm chart for deploying any Kubernetes workload.
-  Supports Deployments, StatefulSets, DaemonSets, Jobs, and CronJobs with extensive
-  configuration options. Designed for maximum flexibility while maintaining security
-  best practices by default. Optimized for AWS with ALB ingress controller as default.
+  A highly flexible and unopinionated Helm chart for deploying Kubernetes workloads.
+  Supports Deployments, CronJobs, and Jobs with extensive configuration options.
+  Designed for maximum flexibility while maintaining security best practices by default.
+  Optimized for AWS with ALB ingress controller support.
 type: application
 version: 0.0.2
 

@@ -1,11 +1,15 @@
 # Example: AWS Web Application Deployment
-# A typical web application on EKS with ALB ingress, autoscaling, and monitoring
+# A typical web application on EKS with ALB ingress, HPA, and monitoring
 
 nameOverride: "webapp"
 fullnameOverride: ""
 
-workload:
-  type: deployment
+image:
+  repository: registry.k8s.io/pause
+  tag: "3.10"
+  pullPolicy: IfNotPresent
+
+deployment:
   enabled: true
   replicas: 3
   strategy:
@@ -13,13 +17,6 @@ workload:
     rollingUpdate:
       maxUnavailable: 1
       maxSurge: 1
-
-image:
-  repository: nginx
-  tag: "1.25-alpine"
-  pullPolicy: IfNotPresent
-
-deployment:
   resources:
     limits:
       memory: "512Mi"
@@ -51,31 +48,28 @@ service:
 ingress:
   enabled: true
   className: alb
-  # controller is not specified, so it will use the default (alb)
-  alb:
-    annotations:
-      alb.ingress.kubernetes.io/scheme: internet-facing
-      alb.ingress.kubernetes.io/target-type: ip
-      alb.ingress.kubernetes.io/healthcheck-path: /health
-      alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
-      alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
-      alb.ingress.kubernetes.io/success-codes: "200,404"
-      alb.ingress.kubernetes.io/tags: Environment=production,Application=webapp
-      alb.ingress.kubernetes.io/group.name: shared-alb
-      alb.ingress.kubernetes.io/group.order: "10"
-      # Using ACM certificate instead of cert-manager for ALB
-      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-      alb.ingress.kubernetes.io/ssl-redirect: "443"
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "30"
+    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
+    alb.ingress.kubernetes.io/success-codes: "200,404"
+    alb.ingress.kubernetes.io/tags: Environment=production,Application=webapp
+    alb.ingress.kubernetes.io/group.name: shared-alb
+    alb.ingress.kubernetes.io/group.order: "10"
+    # Using ACM certificate instead of cert-manager for ALB
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
   hosts:
     - host: webapp.example.com
       paths:
         - path: /
           pathType: Prefix
   # TLS is handled by ALB with ACM certificate
-  tls: []
 
-autoscaling:
+hpa:
   enabled: true
   minReplicas: 3
   maxReplicas: 10

@@ -71,33 +71,19 @@ tests:
           path: spec.rules[1].http.paths[0].path
           value: /api
 
-  - it: should add TLS configuration
-    set:
-      ingress.enabled: true
-      ingress.tls:
-        - secretName: example-tls
-          hosts:
-            - example.com
-    asserts:
-      - equal:
-          path: spec.tls[0].secretName
-          value: example-tls
-      - contains:
-          path: spec.tls[0].hosts
-          content: example.com
 
   - it: should add annotations
     set:
       ingress.enabled: true
       ingress.annotations:
-        nginx.ingress.kubernetes.io/rewrite-target: /
-        cert-manager.io/cluster-issuer: letsencrypt
+        alb.ingress.kubernetes.io/scheme: internet-facing
+        alb.ingress.kubernetes.io/target-type: ip
     asserts:
       - equal:
           path: metadata.annotations
           value:
-            nginx.ingress.kubernetes.io/rewrite-target: /
-            cert-manager.io/cluster-issuer: letsencrypt
+            alb.ingress.kubernetes.io/scheme: internet-facing
+            alb.ingress.kubernetes.io/target-type: ip
 
   - it: should use v1 API version for Kubernetes 1.29+
     set:

@@ -110,28 +110,3 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[1].restartPolicy
           value: Always
-
-  - it: should maintain backward compatibility with legacy sidecars
-    set:
-      sidecars:
-        - name: legacy-sidecar
-          image: nginx:alpine
-      sidecarContainers:
-        - name: native-sidecar
-          image: prom/node-exporter:latest
-    asserts:
-      - lengthEqual:
-          path: spec.template.spec.containers
-          count: 2  # main + legacy sidecar
-      - lengthEqual:
-          path: spec.template.spec.initContainers
-          count: 1  # native sidecar
-      - equal:
-          path: spec.template.spec.containers[1].name
-          value: legacy-sidecar
-      - equal:
-          path: spec.template.spec.initContainers[0].name
-          value: native-sidecar
-      - equal:
-          path: spec.template.spec.initContainers[0].restartPolicy
-          value: Always

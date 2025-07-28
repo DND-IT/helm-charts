@@ -3,55 +3,9 @@
 
 nameOverride: "secure-app"
 
-workload:
-  type: deployment
+deployment:
   enabled: true
   replicas: 2
-
-image:
-  repository: myorg/secure-app
-  tag: "1.0.0-distroless"  # Using distroless image
-  pullPolicy: Always
-
-# Enforce Pod Security Standards
-podSecurity:
-  podSecurityStandards:
-    enabled: true
-    enforce: restricted
-    audit: restricted
-    warn: restricted
-    namespaceEnforcement: true
-
-# Strict pod security context
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 65534  # nobody user
-  runAsGroup: 65534
-  fsGroup: 65534
-  fsGroupChangePolicy: OnRootMismatch
-  seccompProfile:
-    type: RuntimeDefault
-  supplementalGroups: []
-  sysctls: []
-
-# Strict container security context
-containerSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 65534
-  runAsGroup: 65534
-  allowPrivilegeEscalation: false
-  readOnlyRootFilesystem: true
-  privileged: false
-  capabilities:
-    drop:
-      - ALL
-    add: []  # No additional capabilities
-  seccompProfile:
-    type: RuntimeDefault
-  appArmorProfile:
-    type: RuntimeDefault
-
-deployment:
   resources:
     limits:
       memory: "256Mi"
@@ -89,21 +43,25 @@ deployment:
 
 # Temporary writable volumes for read-only root filesystem
 persistence:
-  enabled: true
-  volumes:
-    tmp:
-      type: emptyDir
-      emptyDir:
-        sizeLimit: 100Mi
-    cache:
-      type: emptyDir
-      emptyDir:
-        sizeLimit: 500Mi
-    tls-certs:
-      type: secret
-      secret:
-        secretName: app-tls-certs
-        defaultMode: 0400  # Read-only for owner
+  enabled: false
+
+# Using emptyDir volumes for temporary storage
+emptyDirVolumes:
+  tmp:
+    medium: ""
+    sizeLimit: 100Mi
+    mountPath: /tmp
+  cache:
+    medium: ""
+    sizeLimit: 500Mi
+    mountPath: /app/cache
+
+# Extra volumes for TLS certificates
+extraVolumes:
+  - name: tls-certs
+    secret:
+      secretName: app-tls-certs
+      defaultMode: 0400  # Read-only for owner
 
 service:
   enabled: true
@@ -221,19 +179,6 @@ configMap:
       logging.level.root=WARN
       management.endpoints.enabled-by-default=false
       management.endpoint.health.enabled=true
-
-# Monitoring with authentication
-serviceMonitor:
-  enabled: true
-  endpoints:
-    - port: metrics
-      scheme: https
-      tlsConfig:
-        insecureSkipVerify: false
-        serverName: secure-app.example.com
-      bearerTokenSecret:
-        name: prometheus-token
-        key: token
 
 # Priority class for critical workloads
 priorityClassName: high-priority

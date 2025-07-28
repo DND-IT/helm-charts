@@ -13,9 +13,9 @@ tests:
           path: metadata.name
           value: RELEASE-NAME
 
-  - it: should create deployment when type is deployment
+  - it: should create deployment when enabled
     set:
-      workload.type: deployment
+      deployment.enabled: true
       configMap.enabled: false
       secret.enabled: false
     asserts:
@@ -24,11 +24,11 @@ tests:
       - hasDocuments:
           count: 1
 
-  - it: should not create deployment for other workload types
+  - it: should not create deployment when disabled
     set:
+      deployment.enabled: false
       configMap.enabled: false
       secret.enabled: false
-      workload.type: statefulset
     asserts:
       - hasDocuments:
           count: 0
@@ -37,7 +37,7 @@ tests:
     set:
       configMap.enabled: false
       secret.enabled: false
-      workload.replicas: 3
+      deployment.replicas: 3
     asserts:
       - equal:
           path: spec.replicas
@@ -47,7 +47,7 @@ tests:
     set:
       configMap.enabled: false
       secret.enabled: false
-      workload.strategy:
+      deployment.strategy:
         type: RollingUpdate
         rollingUpdate:
           maxUnavailable: 1
@@ -72,7 +72,7 @@ tests:
           path: spec.template.metadata.labels
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/name"]
-          value: RELEASE-NAME
+          value: generic
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/instance"]
           value: RELEASE-NAME

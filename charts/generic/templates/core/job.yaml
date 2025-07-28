@@ -1,180 +1,139 @@
-{{- include "generic.validateValues" . -}}
-{{- include "generic.validateWorkload" . -}}
-{{- if and .Values.workload.enabled (eq (.Values.workload.type | default "deployment") "job") }}
+{{- range $name, $job := .Values.jobs }}
+{{- if $job.enabled }}
+---
 apiVersion: batch/v1
 kind: Job
-{{- include "generic.workloadMetadata" . }}
+metadata:
+  name: {{ include "generic.fullname" $ }}-{{ $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+    {{- with $job.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $job.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
 spec:
-  {{- with .Values.workload.completions }}
+  {{- with $job.completions }}
   completions: {{ . }}
   {{- end }}
-  {{- with .Values.workload.parallelism }}
+  {{- with $job.parallelism }}
   parallelism: {{ . }}
   {{- end }}
-  {{- with .Values.workload.backoffLimit }}
+  {{- with $job.backoffLimit }}
   backoffLimit: {{ . }}
-  {{- else }}
-  backoffLimit: 6
   {{- end }}
-  {{- with .Values.workload.activeDeadlineSeconds }}
+  {{- with $job.activeDeadlineSeconds }}
   activeDeadlineSeconds: {{ . }}
   {{- end }}
-  {{- with .Values.workload.ttlSecondsAfterFinished }}
+  {{- with $job.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
   {{- end }}
-  {{- with .Values.workload.completionMode }}
+  {{- with $job.completionMode }}
   completionMode: {{ . }}
   {{- end }}
-  {{- with .Values.workload.suspend }}
+  {{- with $job.suspend }}
   suspend: {{ . }}
   {{- end }}
-  {{- with .Values.workload.manualSelector }}
-  manualSelector: {{ . }}
-  {{- end }}
-  {{- if or .Values.workload.selector .Values.workload.manualSelector }}
-  selector:
-    {{- with .Values.workload.selector }}
+  {{- with $job.podFailurePolicy }}
+  podFailurePolicy:
     {{- toYaml . | nindent 4 }}
-    {{- else }}
-    matchLabels:
-      {{- include "generic.selectorLabels" . | nindent 6 }}
-    {{- end }}
   {{- end }}
   template:
     metadata:
       labels:
-        {{- include "generic.labels" . | nindent 8 }}
-        {{- with .Values.podLabels }}
+        {{- include "generic.labels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $name }}
+        {{- with $job.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
+      {{- with $job.podAnnotations }}
       annotations:
-        {{- include "generic.podAnnotations" . | nindent 8 }}
-        {{- with .Values.podAnnotations }}
         {{- toYaml . | nindent 8 }}
-        {{- end }}
+      {{- end }}
     spec:
-      {{- with .Values.imagePullSecrets }}
+      {{- if $job.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml $job.imagePullSecrets | nindent 8 }}
+      {{- else if $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml $.Values.imagePullSecrets | nindent 8 }}
       {{- end }}
-      {{- if .Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "generic.serviceAccountName" . }}
-      {{- else if .Values.serviceAccount.name }}
-      serviceAccountName: {{ .Values.serviceAccount.name }}
+      {{- if $job.serviceAccountName }}
+      serviceAccountName: {{ $job.serviceAccountName }}
+      {{- else if $.Values.serviceAccount.enabled }}
+      serviceAccountName: {{ include "generic.serviceAccountName" $ }}
       {{- end }}
-      {{- with .Values.hostAliases }}
-      hostAliases:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if .Values.hostNetwork }}
-      hostNetwork: true
-      {{- end }}
-      {{- if .Values.hostPID }}
-      hostPID: true
-      {{- end }}
-      {{- if .Values.hostIPC }}
-      hostIPC: true
-      {{- end }}
-      {{- with .Values.hostname }}
-      hostname: {{ . }}
-      {{- end }}
-      {{- with .Values.dnsPolicy }}
-      dnsPolicy: {{ . }}
-      {{- end }}
-      {{- with .Values.dnsConfig }}
-      dnsConfig:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.priorityClassName }}
-      priorityClassName: {{ . }}
-      {{- end }}
-      {{- with .Values.priority }}
-      priority: {{ . }}
-      {{- end }}
-      {{- with .Values.runtimeClassName }}
-      runtimeClassName: {{ . }}
-      {{- end }}
-      {{- with .Values.schedulerName }}
-      schedulerName: {{ . }}
-      {{- end }}
-      {{- if .Values.terminationGracePeriodSeconds }}
-      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
-      {{- end }}
-      {{- with .Values.activeDeadlineSeconds }}
-      activeDeadlineSeconds: {{ . }}
-      {{- end }}
-      {{- with .Values.nodeSelector }}
-      nodeSelector:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.affinity }}
-      affinity:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.tolerations }}
-      tolerations:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if .Values.topologySpreadConstraints }}
-      topologySpreadConstraints:
-        {{- include "generic.topologySpreadConstraints" . | nindent 8 }}
-      {{- end }}
+      restartPolicy: {{ $job.restartPolicy | default "OnFailure" }}
+      {{- if $job.podSecurityContext }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" .Values.podSecurityContext "defaults" .Values.podSecurityContextDefaults) | nindent 8 }}
-      {{- if .Values.initContainers }}
-      initContainers:
-        {{- range $container := .Values.initContainers }}
-        {{- include "generic.container" (dict "container" $container "root" $) | nindent 8 }}
-        {{- end }}
+        {{- toYaml $job.podSecurityContext | nindent 8 }}
+      {{- else if $.Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- if $job.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $job.nodeSelector | nindent 8 }}
+      {{- else if $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $.Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if $job.affinity }}
+      affinity:
+        {{- toYaml $job.affinity | nindent 8 }}
+      {{- else if $.Values.affinity }}
+      affinity:
+        {{- toYaml $.Values.affinity | nindent 8 }}
+      {{- end }}
+      {{- if $job.tolerations }}
+      tolerations:
+        {{- toYaml $job.tolerations | nindent 8 }}
+      {{- else if $.Values.tolerations }}
+      tolerations:
+        {{- toYaml $.Values.tolerations | nindent 8 }}
+      {{- end }}
+      {{- with $job.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       containers:
-        {{- if .Values.containers }}
-        {{- range $container := .Values.containers }}
-        {{- include "generic.container" (dict "container" $container "root" $) | nindent 8 }}
-        {{- end }}
-        {{- else }}
-        {{/* Default single container configuration for backward compatibility */}}
-        - name: {{ .Values.containerName | default "main" }}
-          image: {{ include "generic.image" . }}
-          imagePullPolicy: {{ .Values.image.pullPolicy }}
-          {{- with .Values.deployment.command }}
+        - name: {{ $name }}
+          image: {{ $job.image.repository | default $.Values.image.repository }}:{{ $job.image.tag | default $.Values.image.tag }}
+          imagePullPolicy: {{ $job.image.pullPolicy | default $.Values.image.pullPolicy }}
+          {{- with $job.command }}
           command:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.deployment.args }}
+          {{- with $job.args }}
           args:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- if or .Values.deployment.env .Values.commonEnvVars .Values.deployment.envFrom }}
-          {{- if .Values.commonEnvVars }}
+          {{- with $job.env }}
           env:
-            {{- include "generic.commonEnvVars" . | nindent 12 }}
-            {{- with .Values.deployment.env }}
-            {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 12 }}
-            {{- end }}
-          {{- else if .Values.deployment.env }}
-          env:
-            {{- include "generic.envVars" (dict "envVars" .Values.deployment.env "root" $) | nindent 12 }}
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- include "generic.envFrom" . | nindent 10 }}
+          {{- with $job.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- with .Values.deployment.resources }}
+          {{- with $job.resources }}
           resources:
             {{- toYaml . | nindent 12 }}
           {{- end }}
-          {{- include "generic.volumeMounts" (dict "container" .Values.deployment "root" $) | nindent 10 }}
-          {{- with .Values.deployment.lifecycle }}
-          lifecycle:
+          {{- with $job.volumeMounts }}
+          volumeMounts:
             {{- toYaml . | nindent 12 }}
           {{- end }}
+          {{- if $job.securityContext }}
           securityContext:
-            {{- include "generic.containerSecurityContext" (dict "securityContext" .Values.deployment.securityContext "root" $) | nindent 12 }}
-        {{- end }}
-        {{- with .Values.sidecars }}
-        {{- range $sidecar := . }}
-        {{- include "generic.container" (dict "container" $sidecar "root" $) | nindent 8 }}
-        {{- end }}
-        {{- end }}
-      {{- include "generic.volumes" . | nindent 6 }}
-      restartPolicy: {{ .Values.workload.restartPolicy | default "OnFailure" }}
+            {{- toYaml $job.securityContext | nindent 12 }}
+          {{- else if $.Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml $.Values.containerSecurityContext | nindent 12 }}
+          {{- end }}
+{{- end }}
 {{- end }}
