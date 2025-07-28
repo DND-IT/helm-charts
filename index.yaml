@@ -207,6 +207,16 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.0/custom-resources-0.1.0.tgz
     version: 0.1.0
+  generic:
+  - apiVersion: v2
+    created: "2025-07-28T19:32:18.225758068Z"
+    description: A Helm chart for Kubernetes
+    digest: 597c8076500f2fccc4106c9739b1cc2fc7165329631d56fd65d127a699431ec1
+    name: generic
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/generic-0.0.1/generic-0.0.1.tgz
+    version: 0.0.1
   karpenter-resources:
   - apiVersion: v2
     appVersion: 1.3.3
@@ -455,4 +465,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2025-07-02T15:05:56.355412256Z"
+generated: "2025-07-28T19:32:18.225860364Z"
