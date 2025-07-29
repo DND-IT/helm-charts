@@ -1,0 +1,22 @@
+# Minimal test - verifies chart works with defaults
+# Tests: Basic deployment, default security settings
+
+nameOverride: minimal-test
+
+image:
+  repository: registry.k8s.io/pause
+  tag: "3.9"
+
+deployment:
+  enabled: true
+  replicas: 1
+  resources:
+    requests:
+      cpu: "1m"
+      memory: "4Mi"
+    limits:
+      cpu: "10m"
+      memory: "16Mi"
+
+service:
+  enabled: false

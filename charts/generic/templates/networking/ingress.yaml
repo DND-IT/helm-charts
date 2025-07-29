@@ -1,0 +1,110 @@
+{{- if .Values.ingress.enabled -}}
+{{- $fullName := include "generic.fullname" . -}}
+{{- $namespace := include "generic.namespace" . -}}
+{{- $svcPort := include "generic.servicePort" . -}}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ $fullName }}
+  namespace: {{ $namespace }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.ingress.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  ingressClassName: {{ .Values.ingress.className }}
+  {{- if .Values.ingress.defaultBackend }}
+  defaultBackend:
+    service:
+      name: {{ .Values.ingress.defaultBackend.service.name | default $fullName }}
+      port:
+        {{- if .Values.ingress.defaultBackend.service.port.number }}
+        number: {{ .Values.ingress.defaultBackend.service.port.number }}
+        {{- else }}
+        name: {{ .Values.ingress.defaultBackend.service.port.name | default "http" }}
+        {{- end }}
+  {{- end }}
+  rules:
+    {{- range .Values.ingress.hosts }}
+    - {{- if .host }}
+      host: {{ include "generic.tplValue" (dict "value" .host "context" $) | quote }}
+      {{- end }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType | default "Prefix" }}
+            backend:
+              {{- if .backend }}
+              service:
+                name: {{ .backend.service.name | default (include "generic.fullname" $) }}
+                port:
+                  {{- if .backend.service.port.number }}
+                  number: {{ .backend.service.port.number }}
+                  {{- else }}
+                  name: {{ .backend.service.port.name | default "http" }}
+                  {{- end }}
+              {{- else }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  number: {{ $svcPort }}
+              {{- end }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+{{- if .Values.extraIngresses }}
+{{- range $name, $ingress := .Values.extraIngresses }}
+{{- if $ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $ingress.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.ingress.annotations }}
+  annotations:
+    {{- range $key, $value := . }}
+    {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- with $ingress.className }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+    {{- range $ingress.hosts }}
+    - {{- if .host }}
+      host: {{ include "generic.tplValue" (dict "value" .host "context" $) | quote }}
+      {{- end }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
+            pathType: {{ .pathType | default "Prefix" }}
+            backend:
+              service:
+                name: {{ .backend.service.name | default (include "generic.fullname" $) }}
+                port:
+                  {{- if .backend.service.port.number }}
+                  number: {{ .backend.service.port.number }}
+                  {{- else }}
+                  name: {{ .backend.service.port.name | default "http" }}
+                  {{- end }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

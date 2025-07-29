@@ -1,0 +1,119 @@
+{{- if and .Values.rbac.enabled .Values.serviceAccount.enabled }}
+{{- if or .Values.rbac.rules .Values.rbac.aggregationRule }}
+{{- $rbacType := .Values.rbac.type | default "Role" -}}
+{{- $isClusterRole := eq $rbacType "ClusterRole" -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ $rbacType }}
+metadata:
+  name: {{ include "generic.fullname" . }}
+  {{- if not $isClusterRole }}
+  namespace: {{ include "generic.namespace" . }}
+  {{- end }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.rbac.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.rbac.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- if .Values.rbac.aggregationRule }}
+aggregationRule:
+  {{- toYaml .Values.rbac.aggregationRule | nindent 2 }}
+{{- else if .Values.rbac.rules }}
+rules:
+  {{- toYaml .Values.rbac.rules | nindent 2 }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ if $isClusterRole }}ClusterRoleBinding{{ else }}RoleBinding{{ end }}
+metadata:
+  name: {{ include "generic.fullname" . }}
+  {{- if not $isClusterRole }}
+  namespace: {{ include "generic.namespace" . }}
+  {{- end }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.rbac.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.rbac.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: {{ $rbacType }}
+  name: {{ .Values.rbac.roleRef | default (include "generic.fullname" .) }}
+subjects:
+  {{- if .Values.rbac.subjects }}
+  {{- toYaml .Values.rbac.subjects | nindent 2 }}
+  {{- else }}
+  - kind: ServiceAccount
+    name: {{ include "generic.serviceAccountName" . }}
+    namespace: {{ include "generic.namespace" . }}
+  {{- end }}
+{{- end }}
+{{- if .Values.rbac.extraRoles }}
+{{- range $name, $role := .Values.rbac.extraRoles }}
+{{- if $role.enabled | default true }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ $role.type | default "Role" }}
+metadata:
+  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
+  {{- if ne ($role.type | default "Role") "ClusterRole" }}
+  namespace: {{ include "generic.namespace" $ }}
+  {{- end }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $role.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $role.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- if $role.aggregationRule }}
+aggregationRule:
+  {{- toYaml $role.aggregationRule | nindent 2 }}
+{{- else if $role.rules }}
+rules:
+  {{- toYaml $role.rules | nindent 2 }}
+{{- end }}
+{{- if $role.createBinding | default true }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ if eq ($role.type | default "Role") "ClusterRole" }}ClusterRoleBinding{{ else }}RoleBinding{{ end }}
+metadata:
+  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
+  {{- if ne ($role.type | default "Role") "ClusterRole" }}
+  namespace: {{ include "generic.namespace" $ }}
+  {{- end }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $role.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $role.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: {{ $role.type | default "Role" }}
+  name: {{ $role.roleRef | default (printf "%s-%s" (include "generic.fullname" $) $name) }}
+subjects:
+  {{- if $role.subjects }}
+  {{- toYaml $role.subjects | nindent 2 }}
+  {{- else }}
+  - kind: ServiceAccount
+    name: {{ include "generic.serviceAccountName" $ }}
+    namespace: {{ include "generic.namespace" $ }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

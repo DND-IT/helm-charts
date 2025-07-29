@@ -1,0 +1,67 @@
+{{- if and .Values.gateway.referenceGrant.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1/ReferenceGrant") }}
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: {{ include "generic.fullname" . }}
+  namespace: {{ include "generic.namespace" . }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.gateway.referenceGrant.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.gateway.referenceGrant.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.gateway.referenceGrant.from }}
+  from:
+    {{- range $from := . }}
+    - group: {{ $from.group | default "gateway.networking.k8s.io" }}
+      kind: {{ $from.kind }}
+      {{- with $from.namespace }}
+      namespace: {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.gateway.referenceGrant.to }}
+  to:
+    {{- range $to := . }}
+    - group: {{ $to.group | default "" | quote }}
+      kind: {{ $to.kind }}
+      {{- with $to.name }}
+      name: {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- if .Values.gateway.referenceGrant.extraGrants }}
+{{- range $name, $grant := .Values.gateway.referenceGrant.extraGrants }}
+{{- if $grant.enabled | default true }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: ReferenceGrant
+metadata:
+  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $grant.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $grant.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $grant.from }}
+  from:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $grant.to }}
+  to:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

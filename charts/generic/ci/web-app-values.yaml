@@ -1,0 +1,136 @@
+# Web application test - common production patterns
+# Tests: nginx non-root, service, ingress, configmap, secrets, HPA, PDB
+
+nameOverride: web-app-test
+
+# nginx-unprivileged for non-root execution
+image:
+  repository: nginxinc/nginx-unprivileged
+  tag: "1.25-alpine"
+
+deployment:
+  enabled: true
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  resources:
+    requests:
+      cpu: "50m"
+      memory: "64Mi"
+    limits:
+      cpu: "200m"
+      memory: "256Mi"
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 10
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+  env:
+    - name: ENV
+      value: "production"
+    - name: API_KEY
+      valueFrom:
+        secretKeyRef:
+          name: api-secret
+          key: key
+          optional: true  # Allow missing secrets
+
+# nginx-unprivileged port
+containerPorts:
+  - name: http
+    containerPort: 8080
+
+# Non-root security
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  runAsGroup: 101
+  fsGroup: 101
+
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+    - ALL
+
+# nginx writable directories
+emptyDirVolumes:
+  nginx-cache:
+    mountPath: /var/cache/nginx
+    sizeLimit: 100Mi
+  nginx-pid:
+    mountPath: /tmp
+    sizeLimit: 10Mi
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+
+ingress:
+  enabled: true
+  className: "alb"
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+configMap:
+  enabled: true
+  mountPath: /etc/nginx/conf.d
+  data:
+    default.conf: |
+      server {
+        listen 8080;
+        location / {
+          root /usr/share/nginx/html;
+          index index.html;
+        }
+        location /health {
+          return 200 "OK\n";
+        }
+      }
+
+secret:
+  enabled: true
+  envFrom: true
+  stringData:
+    SECRET_TOKEN: "test-token"
+
+hpa:
+  enabled: false  # Disabled by default (requires metrics-server)
+  minReplicas: 2
+  maxReplicas: 4
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+serviceAccount:
+  enabled: true
+  automountServiceAccountToken: false

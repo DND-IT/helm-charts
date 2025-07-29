@@ -1,0 +1,139 @@
+# Example: CronJob for Scheduled Backups
+# Runs database backups every night at 2 AM
+
+nameOverride: "db-backup"
+
+# Disable main deployment for this cronjob example
+deployment:
+  enabled: false
+
+# Define the backup cronjob
+cronjobs:
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Every day at 2 AM
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 1
+    startingDeadlineSeconds: 200
+
+    # Job template settings
+    backoffLimit: 3
+    ttlSecondsAfterFinished: 86400  # Clean up after 24 hours
+    restartPolicy: OnFailure
+
+    # Container image
+    image:
+      repository: postgres
+      tag: "15-alpine"
+      pullPolicy: IfNotPresent
+
+    command: ["/bin/bash"]
+    args:
+      - -c
+      - |
+        set -e
+        echo "Starting backup for database: $DB_NAME"
+
+        # Create backup filename with timestamp
+        BACKUP_FILE="/backup/db-backup-$(date +%Y%m%d-%H%M%S).sql.gz"
+
+        # Perform backup
+        PGPASSWORD=$DB_PASSWORD pg_dump \
+          -h $DB_HOST \
+          -U $DB_USER \
+          -d $DB_NAME \
+          --no-owner \
+          --no-acl \
+          | gzip > $BACKUP_FILE
+
+        echo "Backup completed: $BACKUP_FILE"
+
+        # Upload to S3 (if AWS CLI is available)
+        if command -v aws &> /dev/null; then
+          aws s3 cp $BACKUP_FILE s3://$S3_BUCKET/postgres-backups/
+          echo "Backup uploaded to S3"
+        fi
+
+        # Clean up old local backups (keep last 7 days)
+        find /backup -name "db-backup-*.sql.gz" -mtime +7 -delete
+        echo "Cleanup completed"
+
+    env:
+      - name: DB_HOST
+        value: "postgres-headless"
+      - name: DB_NAME
+        value: "myapp"
+      - name: DB_USER
+        value: "postgres"
+      - name: DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: postgres-secret
+            key: password
+      - name: S3_BUCKET
+        value: "my-backup-bucket"
+      - name: AWS_DEFAULT_REGION
+        value: "us-east-1"
+      - name: AWS_ACCESS_KEY_ID
+        valueFrom:
+          secretKeyRef:
+            name: aws-credentials
+            key: access-key-id
+      - name: AWS_SECRET_ACCESS_KEY
+        valueFrom:
+          secretKeyRef:
+            name: aws-credentials
+            key: secret-access-key
+
+    resources:
+      limits:
+        memory: "512Mi"
+        cpu: "500m"
+      requests:
+        cpu: "100m"
+        memory: "256Mi"
+
+    volumeMounts:
+      - name: backup-storage
+        mountPath: /backup
+
+    # Volume for this cronjob
+    volumes:
+      - name: backup-storage
+        persistentVolumeClaim:
+          claimName: backup-pvc
+
+# Persistent volume for local backup storage
+persistence:
+  enabled: true
+  storageClass: "standard"
+  accessMode: ReadWriteOnce
+  size: 20Gi
+  mountPath: /backup
+
+# AWS credentials for S3 upload
+secret:
+  enabled: true
+  name: aws-credentials
+  stringData:
+    access-key-id: "AKIAIOSFODNN7EXAMPLE"
+    secret-access-key: "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+# Service account with necessary permissions
+serviceAccount:
+  enabled: true
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/backup-role"
+
+# RBAC for accessing other resources
+rbac:
+  enabled: true
+  rules:
+    - apiGroups: [""]
+      resources: ["pods", "services"]
+      verbs: ["get", "list"]
+    - apiGroups: [""]
+      resources: ["secrets"]
+      resourceNames: ["postgres-secret", "aws-credentials"]
+      verbs: ["get"]

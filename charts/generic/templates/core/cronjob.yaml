@@ -1,0 +1,168 @@
+{{- range $name, $cronjob := .Values.cronjobs }}
+{{- if $cronjob.enabled }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "generic.fullname" $ }}-{{ $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+    {{- with $cronjob.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $cronjob.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  schedule: {{ $cronjob.schedule | quote }}
+  {{- with $cronjob.timeZone }}
+  timeZone: {{ . | quote }}
+  {{- end }}
+  {{- with $cronjob.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ . }}
+  {{- end }}
+  {{- with $cronjob.concurrencyPolicy }}
+  concurrencyPolicy: {{ . }}
+  {{- end }}
+  {{- with $cronjob.successfulJobsHistoryLimit }}
+  successfulJobsHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with $cronjob.failedJobsHistoryLimit }}
+  failedJobsHistoryLimit: {{ . }}
+  {{- end }}
+  {{- with $cronjob.suspend }}
+  suspend: {{ . }}
+  {{- end }}
+  jobTemplate:
+    metadata:
+      labels:
+        {{- include "generic.labels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $name }}
+        {{- with $cronjob.jobLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with $cronjob.jobAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- with $cronjob.backoffLimit }}
+      backoffLimit: {{ . }}
+      {{- end }}
+      {{- with $cronjob.activeDeadlineSeconds }}
+      activeDeadlineSeconds: {{ . }}
+      {{- end }}
+      {{- with $cronjob.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ . }}
+      {{- end }}
+      {{- with $cronjob.completionMode }}
+      completionMode: {{ . }}
+      {{- end }}
+      {{- with $cronjob.completions }}
+      completions: {{ . }}
+      {{- end }}
+      {{- with $cronjob.parallelism }}
+      parallelism: {{ . }}
+      {{- end }}
+      {{- with $cronjob.podFailurePolicy }}
+      podFailurePolicy:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      template:
+        metadata:
+          labels:
+            {{- include "generic.labels" $ | nindent 12 }}
+            app.kubernetes.io/component: {{ $name }}
+            {{- with $cronjob.podLabels }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with $cronjob.podAnnotations }}
+          annotations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        spec:
+          {{- if $cronjob.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml $cronjob.imagePullSecrets | nindent 12 }}
+          {{- else if $.Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml $.Values.imagePullSecrets | nindent 12 }}
+          {{- end }}
+          {{- if $cronjob.serviceAccountName }}
+          serviceAccountName: {{ $cronjob.serviceAccountName }}
+          {{- else if $.Values.serviceAccount.enabled }}
+          serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+          {{- end }}
+          restartPolicy: {{ $cronjob.restartPolicy | default "OnFailure" }}
+          {{- if $cronjob.podSecurityContext }}
+          securityContext:
+            {{- toYaml $cronjob.podSecurityContext | nindent 12 }}
+          {{- else if $.Values.podSecurityContext }}
+          securityContext:
+            {{- toYaml $.Values.podSecurityContext | nindent 12 }}
+          {{- end }}
+          {{- if $cronjob.nodeSelector }}
+          nodeSelector:
+            {{- toYaml $cronjob.nodeSelector | nindent 12 }}
+          {{- else if $.Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml $.Values.nodeSelector | nindent 12 }}
+          {{- end }}
+          {{- if $cronjob.affinity }}
+          affinity:
+            {{- toYaml $cronjob.affinity | nindent 12 }}
+          {{- else if $.Values.affinity }}
+          affinity:
+            {{- toYaml $.Values.affinity | nindent 12 }}
+          {{- end }}
+          {{- if $cronjob.tolerations }}
+          tolerations:
+            {{- toYaml $cronjob.tolerations | nindent 12 }}
+          {{- else if $.Values.tolerations }}
+          tolerations:
+            {{- toYaml $.Values.tolerations | nindent 12 }}
+          {{- end }}
+          {{- with $cronjob.volumes }}
+          volumes:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          containers:
+            - name: {{ $name }}
+              image: {{ $cronjob.image.repository | default $.Values.image.repository }}:{{ $cronjob.image.tag | default $.Values.image.tag }}
+              imagePullPolicy: {{ $cronjob.image.pullPolicy | default $.Values.image.pullPolicy }}
+              {{- with $cronjob.command }}
+              command:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with $cronjob.args }}
+              args:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with $cronjob.env }}
+              env:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with $cronjob.envFrom }}
+              envFrom:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with $cronjob.resources }}
+              resources:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- with $cronjob.volumeMounts }}
+              volumeMounts:
+                {{- toYaml . | nindent 16 }}
+              {{- end }}
+              {{- if $cronjob.securityContext }}
+              securityContext:
+                {{- toYaml $cronjob.securityContext | nindent 16 }}
+              {{- else if $.Values.containerSecurityContext }}
+              securityContext:
+                {{- toYaml $.Values.containerSecurityContext | nindent 16 }}
+              {{- end }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,73 @@
+# Simple nginx deployment without external dependencies
+# This configuration will work in any Kubernetes cluster
+
+nameOverride: simple-nginx
+
+# Use nginx-unprivileged for security
+image:
+  repository: nginxinc/nginx-unprivileged
+  tag: "1.25-alpine"
+
+# Basic deployment configuration
+deployment:
+  enabled: true
+  replicas: 2
+  resources:
+    requests:
+      cpu: "10m"
+      memory: "32Mi"
+    limits:
+      cpu: "100m"
+      memory: "128Mi"
+
+# nginx-unprivileged listens on 8080
+containerPorts:
+  - name: http
+    containerPort: 8080
+
+# Service configuration
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+
+# Security settings
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  runAsGroup: 101
+  fsGroup: 101
+
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+    - ALL
+
+# Required writable directories for nginx
+emptyDirVolumes:
+  nginx-cache:
+    mountPath: /var/cache/nginx
+    sizeLimit: 50Mi
+  nginx-pid:
+    mountPath: /tmp
+    sizeLimit: 10Mi
+
+# Disable features that require external dependencies
+hpa:
+  enabled: false  # Requires metrics-server
+
+persistence:
+  enabled: false  # Requires storage provisioner
+
+ingress:
+  enabled: false  # Requires ingress controller
+
+networkPolicy:
+  enabled: false  # Optional, may not be supported in all clusters

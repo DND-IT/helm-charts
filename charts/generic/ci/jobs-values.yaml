@@ -1,0 +1,89 @@
+# Jobs and CronJobs test
+# Tests: Job, CronJob, init containers, hooks
+
+nameOverride: jobs-test
+
+# Disable main deployment for job-only test
+deployment:
+  enabled: false
+
+# Test Job
+jobs:
+  migration:
+    enabled: true
+    backoffLimit: 3
+    ttlSecondsAfterFinished: 300
+    image:
+      repository: busybox
+      tag: "1.36"
+    command: ["/bin/sh"]
+    args: ["-c", "echo 'Running migration'; sleep 5; echo 'Migration complete'"]
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "32Mi"
+    env:
+      - name: MIGRATION_VERSION
+        value: "1.0.0"
+
+# Test CronJob
+cronjobs:
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 1
+    failedJobsHistoryLimit: 1
+    image:
+      repository: busybox
+      tag: "1.36"
+    command: ["/bin/sh"]
+    args: ["-c", "echo 'Backup started at $(date)'; sleep 2; echo 'Backup completed'"]
+    resources:
+      requests:
+        cpu: "10m"
+        memory: "32Mi"
+
+# Test hooks - disabled for ct install
+# (hooks can cause timeouts in automated testing)
+hooks:
+  enabled: false
+  preInstall:
+    - name: pre-install-check
+      image: busybox:1.36
+      command: ["sh", "-c"]
+      args: ["echo 'Pre-install check passed'"]
+      weight: 1
+      deletePolicy: before-hook-creation
+      ttlSecondsAfterFinished: 60
+      resources:
+        requests:
+          cpu: "10m"
+          memory: "16Mi"
+
+  postInstall:
+    - name: post-install-notify
+      image: curlimages/curl:8.5.0
+      command: ["sh", "-c"]
+      args: ["echo 'Installation completed successfully'"]
+      weight: 1
+      deletePolicy: hook-succeeded
+      ttlSecondsAfterFinished: 60
+      resources:
+        requests:
+          cpu: "10m"
+          memory: "16Mi"
+
+# Service account for jobs
+serviceAccount:
+  enabled: true
+  automountServiceAccountToken: true
+
+# RBAC for jobs that might need it
+rbac:
+  enabled: true
+  type: Role
+  rules:
+    - apiGroups: [""]
+      resources: ["pods"]
+      verbs: ["get", "list"]

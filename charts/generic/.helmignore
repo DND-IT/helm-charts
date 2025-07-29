@@ -21,3 +21,8 @@
 .idea/
 *.tmproj
 .vscode/
+<<<<<<< HEAD
+=======
+
+templates/tests
+>>>>>>> d51fd59 (feat: generic app chart)

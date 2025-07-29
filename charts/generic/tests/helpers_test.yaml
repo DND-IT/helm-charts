@@ -1,0 +1,106 @@
+suite: test helpers
+templates:
+  - core/deployment.yaml  # Use deployment as it uses most helpers
+tests:
+  - it: should generate correct fullname
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+
+  - it: should use nameOverride
+    set:
+      nameOverride: custom-name
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-custom-name
+
+  - it: should use fullnameOverride
+    set:
+      fullnameOverride: my-app
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-app
+
+  - it: should generate correct labels
+    asserts:
+      - equal:
+          path: metadata.labels["helm.sh/chart"]
+          value: generic-0.0.2
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: generic
+      - equal:
+          path: metadata.labels["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: Helm
+
+  - it: should include global labels
+    set:
+      global.labels:
+        environment: production
+        team: platform
+    asserts:
+      - equal:
+          path: metadata.labels.environment
+          value: production
+      - equal:
+          path: metadata.labels.team
+          value: platform
+
+  - it: should use custom namespace
+    set:
+      namespaceOverride: custom-namespace
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: custom-namespace
+
+  - it: should generate service account name
+    set:
+      serviceAccount.enabled: true
+      serviceAccount.name: ""
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: RELEASE-NAME
+
+  - it: should use custom service account name
+    set:
+      serviceAccount.enabled: true
+      serviceAccount.name: custom-sa
+    asserts:
+      - equal:
+          path: spec.template.spec.serviceAccountName
+          value: custom-sa
+
+  - it: should validate required image repository
+    set:
+      image.repository: ""
+    asserts:
+      - failedTemplate: {}
+
+  - it: should validate persistence size when enabled
+    set:
+      persistence.enabled: true
+      persistence.size: ""
+    asserts:
+      - failedTemplate: {}
+
+  - it: should handle template values in env
+    set:
+      nameOverride: myapp
+      deployment:
+        env:
+          - name: APP_NAME
+            value: "{{ .Values.nameOverride }}"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: APP_NAME
+            value: myapp

@@ -1,0 +1,202 @@
+# Example: Security-Hardened Application
+# Maximum security settings with Pod Security Standards
+
+nameOverride: "secure-app"
+
+deployment:
+  enabled: true
+  replicas: 2
+  resources:
+    limits:
+      memory: "256Mi"
+      cpu: "200m"
+    requests:
+      cpu: "100m"
+      memory: "128Mi"
+
+  # Security-focused probes
+  livenessProbe:
+    httpGet:
+      path: /healthz
+      port: http
+      scheme: HTTPS
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /readyz
+      port: http
+      scheme: HTTPS
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+  # Mount only necessary volumes
+  volumeMounts:
+    - name: tmp
+      mountPath: /tmp
+    - name: cache
+      mountPath: /app/cache
+    - name: tls-certs
+      mountPath: /etc/ssl/certs
+      readOnly: true
+
+# Temporary writable volumes for read-only root filesystem
+persistence:
+  enabled: false
+
+# Using emptyDir volumes for temporary storage
+emptyDirVolumes:
+  tmp:
+    medium: ""
+    sizeLimit: 100Mi
+    mountPath: /tmp
+  cache:
+    medium: ""
+    sizeLimit: 500Mi
+    mountPath: /app/cache
+
+# Extra volumes for TLS certificates
+extraVolumes:
+  - name: tls-certs
+    secret:
+      secretName: app-tls-certs
+      defaultMode: 0400  # Read-only for owner
+
+service:
+  enabled: true
+  type: ClusterIP
+  port: 443
+  targetPort: 8443
+  protocol: TCP
+
+# Network policy - deny all by default, allow specific
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+
+  # Only allow traffic from specific sources
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: ingress-nginx
+        - podSelector:
+            matchLabels:
+              app: frontend
+      ports:
+        - protocol: TCP
+          port: 8443
+
+  # Only allow specific outbound traffic
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+
+    # Database
+    - to:
+        - podSelector:
+            matchLabels:
+              app: postgres
+      ports:
+        - protocol: TCP
+          port: 5432
+
+    # External HTTPS APIs
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+            except:
+              - 169.254.169.254/32  # Block IMDS
+              - 10.0.0.0/8
+              - 172.16.0.0/12
+              - 192.168.0.0/16
+      ports:
+        - protocol: TCP
+          port: 443
+
+# Service account with minimal permissions
+serviceAccount:
+  enabled: true
+  automountServiceAccountToken: false  # Don't mount SA token by default
+  annotations: {}
+
+# RBAC - minimal permissions
+rbac:
+  enabled: true
+  rules:
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      resourceNames: ["app-config"]
+      verbs: ["get", "watch"]
+
+# Pod disruption budget for availability
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Resource quotas
+extraObjects:
+  - apiVersion: v1
+    kind: ResourceQuota
+    metadata:
+      name: secure-app-quota
+    spec:
+      hard:
+        requests.cpu: "2"
+        requests.memory: "2Gi"
+        limits.cpu: "4"
+        limits.memory: "4Gi"
+        persistentvolumeclaims: "2"
+
+# Secrets with encryption at rest
+secret:
+  enabled: true
+  annotations:
+    kubernetes.io/enforce-encryption: "true"
+  data:
+    tls.crt: "LS0tLS1CRUdJTi..."  # Base64 encoded certificate
+    tls.key: "LS0tLS1CRUdJTi..."  # Base64 encoded key
+
+# Config with non-sensitive data only
+configMap:
+  enabled: true
+  data:
+    app.properties: |
+      server.port=8443
+      server.ssl.enabled=true
+      server.ssl.key-store=/etc/ssl/certs/keystore.p12
+      logging.level.root=WARN
+      management.endpoints.enabled-by-default=false
+      management.endpoint.health.enabled=true
+
+# Priority class for critical workloads
+priorityClassName: high-priority
+
+# Node affinity for dedicated secure nodes
+affinity:
+  nodeAffinity:
+    requiredDuringSchedulingIgnoredDuringExecution:
+      nodeSelectorTerms:
+        - matchExpressions:
+            - key: node-role.kubernetes.io/secure
+              operator: In
+              values:
+                - "true"
+
+# Tolerations for dedicated nodes
+tolerations:
+  - key: dedicated
+    operator: Equal
+    value: secure
+    effect: NoSchedule

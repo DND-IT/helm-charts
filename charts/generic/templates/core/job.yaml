@@ -1,0 +1,139 @@
+{{- range $name, $job := .Values.jobs }}
+{{- if $job.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "generic.fullname" $ }}-{{ $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
+    {{- with $job.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $job.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $job.completions }}
+  completions: {{ . }}
+  {{- end }}
+  {{- with $job.parallelism }}
+  parallelism: {{ . }}
+  {{- end }}
+  {{- with $job.backoffLimit }}
+  backoffLimit: {{ . }}
+  {{- end }}
+  {{- with $job.activeDeadlineSeconds }}
+  activeDeadlineSeconds: {{ . }}
+  {{- end }}
+  {{- with $job.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ . }}
+  {{- end }}
+  {{- with $job.completionMode }}
+  completionMode: {{ . }}
+  {{- end }}
+  {{- with $job.suspend }}
+  suspend: {{ . }}
+  {{- end }}
+  {{- with $job.podFailurePolicy }}
+  podFailurePolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- include "generic.labels" $ | nindent 8 }}
+        app.kubernetes.io/component: {{ $name }}
+        {{- with $job.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with $job.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if $job.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml $job.imagePullSecrets | nindent 8 }}
+      {{- else if $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml $.Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      {{- if $job.serviceAccountName }}
+      serviceAccountName: {{ $job.serviceAccountName }}
+      {{- else if $.Values.serviceAccount.enabled }}
+      serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+      {{- end }}
+      restartPolicy: {{ $job.restartPolicy | default "OnFailure" }}
+      {{- if $job.podSecurityContext }}
+      securityContext:
+        {{- toYaml $job.podSecurityContext | nindent 8 }}
+      {{- else if $.Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- if $job.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $job.nodeSelector | nindent 8 }}
+      {{- else if $.Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $.Values.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if $job.affinity }}
+      affinity:
+        {{- toYaml $job.affinity | nindent 8 }}
+      {{- else if $.Values.affinity }}
+      affinity:
+        {{- toYaml $.Values.affinity | nindent 8 }}
+      {{- end }}
+      {{- if $job.tolerations }}
+      tolerations:
+        {{- toYaml $job.tolerations | nindent 8 }}
+      {{- else if $.Values.tolerations }}
+      tolerations:
+        {{- toYaml $.Values.tolerations | nindent 8 }}
+      {{- end }}
+      {{- with $job.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          image: {{ $job.image.repository | default $.Values.image.repository }}:{{ $job.image.tag | default $.Values.image.tag }}
+          imagePullPolicy: {{ $job.image.pullPolicy | default $.Values.image.pullPolicy }}
+          {{- with $job.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $job.securityContext }}
+          securityContext:
+            {{- toYaml $job.securityContext | nindent 12 }}
+          {{- else if $.Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml $.Values.containerSecurityContext | nindent 12 }}
+          {{- end }}
+{{- end }}
+{{- end }}

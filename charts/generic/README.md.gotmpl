@@ -5,6 +5,273 @@
 
 {{ template "chart.description" . }}
 
+## Features
+
+- **Multiple Workload Types**: Supports deployments, cronjobs, and jobs
+- **Flexible Networking**: Service, Ingress (ALB), and Gateway API support
+- **Advanced Scaling**: HPA and VPA autoscaling options
+- **Security**: RBAC, NetworkPolicy, Pod Security Standards, and secure defaults
+- **Persistence**: Multiple volume types, CSI snapshots, and volume claim templates
+- **Cloud Native**: External Secrets
+- **High Availability**: PDB, topology spread, and anti-affinity configurations
+- **Extensibility**: Helm hooks, extra objects, and modular template architecture
+
+## Quick Start
+
+### Add the Helm Repository
+
+```bash
+helm repo add dnd-it https://dnd-it.github.io/helm-charts
+helm repo update
+```
+
+### Install the Chart
+
+```bash
+# Basic installation
+helm install my-release dnd-it/generic
+
+# With custom values
+helm install my-release dnd-it/generic -f values.yaml
+
+# Deploy with custom image
+helm install my-release dnd-it/generic \
+  --set deployment.enabled=true \
+  --set image.repository=myorg/myapp \
+  --set image.tag=v1.0.0
+
+# Deploy a CronJob
+helm install my-release dnd-it/generic \
+  --set deployment.enabled=false \
+  --set cronjobs.backup.enabled=true \
+  --set cronjobs.backup.schedule="0 * * * *" \
+  --set cronjobs.backup.image.repository=myorg/backup-job
+```
+
+## Examples
+
+### Basic Web Application
+
+```yaml
+image:
+  repository: nginx
+  tag: "1.21-alpine"
+
+service:
+  port: 80
+  targetPort: 8080
+
+ingress:
+  enabled: true
+  className: alb
+  alb:
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: myapp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+deployment:
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+```
+
+### Application with ALB Ingress
+
+```yaml
+deployment:
+  enabled: true
+  replicas: 2
+
+image:
+  repository: myorg/webapp
+  tag: "v2.0.0"
+
+ingress:
+  enabled: true
+  className: alb
+  alb:
+    annotations:
+      alb.ingress.kubernetes.io/scheme: internet-facing
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678
+      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      alb.ingress.kubernetes.io/ssl-redirect: "443"
+      alb.ingress.kubernetes.io/group.name: shared-alb
+  hosts:
+    - host: app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+```
+
+### CronJob Example
+
+```yaml
+deployment:
+  enabled: false  # Disable main deployment
+
+cronjobs:
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 1
+    image:
+      repository: myorg/backup-tool
+      tag: "v1.0.0"
+    command: ["/bin/sh"]
+    args: ["-c", "backup-script.sh"]
+    resources:
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    env:
+      - name: BACKUP_BUCKET
+        value: "s3://my-backups"
+
+  cleanup:
+    enabled: true
+    schedule: "0 */6 * * *"  # Every 6 hours
+    image:
+      repository: myorg/cleanup-tool
+      tag: "latest"
+    command: ["python", "cleanup.py"]
+```
+
+### Job Example
+
+```yaml
+deployment:
+  enabled: false  # Disable main deployment
+
+jobs:
+  migration:
+    enabled: true
+    backoffLimit: 3
+    completions: 1
+    parallelism: 1
+    ttlSecondsAfterFinished: 300
+    image:
+      repository: myorg/migration-tool
+      tag: "v2.0.0"
+    command: ["python", "migrate.py"]
+    env:
+      - name: DATABASE_URL
+        value: "postgresql://localhost/myapp"
+    resources:
+      requests:
+        cpu: 500m
+        memory: 1Gi
+```
+
+### Multiple Deployments Example
+
+```yaml
+# Main deployment
+deployment:
+  enabled: true
+  replicas: 3
+  env:
+    - name: SERVICE_TYPE
+      value: "api"
+
+image:
+  repository: myorg/api
+  tag: "v1.0.0"
+
+# Additional deployments
+extraDeployments:
+  worker:
+    replicas: 2
+    image:
+      repository: myorg/worker
+      tag: "v1.0.0"
+    env:
+      - name: SERVICE_TYPE
+        value: "worker"
+    resources:
+      requests:
+        cpu: 200m
+        memory: 512Mi
+
+  admin:
+    replicas: 1
+    image:
+      repository: myorg/admin
+      tag: "v1.0.0"
+    env:
+      - name: SERVICE_TYPE
+        value: "admin"
+    ports:
+      - name: http
+        containerPort: 8080
+```
+
+## Upgrading
+
+### Breaking Changes in v0.0.2
+
+1. **Workload Structure Changed**:
+   - Removed `workload.type` configuration
+   - StatefulSet and DaemonSet no longer supported
+   - Use `deployment.enabled`, `cronjobs`, and `jobs` instead
+
+2. **Monitoring Resources Removed**:
+   - ServiceMonitor, PodMonitor, PrometheusRule removed
+   - Datadog custom resources moved to separate `datadog-resources` chart
+
+3. **Ingress Controller**:
+   - Removed `ingress.controller` field
+   - Only ALB ingress controller is supported
+   - Removed `ingress.nginx` configuration section
+
+### Migration Guide
+
+```yaml
+# Old structure
+workload:
+  type: deployment
+  enabled: true
+  replicas: 3
+
+# New structure
+deployment:
+  enabled: true
+  replicas: 3
+
+# Old CronJob
+workload:
+  type: cronjob
+  schedule: "0 * * * *"
+
+# New CronJob
+deployment:
+  enabled: false
+cronjobs:
+  mycron:
+    enabled: true
+    schedule: "0 * * * *"
+```
+
 {{ template "chart.homepageLine" . }}
 
 {{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}
+
+----------------------------------------------
+Autogenerated from chart metadata using [helm-docs v{{ .Version }}](https://github.com/norwoodj/helm-docs/releases/v{{ .Version }})

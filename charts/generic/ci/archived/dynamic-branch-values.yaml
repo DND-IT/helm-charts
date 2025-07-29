@@ -1,0 +1,189 @@
+# Example: Dynamic Branch Deployment with Templated Values
+# This example shows how to use templated values for feature branch deployments
+# Perfect for CI/CD pipelines and ArgoCD applications
+
+# Dynamic values that can be set by CI/CD or ArgoCD
+generic:
+  branchName: "feature-123"  # Set dynamically by CI: $CI_COMMIT_REF_SLUG
+  environment: "staging"
+  version: "feature-123-20250725"
+
+# Override namespace for branch isolation
+namespaceOverride: "{{ .Values.generic.branchName }}"
+
+deployment:
+  enabled: true
+  replicas: 1
+  resources:
+    limits:
+      memory: "512Mi"
+      cpu: "500m"
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+
+  env:
+    - name: ENVIRONMENT
+      value: "{{ .Values.generic.environment }}"
+    - name: BRANCH_NAME
+      value: "{{ .Values.generic.branchName }}"
+    - name: VERSION
+      value: "{{ .Values.generic.version }}"
+    - name: API_BASE_URL
+      value: "https://{{ .Values.generic.branchName }}.api.{{ .Values.generic.environment }}.example.com"
+    - name: FRONTEND_URL
+      value: "https://{{ .Values.generic.branchName }}.{{ .Values.generic.environment }}.example.com"
+    - name: DATABASE_NAME
+      value: "app_{{ .Values.generic.branchName | replace \"-\" \"_\" | lower }}"
+    - name: CACHE_PREFIX
+      value: "{{ .Values.generic.branchName }}:{{ .Values.generic.environment }}:"
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+
+# Dynamic ingress configuration with ALB
+ingress:
+  enabled: true
+  className: alb
+  annotations:
+    # Dynamic ALB configuration
+    alb.ingress.kubernetes.io/load-balancer-name: "{{ .Values.generic.branchName }}-{{ .Values.generic.environment }}"
+    alb.ingress.kubernetes.io/group.name: "{{ .Values.generic.environment }}-branches"
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/tags: |
+      Environment={{ .Values.generic.environment }}
+      Branch={{ .Values.generic.branchName }}
+      ManagedBy=ArgoCD
+      CreatedAt={{ now | date "2006-01-02" }}
+    # SSL configuration
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-east-1:123456789012:certificate/{{ .Values.generic.environment }}-wildcard"
+
+  hosts:
+    - host: "{{ .Values.generic.branchName }}.{{ .Values.generic.environment }}.example.com"
+      paths:
+        - path: /
+          pathType: Prefix
+    # Additional host for shorter URL
+    - host: "{{ .Values.generic.branchName }}.dev.example.com"
+      paths:
+        - path: /
+          pathType: Prefix
+
+# ConfigMap with dynamic configuration
+configMap:
+  enabled: true
+  data:
+    app.yaml: |
+      environment: {{ .Values.generic.environment }}
+      branch: {{ .Values.generic.branchName }}
+      features:
+        debug: {{ eq .Values.generic.environment "staging" }}
+        analytics: {{ ne .Values.generic.branchName "main" }}
+      urls:
+        api: https://{{ .Values.generic.branchName }}.api.{{ .Values.generic.environment }}.example.com
+        frontend: https://{{ .Values.generic.branchName }}.{{ .Values.generic.environment }}.example.com
+        cdn: https://cdn.{{ .Values.generic.environment }}.example.com/{{ .Values.generic.branchName }}
+
+# External secret for branch-specific credentials
+externalSecret:
+  enabled: true
+  spec:
+    refreshInterval: 1h
+    secretStoreRef:
+      name: aws-secrets-manager
+      kind: SecretStore
+    target:
+      name: "{{ .Values.generic.branchName }}-secrets"
+    data:
+      - secretKey: database-password
+        remoteRef:
+          key: "/{{ .Values.generic.environment }}/{{ .Values.generic.branchName }}/db-password"
+      - secretKey: api-key
+        remoteRef:
+          key: "/{{ .Values.generic.environment }}/{{ .Values.generic.branchName }}/api-key"
+      - secretKey: jwt-secret
+        remoteRef:
+          key: "/{{ .Values.generic.environment }}/shared/jwt-secret"
+
+# Service account with dynamic naming
+serviceAccount:
+  enabled: true
+  name: "{{ .Values.generic.branchName }}-sa"
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/{{ .Values.generic.environment }}-{{ .Values.generic.branchName }}-role"
+
+# Auto-scaling for popular branches
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+# Network policy for branch isolation
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        # Allow traffic from the same branch namespace
+        - podSelector: {}
+        # Allow from ingress controller
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+          podSelector:
+            matchLabels:
+              app.kubernetes.io/name: aws-load-balancer-controller
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    # Allow DNS
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+    # Allow external HTTPS
+    - to:
+        - ipBlock:
+            cidr: 0.0.0.0/0
+      ports:
+        - protocol: TCP
+          port: 443
+    # Allow database in staging namespace
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              name: "{{ .Values.generic.environment }}-data"
+          podSelector:
+            matchLabels:
+              app: postgresql
+      ports:
+        - protocol: TCP
+          port: 5432

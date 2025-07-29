@@ -1,0 +1,283 @@
+{{- if and .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ include "generic.fullname" . }}
+  namespace: {{ include "generic.namespace" . }}
+  labels:
+    {{- include "generic.labels" . | nindent 4 }}
+    {{- with .Values.gateway.httpRoute.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with .Values.gateway.httpRoute.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if .Values.gateway.httpRoute.parentRefs }}
+  parentRefs:
+    {{- range $parentRef := .Values.gateway.httpRoute.parentRefs }}
+    - {{- if $parentRef.group }}
+      group: {{ $parentRef.group }}
+      {{- end }}
+      {{- if $parentRef.kind }}
+      kind: {{ $parentRef.kind }}
+      {{- end }}
+      {{- if $parentRef.namespace }}
+      namespace: {{ $parentRef.namespace }}
+      {{- end }}
+      name: {{ $parentRef.name }}
+      {{- with $parentRef.sectionName }}
+      sectionName: {{ . }}
+      {{- end }}
+      {{- with $parentRef.port }}
+      port: {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.gateway.httpRoute.hostnames }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  rules:
+    {{- if .Values.gateway.httpRoute.rules }}
+    {{- range $rule := .Values.gateway.httpRoute.rules }}
+    - {{- with $rule.matches }}
+      matches:
+        {{- range $match := . }}
+        - {{- with $match.path }}
+          path:
+            {{- if .type }}
+            type: {{ .type }}
+            {{- end }}
+            {{- if .value }}
+            value: {{ .value }}
+            {{- end }}
+          {{- end }}
+          {{- with $match.headers }}
+          headers:
+            {{- range $header := . }}
+            - {{- if $header.type }}
+              type: {{ $header.type }}
+              {{- end }}
+              name: {{ $header.name }}
+              {{- if $header.value }}
+              value: {{ $header.value }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- with $match.queryParams }}
+          queryParams:
+            {{- range $param := . }}
+            - {{- if $param.type }}
+              type: {{ $param.type }}
+              {{- end }}
+              name: {{ $param.name }}
+              {{- if $param.value }}
+              value: {{ $param.value }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- with $match.method }}
+          method: {{ . }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- with $rule.filters }}
+      filters:
+        {{- range $filter := . }}
+        - type: {{ $filter.type }}
+          {{- if eq $filter.type "RequestHeaderModifier" }}
+          {{- with $filter.requestHeaderModifier }}
+          requestHeaderModifier:
+            {{- with .set }}
+            set:
+              {{- range $header := . }}
+              - name: {{ $header.name }}
+                value: {{ $header.value }}
+              {{- end }}
+            {{- end }}
+            {{- with .add }}
+            add:
+              {{- range $header := . }}
+              - name: {{ $header.name }}
+                value: {{ $header.value }}
+              {{- end }}
+            {{- end }}
+            {{- with .remove }}
+            remove:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if eq $filter.type "ResponseHeaderModifier" }}
+          {{- with $filter.responseHeaderModifier }}
+          responseHeaderModifier:
+            {{- with .set }}
+            set:
+              {{- range $header := . }}
+              - name: {{ $header.name }}
+                value: {{ $header.value }}
+              {{- end }}
+            {{- end }}
+            {{- with .add }}
+            add:
+              {{- range $header := . }}
+              - name: {{ $header.name }}
+                value: {{ $header.value }}
+              {{- end }}
+            {{- end }}
+            {{- with .remove }}
+            remove:
+              {{- toYaml . | nindent 14 }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if eq $filter.type "RequestMirror" }}
+          {{- with $filter.requestMirror }}
+          requestMirror:
+            backendRef:
+              {{- if .backendRef.group }}
+              group: {{ .backendRef.group }}
+              {{- end }}
+              {{- if .backendRef.kind }}
+              kind: {{ .backendRef.kind }}
+              {{- end }}
+              {{- if .backendRef.namespace }}
+              namespace: {{ .backendRef.namespace }}
+              {{- end }}
+              name: {{ .backendRef.name }}
+              {{- with .backendRef.port }}
+              port: {{ . }}
+              {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if eq $filter.type "RequestRedirect" }}
+          {{- with $filter.requestRedirect }}
+          requestRedirect:
+            {{- with .scheme }}
+            scheme: {{ . }}
+            {{- end }}
+            {{- with .hostname }}
+            hostname: {{ . }}
+            {{- end }}
+            {{- with .path }}
+            path:
+              {{- if .type }}
+              type: {{ .type }}
+              {{- end }}
+              {{- if .replaceFullPath }}
+              replaceFullPath: {{ .replaceFullPath }}
+              {{- end }}
+              {{- if .replacePrefixMatch }}
+              replacePrefixMatch: {{ .replacePrefixMatch }}
+              {{- end }}
+            {{- end }}
+            {{- with .port }}
+            port: {{ . }}
+            {{- end }}
+            {{- with .statusCode }}
+            statusCode: {{ . }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if eq $filter.type "URLRewrite" }}
+          {{- with $filter.urlRewrite }}
+          urlRewrite:
+            {{- with .hostname }}
+            hostname: {{ . }}
+            {{- end }}
+            {{- with .path }}
+            path:
+              {{- if .type }}
+              type: {{ .type }}
+              {{- end }}
+              {{- if .replaceFullPath }}
+              replaceFullPath: {{ .replaceFullPath }}
+              {{- end }}
+              {{- if .replacePrefixMatch }}
+              replacePrefixMatch: {{ .replacePrefixMatch }}
+              {{- end }}
+            {{- end }}
+          {{- end }}
+          {{- end }}
+          {{- if eq $filter.type "ExtensionRef" }}
+          {{- with $filter.extensionRef }}
+          extensionRef:
+            group: {{ .group }}
+            kind: {{ .kind }}
+            name: {{ .name }}
+          {{- end }}
+          {{- end }}
+        {{- end }}
+      {{- end }}
+      backendRefs:
+        {{- if $rule.backendRefs }}
+        {{- range $backendRef := $rule.backendRefs }}
+        - {{- if $backendRef.group }}
+          group: {{ $backendRef.group }}
+          {{- end }}
+          {{- if $backendRef.kind }}
+          kind: {{ $backendRef.kind }}
+          {{- end }}
+          {{- if $backendRef.namespace }}
+          namespace: {{ $backendRef.namespace }}
+          {{- end }}
+          name: {{ $backendRef.name }}
+          {{- with $backendRef.port }}
+          port: {{ . }}
+          {{- end }}
+          {{- with $backendRef.weight }}
+          weight: {{ . }}
+          {{- end }}
+          {{- with $backendRef.filters }}
+          filters:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+        {{- end }}
+        {{- else }}
+        - name: {{ include "generic.fullname" $ }}
+          port: {{ (index $.Values.service.ports 0).port | default 80 }}
+        {{- end }}
+    {{- end }}
+    {{- else }}
+    # Default rule
+    - backendRefs:
+        - name: {{ include "generic.fullname" . }}
+          port: {{ (index .Values.service.ports 0).port | default 80 }}
+    {{- end }}
+{{- if .Values.gateway.httpRoute.extraRoutes }}
+{{- range $name, $route := .Values.gateway.httpRoute.extraRoutes }}
+{{- if $route.enabled | default true }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- include "generic.labels" $ | nindent 4 }}
+    {{- with $route.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $route.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $route.parentRefs }}
+  parentRefs:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $route.hostnames }}
+  hostnames:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $route.rules }}
+  rules:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

@@ -1,7 +1,24 @@
 apiVersion: v2
 name: generic
-description: A Helm chart for Kubernetes
-
+description: |
+  A highly flexible and unopinionated Helm chart for deploying Kubernetes workloads.
+  Supports Deployments, CronJobs, and Jobs with extensive configuration options.
+  Designed for maximum flexibility while maintaining security best practices by default.
+  Optimized for AWS with ALB ingress controller support.
 type: application
+version: 0.0.2
 
-version: 0.0.1
+keywords:
+  - application
+  - kubernetes
+  - generic
+
+home: https://github.com/dnd-it/helm-charts
+sources:
+  - https://github.com/dnd-it/helm-charts
+
+maintainers:
+  - name: DAI
+    email: abc@abc.com
+
+kubeVersion: ">=1.29.0-0"

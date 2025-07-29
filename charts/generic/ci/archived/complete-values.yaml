@@ -1,0 +1,222 @@
+# Example values for deploying a web application with nginx non-root container
+generic:
+  name: "my-web-app"
+  version: "1.0.0"
+
+# Use nginx-unprivileged image for non-root execution
+image:
+  repository: nginxinc/nginx-unprivileged
+  tag: "1.25-alpine"
+  pullPolicy: IfNotPresent
+
+deployment:
+  enabled: true
+  replicas: 3
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+  # Resource limits
+  resources:
+    limits:
+      cpu: 500m
+      memory: 512Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+  # Health checks for nginx
+  livenessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /
+      port: http
+    initialDelaySeconds: 5
+    periodSeconds: 5
+
+  # Environment variables
+  env:
+    - name: ENV
+      value: "production"
+    - name: LOG_LEVEL
+      value: "info"
+    - name: DB_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: db-secret
+          key: password
+    - name: MISSING_SECRET
+      valueFrom:
+        secretKeyRef:
+          name: missing-secret
+          key: password
+          optional: true  # Secret can be missing
+
+# nginx-unprivileged runs on port 8080 by default
+containerPorts:
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080  # Maps to nginx-unprivileged port
+
+ingress:
+  enabled: true
+  className: "alb"
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+  hosts:
+    - host: myapp.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+
+# Enable persistence
+# NOTE: This will create a PVC - ensure the storageClass exists in your cluster
+persistence:
+  enabled: false  # Set to true if you need persistent storage
+  size: 10Gi
+  storageClass: ""  # Leave empty for default storage class
+  mountPath: /data
+
+# Enable horizontal pod autoscaler (HPA)
+# NOTE: Requires metrics-server to be installed in the cluster
+# Disable this if metrics-server is not available
+hpa:
+  enabled: false  # Set to true if metrics-server is installed
+  minReplicas: 2
+  maxReplicas: 10
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 70
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 80
+
+# Configure ServiceAccount and RBAC
+serviceAccount:
+  enabled: true
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789:role/MyAppRole"
+  automountServiceAccountToken: false  # nginx doesn't need API access
+
+rbac:
+  enabled: true
+  rules:
+    - apiGroups: [""]
+      resources: ["configmaps"]
+      verbs: ["get", "list"]
+
+# Add nginx configuration for non-root
+configMap:
+  enabled: true
+  mountPath: /etc/nginx/conf.d
+  data:
+    default.conf: |
+      server {
+        listen 8080;
+        server_name localhost;
+
+        location / {
+          root   /usr/share/nginx/html;
+          index  index.html index.htm;
+        }
+
+        location /health {
+          access_log off;
+          return 200 "healthy\n";
+        }
+
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
+          root /usr/share/nginx/html;
+        }
+      }
+
+secret:
+  enabled: true
+  envFrom: true
+  name: some-secret
+  stringData:
+    SUPER_SECRET: "super-secret-key"
+
+extraSecrets:
+  db-secret:
+    stringData:
+      password: "super-secret-password"
+
+
+# Network policy for security
+networkPolicy:
+  enabled: true
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              name: kube-system
+      ports:
+        - protocol: TCP
+          port: 8080
+  egress:
+    - to: []
+      ports:
+        - protocol: TCP
+          port: 443
+        - protocol: TCP
+          port: 80
+
+# Pod disruption budget
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
+
+# Security contexts for non-root nginx
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101     # nginx user in alpine
+  runAsGroup: 101
+  fsGroup: 101
+  fsGroupChangePolicy: OnRootMismatch
+
+containerSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 101
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+    - ALL
+
+# EmptyDir volumes for nginx writable directories
+emptyDirVolumes:
+  nginx-cache:
+    mountPath: /var/cache/nginx
+    sizeLimit: 100Mi
+  nginx-pid:
+    mountPath: /tmp
+    sizeLimit: 10Mi
