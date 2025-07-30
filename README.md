@@ -7,13 +7,13 @@ Welcome to the DND-IT Helm Charts repository! This repository contains a collect
 
 ## Available Charts
 
-| Chart | Version | Description | Documentation |
-|-------|---------|-------------|---------------|
-| [generic](./charts/generic) | 0.1.0 | A highly flexible and unopinionated Helm chart for deploying any Kubernetes workload. | [README](./charts/generic/README.md) |
-| [webapp](./charts/webapp) | 1.8.0 | [DEPRECATED] Web application deployment chart | [README](./charts/webapp/README.md) |
-| [cronjob](./charts/cronjob) | 0.4.0 | [DEPRECATED] Helm chart for deploying Kubernetes CronJobs | [README](./charts/cronjob/README.md) |
-| [custom-resources](./charts/custom-resources) | 0.1.2 | Deploy arbitrary Kubernetes resources | [README](./charts/custom-resources/README.md) |
-| [karpenter-resources](./charts/karpenter-resources) | 0.3.2 | Karpenter provisioner and node pool configurations | [README](./charts/karpenter-resources/README.md) |
+| Chart | Description | Documentation |
+|-------|-------------|---------------|
+| [generic](./charts/generic) | A highly flexible and unopinionated Helm chart for deploying any Kubernetes workload. | [README](./charts/generic/README.md) |
+| [webapp](./charts/webapp) | [DEPRECATED] Web application deployment chart | [README](./charts/webapp/README.md) |
+| [cronjob](./charts/cronjob) | [DEPRECATED] Helm chart for deploying Kubernetes CronJobs | [README](./charts/cronjob/README.md) |
+| [custom-resources](./charts/custom-resources) | Deploy arbitrary Kubernetes resources | [README](./charts/custom-resources/README.md) |
+| [karpenter-resources](./charts/karpenter-resources) | Karpenter provisioner and node pool configurations | [README](./charts/karpenter-resources/README.md) |
 
 ## Kubernetes Version Support
 

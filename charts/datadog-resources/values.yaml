@@ -1,0 +1,166 @@
+# Default values for datadog-resources chart
+# This chart manages Datadog custom resources including monitors, dashboards, SLOs, and metrics
+
+# Global settings
+global:
+  # Datadog site (datadoghq.com, datadoghq.eu, etc.)
+  datadogSite: datadoghq.com
+  # Common labels to apply to all resources
+  labels: {}
+  # Common annotations to apply to all resources
+  annotations: {}
+
+# Common labels for all Datadog resources
+commonLabels: {}
+# team: platform
+# environment: production
+
+# Common annotations for all Datadog resources
+commonAnnotations: {}
+# managed-by: helm
+
+# Datadog Monitor configuration
+# Create and manage Datadog monitors as Kubernetes resources
+monitors: {}
+  # cpu-usage:
+  #   enabled: true
+  #   name: "High CPU Usage Alert"
+  #   type: "metric alert"
+  #   query: "avg(last_5m):avg:kubernetes.cpu.usage.total{*} by {pod_name} > 0.8"
+  #   message: |
+  #     CPU usage is above 80% for pod {{pod_name.name}}
+  #     Please investigate and consider scaling or optimizing the application.
+  #   tags:
+  #     - "team:platform"
+  #     - "severity:warning"
+  #   priority: 3
+  #   options:
+  #     thresholds:
+  #       critical: 0.9
+  #       warning: 0.8
+  #     notifyNoData: true
+  #     noDataTimeframe: 10
+  #     requireFullWindow: false
+  #     notifyAudit: false
+  #     timeoutH: 1
+  #     renotifyInterval: 60
+  #     escalationMessage: "CPU usage remains high after 1 hour"
+  #     includeTags: true
+  #     evaluationDelay: 60
+  #     newGroupDelay: 60
+  #   restrictedRoles: []
+  #
+  # memory-usage:
+  #   enabled: true
+  #   name: "High Memory Usage Alert"
+  #   type: "metric alert"
+  #   query: "avg(last_5m):avg:kubernetes.memory.usage{*} by {pod_name} > 0.85"
+  #   message: "Memory usage is above 85% for pod {{pod_name.name}}"
+  #   tags:
+  #     - "team:platform"
+  #     - "severity:critical"
+  #   priority: 2
+  #   options:
+  #     thresholds:
+  #       critical: 0.9
+  #       warning: 0.85
+
+# Datadog SLO (Service Level Objective) configuration
+# Define and manage SLOs for your services
+slos: {}
+  # api-availability:
+  #   enabled: true
+  #   name: "API Availability SLO"
+  #   description: "99.9% availability for the main API service"
+  #   type: "metric"
+  #   targetThreshold: "99.9"
+  #   timeframe: "30d"
+  #   warningThreshold: "99.95"
+  #   tags:
+  #     - "team:platform"
+  #     - "service:api"
+  #   thresholds:
+  #     - timeframe: "7d"
+  #       target: 99.9
+  #       warning: 99.95
+  #     - timeframe: "30d"
+  #       target: 99.9
+  #       warning: 99.95
+  #   query:
+  #     numerator: "sum:http.requests{service:api,status_code:2xx}.as_count()"
+  #     denominator: "sum:http.requests{service:api}.as_count()"
+  #
+  # api-latency:
+  #   enabled: true
+  #   name: "API Latency SLO"
+  #   description: "95% of requests complete within 500ms"
+  #   type: "metric"
+  #   targetThreshold: "95"
+  #   timeframe: "7d"
+  #   query:
+  #     numerator: "sum:http.requests{service:api,response_time:<500}.as_count()"
+  #     denominator: "sum:http.requests{service:api}.as_count()"
+
+# Datadog Metric configuration
+# Define custom metrics for HPA scaling
+metrics: {}
+  # queue-size:
+  #   enabled: true
+  #   query: "avg:redis.queue.size{queue:jobs}"
+  #   externalMetricName: "redis_queue_size"
+  #   maxAge: 120
+  #   returnOnlyMatched: true
+  #
+  # custom-app-metric:
+  #   enabled: true
+  #   query: "avg:app.custom.metric{env:prod}"
+  #   externalMetricName: "app_custom_metric"
+
+# Datadog Dashboard configuration
+# Create and manage Datadog dashboards as code
+dashboards: {}
+  # app-overview:
+  #   enabled: true
+  #   title: "Application Overview Dashboard"
+  #   description: "Main dashboard for application monitoring"
+  #   layoutType: "ordered"
+  #   isReadOnly: false
+  #   notifyList: []
+  #   templateVariables:
+  #     - name: "env"
+  #       prefix: "env"
+  #       availableValues: ["prod", "staging", "dev"]
+  #       default: "prod"
+  #   widgets:
+  #     - definition:
+  #         title: "Request Rate"
+  #         type: "timeseries"
+  #         requests:
+  #           - q: "sum:http.requests{$env} by {service}.as_rate()"
+  #             displayType: "line"
+  #             style:
+  #               palette: "dog_classic"
+  #               lineType: "solid"
+  #               lineWidth: "normal"
+  #       layout:
+  #         x: 0
+  #         y: 0
+  #         width: 4
+  #         height: 2
+
+# Downtime configuration
+# Schedule maintenance windows and suppress alerts
+downtimes: {}
+  # weekly-maintenance:
+  #   enabled: true
+  #   scope: "host:web-*"
+  #   start: "2024-01-01T02:00:00Z"
+  #   end: "2024-01-01T04:00:00Z"
+  #   recurrence:
+  #     type: "weeks"
+  #     weekDays: ["Sun"]
+  #     untilDate: null
+  #   message: "Weekly maintenance window"
+  #   monitorTags: ["maintenance:weekly"]
+  #   notifyEndStates: ["alert", "no data", "warn"]
+  #   notifyEndTypes: ["expired", "canceled"]

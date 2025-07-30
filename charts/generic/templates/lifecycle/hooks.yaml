@@ -9,19 +9,12 @@ metadata:
   name: {{ printf "%s-pre-install-%s" (include "generic.fullname" $) $hook.name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: hook
-    app.kubernetes.io/hook-type: pre-install
-    {{- with $hook.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "pre-install") ($hook.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-install
-    "helm.sh/hook-weight": {{ $hook.weight | default 1 | quote }}
-    "helm.sh/hook-delete-policy": {{ $hook.deletePolicy | default "before-hook-creation" }}
-    {{- with $hook.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $helmAnnotations := dict "helm.sh/hook" "pre-install" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "before-hook-creation") }}
+    {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -95,19 +88,12 @@ metadata:
   name: {{ printf "%s-post-install-%s" (include "generic.fullname" $) $hook.name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: hook
-    app.kubernetes.io/hook-type: post-install
-    {{- with $hook.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "post-install") ($hook.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
-    "helm.sh/hook": post-install
-    "helm.sh/hook-weight": {{ $hook.weight | default 1 | quote }}
-    "helm.sh/hook-delete-policy": {{ $hook.deletePolicy | default "hook-succeeded" }}
-    {{- with $hook.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $helmAnnotations := dict "helm.sh/hook" "post-install" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "hook-succeeded") }}
+    {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -181,19 +167,12 @@ metadata:
   name: {{ printf "%s-pre-upgrade-%s" (include "generic.fullname" $) $hook.name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: hook
-    app.kubernetes.io/hook-type: pre-upgrade
-    {{- with $hook.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "pre-upgrade") ($hook.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-upgrade
-    "helm.sh/hook-weight": {{ $hook.weight | default 1 | quote }}
-    "helm.sh/hook-delete-policy": {{ $hook.deletePolicy | default "before-hook-creation" }}
-    {{- with $hook.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $helmAnnotations := dict "helm.sh/hook" "pre-upgrade" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "before-hook-creation") }}
+    {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -267,19 +246,12 @@ metadata:
   name: {{ printf "%s-post-upgrade-%s" (include "generic.fullname" $) $hook.name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: hook
-    app.kubernetes.io/hook-type: post-upgrade
-    {{- with $hook.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "post-upgrade") ($hook.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
-    "helm.sh/hook": post-upgrade
-    "helm.sh/hook-weight": {{ $hook.weight | default 1 | quote }}
-    "helm.sh/hook-delete-policy": {{ $hook.deletePolicy | default "hook-succeeded" }}
-    {{- with $hook.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $helmAnnotations := dict "helm.sh/hook" "post-upgrade" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "hook-succeeded") }}
+    {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -353,19 +325,12 @@ metadata:
   name: {{ printf "%s-pre-delete-%s" (include "generic.fullname" $) $hook.name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: hook
-    app.kubernetes.io/hook-type: pre-delete
-    {{- with $hook.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "pre-delete") ($hook.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
-    "helm.sh/hook": pre-delete
-    "helm.sh/hook-weight": {{ $hook.weight | default 1 | quote }}
-    "helm.sh/hook-delete-policy": {{ $hook.deletePolicy | default "hook-succeeded" }}
-    {{- with $hook.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $helmAnnotations := dict "helm.sh/hook" "pre-delete" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "hook-succeeded") }}
+    {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -439,19 +404,12 @@ metadata:
   name: {{ printf "%s-post-delete-%s" (include "generic.fullname" $) $hook.name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: hook
-    app.kubernetes.io/hook-type: post-delete
-    {{- with $hook.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "post-delete") ($hook.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
-    "helm.sh/hook": post-delete
-    "helm.sh/hook-weight": {{ $hook.weight | default 1 | quote }}
-    "helm.sh/hook-delete-policy": {{ $hook.deletePolicy | default "hook-succeeded" }}
-    {{- with $hook.annotations }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
+    {{- $helmAnnotations := dict "helm.sh/hook" "post-delete" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "hook-succeeded") }}
+    {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}

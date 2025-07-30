@@ -5,13 +5,10 @@ metadata:
   name: {{ include "generic.fullname" . }}
   namespace: {{ include "generic.namespace" . }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.vpa.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.vpa.annotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.vpa.labels) | nindent 4 }}
+  {{- if or .Values.vpa.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.vpa.annotations) | nindent 4 }}
   {{- end }}
 spec:
   targetRef:

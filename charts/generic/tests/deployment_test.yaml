@@ -1,6 +1,6 @@
 suite: test deployment
 templates:
-  - core/deployment.yaml
+  - deployment.yaml
 tests:
   - it: should create deployment by default
     set:

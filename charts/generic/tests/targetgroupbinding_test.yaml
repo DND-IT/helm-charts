@@ -1,0 +1,146 @@
+suite: test targetgroupbinding
+templates:
+  - networking/targetgroupbinding.yaml
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render when enabled
+    set:
+      targetGroupBinding.enabled: true
+      targetGroupBinding.targetGroupARN: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-tg/abcdef1234567890"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: TargetGroupBinding
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+      - equal:
+          path: spec.targetGroupARN
+          value: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-tg/abcdef1234567890"
+      - equal:
+          path: spec.serviceRef.name
+          value: RELEASE-NAME
+      - equal:
+          path: spec.serviceRef.port
+          value: "http"
+
+  - it: should support custom service reference
+    set:
+      targetGroupBinding.enabled: true
+      targetGroupBinding.targetGroupARN: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-tg/abcdef1234567890"
+      targetGroupBinding.serviceRef.name: "custom-service"
+      targetGroupBinding.serviceRef.port: 8080
+    asserts:
+      - equal:
+          path: spec.serviceRef.name
+          value: "custom-service"
+      - equal:
+          path: spec.serviceRef.port
+          value: 8080
+
+  - it: should support targetType and ipAddressType
+    set:
+      targetGroupBinding.enabled: true
+      targetGroupBinding.targetGroupARN: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-tg/abcdef1234567890"
+      targetGroupBinding.targetType: "ip"
+      targetGroupBinding.ipAddressType: "dualstack"
+    asserts:
+      - equal:
+          path: spec.targetType
+          value: "ip"
+      - equal:
+          path: spec.ipAddressType
+          value: "dualstack"
+
+  - it: should support networking configuration
+    set:
+      targetGroupBinding.enabled: true
+      targetGroupBinding.targetGroupARN: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-tg/abcdef1234567890"
+      targetGroupBinding.networking:
+        ingress:
+          - from:
+              - securityGroup:
+                  groupID: sg-123456
+            ports:
+              - protocol: TCP
+                port: 80
+    asserts:
+      - equal:
+          path: spec.networking.ingress[0].from[0].securityGroup.groupID
+          value: "sg-123456"
+      - equal:
+          path: spec.networking.ingress[0].ports[0].protocol
+          value: "TCP"
+      - equal:
+          path: spec.networking.ingress[0].ports[0].port
+          value: 80
+
+  - it: should support custom labels and annotations
+    set:
+      targetGroupBinding.enabled: true
+      targetGroupBinding.targetGroupARN: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/test-tg/abcdef1234567890"
+      targetGroupBinding.labels:
+        custom-label: test
+      targetGroupBinding.annotations:
+        custom-annotation: value
+    asserts:
+      - equal:
+          path: metadata.labels.custom-label
+          value: test
+      - equal:
+          path: metadata.annotations.custom-annotation
+          value: value
+
+  - it: should render single extra target group binding
+    set:
+      extraTargetGroupBindings:
+        grpc:
+          enabled: true
+          targetGroupARN: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/grpc-tg/1234567890"
+          serviceRef:
+            name: "grpc-service"
+            port: 50051
+          targetType: "ip"
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-grpc
+      - equal:
+          path: spec.serviceRef.name
+          value: "grpc-service"
+      - equal:
+          path: spec.serviceRef.port
+          value: 50051
+      - equal:
+          path: spec.targetType
+          value: "ip"
+      - equal:
+          path: spec.targetGroupARN
+          value: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/grpc-tg/1234567890"
+
+  - it: should render multiple extra target group bindings
+    set:
+      extraTargetGroupBindings:
+        grpc:
+          enabled: true
+          targetGroupARN: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/grpc-tg/1234567890"
+        admin:
+          enabled: true
+          targetGroupARN: "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/admin-tg/0987654321"
+    asserts:
+      - hasDocuments:
+          count: 2
+      # Just verify we have two TGBs with different names
+      - isKind:
+          of: TargetGroupBinding
+        documentIndex: 0
+      - isKind:
+          of: TargetGroupBinding
+        documentIndex: 1

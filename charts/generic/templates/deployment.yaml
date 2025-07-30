@@ -6,13 +6,10 @@ metadata:
   name: {{ include "generic.fullname" . }}
   namespace: {{ include "generic.namespace" . }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.workloadLabels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.workloadAnnotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.workloadLabels) | nindent 4 }}
+  {{- if or .Values.workloadAnnotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.workloadAnnotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- if not .Values.hpa.enabled }}
@@ -45,14 +42,11 @@ metadata:
   name: {{ include "generic.fullname" $ }}-{{ $name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: {{ $name }}
-    {{- with $deployment.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $deployment.annotations }}
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" $name) ($deployment.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+  {{- if or $deployment.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $deployment.annotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- if not $deployment.hpa }}
@@ -76,5 +70,5 @@ spec:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   template:
-    {{- include "generic.deploymentPodTemplate" (dict "root" $ "deployment" $deployment "componentName" $name) | nindent 4 }}
+    {{- include "generic.podTemplate" (dict "root" $ "config" $deployment "componentName" $name) | nindent 4 }}
 {{- end }}

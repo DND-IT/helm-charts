@@ -96,8 +96,8 @@ lint: validate-chart ## Run chart linting for specified chart
 lint-all: ## Run linting on all charts
 	@echo "Running lint on all charts..."
 	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Linting $chart..."; \
-		$(MAKE) lint CHART=$chart || exit 1; \
+		echo "Linting $$chart..."; \
+		$(MAKE) lint CHART=$$chart || exit 1; \
 	done
 
 # Testing
@@ -109,14 +109,14 @@ test: validate-chart ## Run unit tests for specified chart
 		echo "No tests directory found for $(CHART), skipping unit tests"; \
 	fi
 
-test-all: ## Run tests on all charts
+test-all-charts: ## Run tests on all charts
 	@echo "Running tests on all charts..."
 	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Testing $chart..."; \
-		$(MAKE) test CHART=$chart || exit 1; \
+		echo "Testing $$chart..."; \
+		$(MAKE) test CHART=$$chart || exit 1; \
 	done
 
-test-all: lint-all test-all ## Run all tests on all charts
+test-all: lint-all test-all-charts ## Run all tests on all charts
 
 # Template generation
 template: validate-chart ## Generate templates for specified chart with default values
@@ -157,8 +157,8 @@ template-all: ## Generate templates for all charts
 	@echo "Generating templates for all charts..."
 	@mkdir -p output
 	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Generating templates for $chart..."; \
-		$(MAKE) template-output CHART=$chart RELEASE=$chart-test || exit 1; \
+		echo "Generating templates for $$chart..."; \
+		$(MAKE) template-output CHART=$$chart RELEASE=$$chart-test || exit 1; \
 	done
 
 # Installation
@@ -202,8 +202,8 @@ package-all: ## Package all charts
 	@echo "Packaging all charts..."
 	@mkdir -p packages
 	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Packaging $chart..."; \
-		helm package $(CHART_DIR)/$chart --destination packages/ 2>/dev/null || helm package $chart --destination packages/ || exit 1; \
+		echo "Packaging $$chart..."; \
+		helm package $(CHART_DIR)/$$chart --destination packages/ 2>/dev/null || helm package $$chart --destination packages/ || exit 1; \
 	done
 	@echo "All charts packaged in packages/"
 
@@ -285,8 +285,8 @@ integration-test: validate-chart ## Run integration tests for specified chart
 integration-test-all: ## Run integration tests for all charts
 	@echo "Running integration tests for all charts..."
 	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Testing $chart..."; \
-		$(MAKE) integration-test CHART=$chart NAMESPACE=$chart-test || exit 1; \
+		echo "Testing $$chart..."; \
+		$(MAKE) integration-test CHART=$$chart NAMESPACE=$$chart-test || exit 1; \
 	done
 
 # Validation with kubeconform
@@ -335,8 +335,8 @@ security-scan: validate-chart ## Run security scan on generated manifests for sp
 security-scan-all: ## Run security scan on all charts
 	@echo "Running security scan on all charts..."
 	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Scanning $chart..."; \
-		$(MAKE) security-scan CHART=$chart || exit 1; \
+		echo "Scanning $$chart..."; \
+		$(MAKE) security-scan CHART=$$chart || exit 1; \
 	done
 
 # Cleanup
@@ -396,9 +396,9 @@ kind-install: validate-chart ## Install chart in kind cluster
 kind-test-all: kind-create ## Create kind cluster and test all charts
 	@echo "Testing all charts in kind cluster..."
 	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Testing $chart in kind..."; \
-		$(MAKE) kind-install CHART=$chart RELEASE=$chart-kind-test NAMESPACE=$chart-test || exit 1; \
-		$(MAKE) uninstall RELEASE=$chart-kind-test NAMESPACE=$chart-test || true; \
+		echo "Testing $$chart in kind..."; \
+		$(MAKE) kind-install CHART=$$chart RELEASE=$$chart-kind-test NAMESPACE=$$chart-test || exit 1; \
+		$(MAKE) uninstall RELEASE=$$chart-kind-test NAMESPACE=$$chart-test || true; \
 	done
 
 # Chart dependency management
@@ -418,8 +418,8 @@ dependency-update: validate-chart ## Update chart dependencies
 dependency-update-all: ## Update dependencies for all charts
 	@echo "Updating dependencies for all charts..."
 	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Updating dependencies for $chart..."; \
-		$(MAKE) dependency-update CHART=$chart || exit 1; \
+		echo "Updating dependencies for $$chart..."; \
+		$(MAKE) dependency-update CHART=$$chart || exit 1; \
 	done
 
 # Utility targets
@@ -443,14 +443,14 @@ version: validate-chart ## Show chart version and app version
 version-all: ## Show versions for all charts
 	@echo "Chart versions:"
 	@for chart in $(CHARTS_AVAILABLE); do \
-		if [ -d "$(CHART_DIR)/$chart" ]; then \
-			chart_path="$(CHART_DIR)/$chart"; \
+		if [ -d "$(CHART_DIR)/$$chart" ]; then \
+			chart_path="$(CHART_DIR)/$$chart"; \
 		else \
-			chart_path="$chart"; \
+			chart_path="$$chart"; \
 		fi; \
-		version=$(helm show chart $chart_path | grep '^version:' | cut -d' ' -f2); \
-		app_version=$(helm show chart $chart_path | grep '^appVersion:' | cut -d' ' -f2); \
-		printf "  %-20s %s (app: %s)\n" "$chart" "$version" "$app_version"; \
+		version=$(helm show chart $$chart_path | grep '^version:' | cut -d' ' -f2); \
+		app_version=$(helm show chart $$chart_path | grep '^appVersion:' | cut -d' ' -f2); \
+		printf "  %-20s %s (app: %s)\n" "$$chart" "$version" "$app_version"; \
 	done
 
 # CI/CD helpers

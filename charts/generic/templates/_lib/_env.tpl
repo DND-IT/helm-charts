@@ -98,8 +98,26 @@ Environment from sources (ConfigMaps and Secrets)
     {{- $envFromSources = append $envFromSources $source -}}
   {{- end -}}
 {{- end -}}
+{{/* External Secrets */}}
+{{- range $name, $config := .Values.externalSecrets -}}
+  {{- if and $config.enabled $config.envFrom -}}
+    {{- $secretName := $name -}}
+    {{- if and $config.target $config.target.name -}}
+      {{- $secretName = $config.target.name -}}
+    {{- end -}}
+    {{- $source := dict "secretRef" (dict "name" $secretName) -}}
+    {{- if $config.prefix -}}
+      {{- $_ := set $source "prefix" $config.prefix -}}
+    {{- end -}}
+    {{- $envFromSources = append $envFromSources $source -}}
+  {{- end -}}
+{{- end -}}
 {{/* Custom envFrom */}}
 {{- with .Values.envFrom -}}
+  {{- $envFromSources = concat $envFromSources . -}}
+{{- end -}}
+{{/* Extra envFrom */}}
+{{- with .Values.extraEnvFrom -}}
   {{- $envFromSources = concat $envFromSources . -}}
 {{- end -}}
 {{/* Output */}}

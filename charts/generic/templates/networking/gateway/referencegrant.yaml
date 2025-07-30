@@ -5,13 +5,10 @@ metadata:
   name: {{ include "generic.fullname" . }}
   namespace: {{ include "generic.namespace" . }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.gateway.referenceGrant.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.gateway.referenceGrant.annotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.gateway.referenceGrant.labels) | nindent 4 }}
+  {{- if or .Values.gateway.referenceGrant.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.gateway.referenceGrant.annotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- with .Values.gateway.referenceGrant.from }}
@@ -44,13 +41,10 @@ metadata:
   name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    {{- with $grant.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $grant.annotations }}
+    {{- include "generic.labels" (dict "context" $ "labels" $grant.labels) | nindent 4 }}
+  {{- if or $grant.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $grant.annotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- with $grant.from }}

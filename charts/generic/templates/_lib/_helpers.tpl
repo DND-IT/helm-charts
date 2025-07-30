@@ -34,15 +34,29 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "generic.labels" -}}
-helm.sh/chart: {{ include "generic.chart" . }}
-{{ include "generic.selectorLabels" . }}
-{{- if .Values.generic.version }}
-app.kubernetes.io/version: {{ .Values.generic.version | quote }}
-{{- else if .Chart.AppVersion }}
-app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
+{{- $context := .context | default . -}}
+{{- $labels := .labels | default dict -}}
+helm.sh/chart: {{ include "generic.chart" $context }}
+{{ include "generic.selectorLabels" $context }}
+app.kubernetes.io/managed-by: {{ $context.Release.Service }}
+{{- with $context.Values.commonLabels }}
+{{ toYaml . }}
 {{- end }}
-app.kubernetes.io/managed-by: {{ .Release.Service }}
-{{- with .Values.global.labels }}
+{{- with $labels }}
+{{ toYaml . }}
+{{- end }}
+{{- end }}
+
+{{/*
+Common annotations
+*/}}
+{{- define "generic.annotations" -}}
+{{- $context := .context | default . -}}
+{{- $annotations := .annotations | default dict -}}
+{{- with $context.Values.commonAnnotations }}
+{{ toYaml . }}
+{{- end }}
+{{- with $annotations }}
 {{ toYaml . }}
 {{- end }}
 {{- end }}
