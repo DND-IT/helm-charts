@@ -207,7 +207,56 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.0/custom-resources-0.1.0.tgz
     version: 0.1.0
+  datadog-resources:
+  - annotations:
+      category: Monitoring
+    apiVersion: v2
+    appVersion: 1.0.0
+    created: "2025-07-30T14:23:50.504579748Z"
+    description: A Helm chart for managing Datadog custom resources (monitors, dashboards,
+      SLOs)
+    digest: df3187f6668efe2afbb0549b313e3f1bdc5b0441bb092808cca5272fbdc0fcc4
+    home: https://github.com/DND-IT/helm-charts
+    keywords:
+    - datadog
+    - monitoring
+    - observability
+    - apm
+    - metrics
+    maintainers:
+    - email: platform@example.com
+      name: Platform Team
+    name: datadog-resources
+    sources:
+    - https://github.com/DND-IT/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/datadog-resources-0.1.0/datadog-resources-0.1.0.tgz
+    version: 0.1.0
   generic:
+  - apiVersion: v2
+    created: "2025-07-30T14:23:50.669718743Z"
+    description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
+      workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
+      options. Designed for maximum flexibility while maintaining security best practices
+      by default. Optimized for AWS with ALB ingress controller support. '
+    digest: e72ab52127be9a696851f7a1b3e77167dd3c0ab86d67ef6decf7ffbb40f00e40
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - application
+    - kubernetes
+    - generic
+    kubeVersion: '>=1.29.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: generic
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/generic-0.0.3/generic-0.0.3.tgz
+    version: 0.0.3
   - apiVersion: v2
     created: "2025-07-29T10:38:45.408260012Z"
     description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
@@ -488,4 +537,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2025-07-29T10:38:45.408370953Z"
+generated: "2025-07-30T14:23:50.669807674Z"
