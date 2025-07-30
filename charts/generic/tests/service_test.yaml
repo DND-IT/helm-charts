@@ -1,6 +1,6 @@
 suite: test service
 templates:
-  - core/service.yaml
+  - service.yaml
 tests:
   - it: should create service by default
     asserts:

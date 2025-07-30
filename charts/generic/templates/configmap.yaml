@@ -5,13 +5,10 @@ metadata:
   name: {{ include "generic.configMapName" . }}
   namespace: {{ include "generic.namespace" . }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.configMap.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.configMap.annotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.configMap.labels) | nindent 4 }}
+  {{- if or .Values.configMap.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.configMap.annotations) | nindent 4 }}
   {{- end }}
 {{- if or .Values.configMap.data .Values.configMap.binaryData }}
 {{- with .Values.configMap.data }}
@@ -43,13 +40,10 @@ metadata:
   name: {{ $name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    {{- with $configMap.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $configMap.annotations }}
+    {{- include "generic.labels" (dict "context" $ "labels" $configMap.labels) | nindent 4 }}
+  {{- if or $configMap.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $configMap.annotations) | nindent 4 }}
   {{- end }}
 {{- if or $configMap.data $configMap.binaryData $configMap.files }}
 {{- if or $configMap.data $configMap.files }}

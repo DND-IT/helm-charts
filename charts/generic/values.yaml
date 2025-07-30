@@ -1,10 +1,9 @@
 # Default values for generic chart
 # This is a YAML-formatted file with secure defaults
 
-# Global settings
-global:
-  labels: {}
-  annotations: {}
+# Common labels and annotations applied to all resources
+commonLabels: {}
+commonAnnotations: {}
 
 generic:
   # Values for templating - use these in other template expressions
@@ -231,6 +230,16 @@ restartPolicy: null
 commonEnvVars: false  # Set to true to inject POD_NAME, POD_NAMESPACE, etc.
 env: []
 envFrom: []
+# Extra environment sources to be added in addition to automatic envFrom
+# This is useful when you want to keep the automatic envFrom behavior
+# (for configMaps/secrets with envFrom: true) while adding additional sources
+extraEnvFrom: []
+# extraEnvFrom:
+#   - secretRef:
+#       name: my-external-secret
+#   - configMapRef:
+#       name: my-external-configmap
+#       optional: true
 
 # Scheduling
 nodeSelector: {}
@@ -396,7 +405,7 @@ extraServices: {}
 # Ingress configuration
 ingress:
   enabled: false
-  className: "alb"
+  ingressClassName: "alb"
   labels: {}
   annotations: {}
   # Example ALB annotations for AWS Load Balancer Controller
@@ -438,7 +447,7 @@ ingress:
 extraIngresses: {}
 # admin:
 #   enabled: true
-#   className: nginx
+#   ingressClassName: nginx
 #   annotations: {}
 #   hosts:
 #   - host: admin.example.com
@@ -581,8 +590,6 @@ emptyDirVolumes: {}
 #   medium: Memory
 #   sizeLimit: 1Gi
 #   mountPath: /tmp
-# Example: Fix for nginx permission errors when running as non-root
-# IMPORTANT: Standard nginx images need these directories to be writable
 # nginx-cache:
 #   mountPath: /var/cache/nginx
 #   sizeLimit: 100Mi
@@ -592,10 +599,6 @@ emptyDirVolumes: {}
 # nginx-pid:
 #   mountPath: /tmp
 #   sizeLimit: 10Mi
-# Note: For nginx, also consider:
-# 1. Using nginxinc/nginx-unprivileged image (recommended)
-# 2. Setting runAsUser: 101 (nginx user in Alpine images)
-# 3. Or use bitnami/nginx which handles non-root better
 # Example: In-memory cache for better performance
 # app-cache:
 #   medium: Memory  # Uses RAM instead of disk
@@ -1093,6 +1096,47 @@ externalSecrets: {}
   #     - extract:
   #         key: prod/api/config
   #
+  #   # Use all keys from the created secret as environment variables
+  #   envFrom: true
+  #   # Optional: prefix all env vars from this secret
+  #   prefix: AWS_
+
+# AWS Target Group Binding (for AWS Load Balancer Controller)
+targetGroupBinding:
+  enabled: false
+  labels: {}
+  annotations: {}
+  # Target Group ARN from AWS
+  targetGroupARN: ""
+  # Service reference
+  serviceRef:
+    # Service name (defaults to release name)
+    name: ""
+    # Service port name or number
+    port: "http"
+  # Target type: instance (default) or ip
+  targetType: ""
+  # IP address type: ipv4 (default) or dualstack
+  ipAddressType: ""
+  # Networking configuration
+  networking: {}
+  # ingress:
+  # - from:
+  #   - securityGroup:
+  #       groupID: sg-123456
+  #   ports:
+  #   - protocol: TCP
+  #     port: 80
+
+# Extra Target Group Bindings
+extraTargetGroupBindings: {}
+# grpc-service:
+#   enabled: true
+#   targetGroupARN: arn:aws:elasticloadbalancing:region:account:targetgroup/grpc-tg/1234567890
+#   serviceRef:
+#     name: my-grpc-service
+#     port: 50051
+#   targetType: ip
 
 # Extra Kubernetes objects
 extraObjects: []

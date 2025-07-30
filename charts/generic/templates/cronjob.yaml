@@ -7,14 +7,11 @@ metadata:
   name: {{ include "generic.fullname" $ }}-{{ $name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    app.kubernetes.io/component: {{ $name }}
-    {{- with $cronjob.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $cronjob.annotations }}
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" $name) ($cronjob.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+  {{- if or $cronjob.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $cronjob.annotations) | nindent 4 }}
   {{- end }}
 spec:
   schedule: {{ $cronjob.schedule | quote }}
@@ -39,14 +36,11 @@ spec:
   jobTemplate:
     metadata:
       labels:
-        {{- include "generic.labels" $ | nindent 8 }}
-        app.kubernetes.io/component: {{ $name }}
-        {{- with $cronjob.jobLabels }}
-        {{- toYaml . | nindent 8 }}
-        {{- end }}
-      {{- with $cronjob.jobAnnotations }}
+        {{- $extraJobLabels := merge (dict "app.kubernetes.io/component" $name) ($cronjob.jobLabels | default dict) }}
+        {{- include "generic.labels" (dict "context" $ "labels" $extraJobLabels) | nindent 8 }}
+      {{- if or $cronjob.jobAnnotations $.Values.commonAnnotations }}
       annotations:
-        {{- toYaml . | nindent 8 }}
+        {{- include "generic.annotations" (dict "context" $ "annotations" $cronjob.jobAnnotations) | nindent 8 }}
       {{- end }}
     spec:
       {{- with $cronjob.backoffLimit }}
@@ -74,14 +68,11 @@ spec:
       template:
         metadata:
           labels:
-            {{- include "generic.labels" $ | nindent 12 }}
-            app.kubernetes.io/component: {{ $name }}
-            {{- with $cronjob.podLabels }}
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-          {{- with $cronjob.podAnnotations }}
+            {{- $extraPodLabels := merge (dict "app.kubernetes.io/component" $name) ($cronjob.podLabels | default dict) }}
+            {{- include "generic.labels" (dict "context" $ "labels" $extraPodLabels) | nindent 12 }}
+          {{- if or $cronjob.podAnnotations $.Values.commonAnnotations }}
           annotations:
-            {{- toYaml . | nindent 12 }}
+            {{- include "generic.annotations" (dict "context" $ "annotations" $cronjob.podAnnotations) | nindent 12 }}
           {{- end }}
         spec:
           {{- if $cronjob.imagePullSecrets }}

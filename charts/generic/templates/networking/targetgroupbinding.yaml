@@ -1,0 +1,65 @@
+{{- if .Values.targetGroupBinding.enabled -}}
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: {{ include "generic.fullname" . }}
+  namespace: {{ include "generic.namespace" . }}
+  labels:
+    {{- include "generic.labels" (dict "context" . "labels" .Values.targetGroupBinding.labels) | nindent 4 }}
+  {{- if or .Values.targetGroupBinding.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.targetGroupBinding.annotations) | nindent 4 }}
+  {{- end }}
+spec:
+  serviceRef:
+    name: {{ .Values.targetGroupBinding.serviceRef.name | default (include "generic.fullname" .) }}
+    port: {{ .Values.targetGroupBinding.serviceRef.port | default "http" }}
+  targetGroupARN: {{ .Values.targetGroupBinding.targetGroupARN }}
+  {{- with .Values.targetGroupBinding.targetType }}
+  targetType: {{ . }}
+  {{- end }}
+  {{- with .Values.targetGroupBinding.ipAddressType }}
+  ipAddressType: {{ . }}
+  {{- end }}
+  {{- with .Values.targetGroupBinding.networking }}
+  networking:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- range $name, $binding := .Values.extraTargetGroupBindings }}
+{{- if $binding.enabled }}
+---
+apiVersion: elbv2.k8s.aws/v1beta1
+kind: TargetGroupBinding
+metadata:
+  name: {{ include "generic.fullname" $ }}-{{ $name }}
+  namespace: {{ include "generic.namespace" $ }}
+  labels:
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" $name) ($binding.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+  {{- if or $binding.annotations $.Values.commonAnnotations }}
+  annotations:
+    {{- include "generic.annotations" (dict "context" $ "annotations" $binding.annotations) | nindent 4 }}
+  {{- end }}
+spec:
+  serviceRef:
+    {{- if $binding.serviceRef }}
+    name: {{ $binding.serviceRef.name | default (include "generic.fullname" $) }}
+    port: {{ $binding.serviceRef.port | default "http" }}
+    {{- else }}
+    name: {{ include "generic.fullname" $ }}
+    port: "http"
+    {{- end }}
+  targetGroupARN: {{ $binding.targetGroupARN }}
+  {{- with $binding.targetType }}
+  targetType: {{ . }}
+  {{- end }}
+  {{- with $binding.ipAddressType }}
+  ipAddressType: {{ . }}
+  {{- end }}
+  {{- with $binding.networking }}
+  networking:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}

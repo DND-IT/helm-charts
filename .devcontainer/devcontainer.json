@@ -1,7 +1,8 @@
 {
   "name": "dnd-it/helm-charts",
   "build": {
-    "dockerfile": "Dockerfile"
+    "dockerfile": "Dockerfile",
+    "context": "."
   },
   "init": true,
   "mounts": [

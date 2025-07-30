@@ -1,0 +1,58 @@
+{{- if .Capabilities.APIVersions.Has "datadoghq.com/v1alpha1/DatadogDowntime" }}
+{{- range $name, $downtime := .Values.downtimes }}
+{{- if $downtime.enabled }}
+---
+apiVersion: datadoghq.com/v1alpha1
+kind: DatadogDowntime
+metadata:
+  name: {{ include "datadog-resources.fullname" $ }}-{{ $name }}
+  namespace: {{ include "datadog-resources.namespace" $ }}
+  labels:
+    {{- include "datadog-resources.labels" $ | nindent 4 }}
+    datadog.resource.type: downtime
+    datadog.downtime.name: {{ $name }}
+    {{- with $downtime.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $downtime.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $downtime.scope }}
+  scope: {{ . | quote }}
+  {{- end }}
+  {{- with $downtime.start }}
+  start: {{ . | quote }}
+  {{- end }}
+  {{- with $downtime.end }}
+  end: {{ . | quote }}
+  {{- end }}
+  {{- with $downtime.timezone }}
+  timezone: {{ . | quote }}
+  {{- end }}
+  {{- with $downtime.message }}
+  message: {{ . | quote }}
+  {{- end }}
+  {{- with $downtime.monitorId }}
+  monitorId: {{ . }}
+  {{- end }}
+  {{- with $downtime.monitorTags }}
+  monitorTags:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $downtime.recurrence }}
+  recurrence:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $downtime.notifyEndStates }}
+  notifyEndStates:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $downtime.notifyEndTypes }}
+  notifyEndTypes:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

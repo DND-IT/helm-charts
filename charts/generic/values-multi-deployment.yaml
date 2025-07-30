@@ -1,0 +1,175 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/dnd-it/helm-charts/main/charts/generic/values.schema.json
+# Example: Multi-deployment configuration
+
+commonLabels:
+  environment: dev
+  managed-by: helm
+
+commonAnnotations:
+  deployment.kubernetes.io/revision: "1"
+  team: platform
+
+serviceAccount:
+  create: true
+  name: gazette
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::975049962631:role/gazette-20241216163246281100000001
+
+image:
+  repository: 975049962631.dkr.ecr.eu-central-1.amazonaws.com/discovery-gazette
+  tag: latest
+  pullPolicy: IfNotPresent
+
+podLabels:
+  tags.datadoghq.com/env: dev-discovery
+  tags.datadoghq.com/service: gazette
+  tags.datadoghq.com/version: git-
+
+configMap:
+  enabled: true
+  envFrom: true
+  data:
+    DATABASE_HOST: "localhost"
+    API_KEY: "mykey"
+
+
+extraConfigMaps:
+  foo:
+    envFrom: true
+    data:
+      app.properties: |
+        server.port=8080
+
+resources:
+  limits:
+    cpu: 1000m
+    memory: 2000Mi
+  requests:
+    cpu: 500m
+    memory: 400Mi
+
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: http
+readinessProbe:
+  httpGet:
+    path: /api/health
+    port: http
+
+hpa:
+  enabled: true
+  minReplicas: 1
+  maxReplicas: 20
+  targetCPUUtilizationPercentage: 80
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: "50%"
+
+service:
+  enabled: true
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 80
+      targetPort: 8080
+
+nodeSelector:
+  kubernetes.io/arch: amd64
+
+# External Secrets configuration
+externalSecrets:
+  rdscredentials:
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: aws-secretsmanager
+      kind: ClusterSecretStore
+    target:
+      name: gazette-rdscredentials
+      creationPolicy: Owner
+    dataFrom:
+      - extract:
+          key: discovery/gazette/rdsCredentials
+    # Load all secret keys as environment variables
+    envFrom: true
+  appsecrets:
+    enabled: true
+    refreshInterval: 1h
+    secretStoreRef:
+      name: secretsmanager
+      kind: ClusterSecretStore
+    dataFrom:
+      - extract:
+          key: discovery/gazette/appSecrets
+    # Load all secret keys as environment variables
+    envFrom: true
+
+# extraEnvFrom no longer needed - external secrets with envFrom: true are automatically included
+# extraEnvFrom:
+#   - secretRef:
+#       name: gazette-rdscredentials
+#   - secretRef:
+#       name: gazette-appsecrets
+
+# AWS Target Group Binding for ALB
+targetGroupBinding:
+  enabled: true
+  targetGroupARN: arn:aws:elasticloadbalancing:eu-central-1:975049962631:targetgroup/gazette-discovery-66d6cfeb/e4f6595792171a3e
+
+# Additional deployments for Celery
+extraDeployments:
+  celery-beat:
+    enabled: true
+    image:
+      repository: 975049962631.dkr.ecr.eu-central-1.amazonaws.com/discovery-gazette
+      tag: latest
+    command:
+      - celery
+      - -A
+      - tasks
+      - beat
+      - --loglevel=INFO
+    resources:
+      limits:
+        cpu: 500m
+        memory: 512Mi
+      requests:
+        cpu: 100m
+        memory: 256Mi
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    podLabels:
+      tags.datadoghq.com/env: dev-discovery
+      tags.datadoghq.com/service: gazette-celery-beat
+      tags.datadoghq.com/version: git-
+    # envFrom is now automatically handled by external secrets with envFrom: true
+
+  celery-worker:
+    enabled: true
+    image:
+      repository: 975049962631.dkr.ecr.eu-central-1.amazonaws.com/discovery-gazette
+      tag: latest
+    command:
+      - celery
+      - -A
+      - tasks
+      - worker
+      - --loglevel=INFO
+      - --uid=nobody
+      - --gid=nogroup
+    resources:
+      limits:
+        cpu: 1000m
+        memory: 1024Mi
+      requests:
+        cpu: 200m
+        memory: 512Mi
+    nodeSelector:
+      kubernetes.io/arch: amd64
+    podLabels:
+      tags.datadoghq.com/env: dev-discovery
+      tags.datadoghq.com/service: gazette-celery-worker
+      tags.datadoghq.com/version: git-
+    # envFrom is now automatically handled by external secrets with envFrom: true

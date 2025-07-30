@@ -1,6 +1,6 @@
 suite: test sidecar containers
 templates:
-  - core/deployment.yaml
+  - deployment.yaml
 tests:
   - it: should not render sidecar containers by default
     asserts:

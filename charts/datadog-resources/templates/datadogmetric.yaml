@@ -1,0 +1,36 @@
+{{- if .Capabilities.APIVersions.Has "datadoghq.com/v1alpha1/DatadogMetric" }}
+{{- range $name, $metric := .Values.metrics }}
+{{- if $metric.enabled }}
+---
+apiVersion: datadoghq.com/v1alpha1
+kind: DatadogMetric
+metadata:
+  name: {{ include "datadog-resources.fullname" $ }}-{{ $name }}
+  namespace: {{ include "datadog-resources.namespace" $ }}
+  labels:
+    {{- include "datadog-resources.labels" $ | nindent 4 }}
+    datadog.resource.type: metric
+    datadog.metric.name: {{ $name }}
+    {{- with $metric.labels }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- with $metric.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $metric.query }}
+  query: {{ . | quote }}
+  {{- end }}
+  {{- with $metric.maxAge }}
+  maxAge: {{ . }}
+  {{- end }}
+  {{- with $metric.externalMetricName }}
+  externalMetricName: {{ . | quote }}
+  {{- end }}
+  {{- with $metric.returnOnlyMatched }}
+  returnOnlyMatched: {{ . }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}

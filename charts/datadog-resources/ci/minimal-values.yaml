@@ -1,0 +1,10 @@
+# Minimal values for testing datadog-resources chart
+
+# Test with just one monitor enabled
+monitors:
+  simple-monitor:
+    enabled: true
+    name: "Simple Test Monitor"
+    type: "metric alert"
+    query: "avg(last_5m):avg:system.cpu.user{*} > 50"
+    message: "CPU usage is high"

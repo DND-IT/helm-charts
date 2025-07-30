@@ -20,7 +20,7 @@ tests:
   - it: should set ingress class name
     set:
       ingress.enabled: true
-      ingress.className: nginx
+      ingress.ingressClassName: nginx
     capabilities:
       apiVersions:
         - networking.k8s.io/v1

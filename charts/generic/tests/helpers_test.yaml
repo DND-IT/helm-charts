@@ -1,6 +1,6 @@
 suite: test helpers
 templates:
-  - core/deployment.yaml  # Use deployment as it uses most helpers
+  - deployment.yaml  # Use deployment as it uses most helpers
 tests:
   - it: should generate correct fullname
     asserts:
@@ -28,7 +28,7 @@ tests:
     asserts:
       - equal:
           path: metadata.labels["helm.sh/chart"]
-          value: generic-0.0.2
+          value: generic-0.0.3
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
           value: generic
@@ -39,9 +39,9 @@ tests:
           path: metadata.labels["app.kubernetes.io/managed-by"]
           value: Helm
 
-  - it: should include global labels
+  - it: should include common labels
     set:
-      global.labels:
+      commonLabels:
         environment: production
         team: platform
     asserts:

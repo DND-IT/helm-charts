@@ -25,7 +25,7 @@ Each test file follows this structure:
 ```yaml
 suite: test suite name        # Name of the test suite
 templates:                    # List of templates to test
-  - core/deployment.yaml      # Path relative to templates/
+  - deployment.yaml           # Path relative to templates/
 tests:                       # List of test cases
   - it: should do something  # Test description
     set:                     # Optional: Set values

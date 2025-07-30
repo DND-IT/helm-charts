@@ -8,13 +8,10 @@ metadata:
   name: {{ $serviceName }}
   namespace: {{ include "generic.namespace" . }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.service.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.service.annotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.service.labels) | nindent 4 }}
+  {{- if or .Values.service.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.service.annotations) | nindent 4 }}
   {{- end }}
 spec:
   type: {{ $serviceType }}
@@ -113,13 +110,10 @@ metadata:
   name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    {{- with $service.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $service.annotations }}
+    {{- include "generic.labels" (dict "context" $ "labels" $service.labels) | nindent 4 }}
+  {{- if or $service.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $service.annotations) | nindent 4 }}
   {{- end }}
 spec:
   type: {{ $service.type | default "ClusterIP" }}

@@ -1,0 +1,89 @@
+# Example values for testing datadog-resources chart
+
+commonLabels:
+  team: platform
+  environment: test
+
+monitors:
+  cpu-high:
+    enabled: true
+    name: "Test CPU High Alert"
+    type: "metric alert"
+    query: "avg(last_5m):avg:kubernetes.cpu.usage.total{*} by {pod_name} > 0.8"
+    message: |
+      Test alert: CPU usage is above 80% for pod {{pod_name.name}}
+    tags:
+      - "team:platform"
+      - "severity:warning"
+      - "test:true"
+    priority: 3
+    options:
+      thresholds:
+        critical: 0.9
+        warning: 0.8
+      notifyNoData: true
+      noDataTimeframe: 10
+
+  memory-high:
+    enabled: true
+    name: "Test Memory High Alert"
+    type: "metric alert"
+    query: "avg(last_5m):avg:kubernetes.memory.usage{*} by {pod_name} > 0.85"
+    message: "Test alert: Memory usage is above 85%"
+    tags:
+      - "team:platform"
+      - "severity:critical"
+    priority: 2
+
+slos:
+  api-availability:
+    enabled: true
+    name: "Test API Availability SLO"
+    description: "99.9% availability test"
+    type: "metric"
+    targetThreshold: "99.9"
+    timeframe: "30d"
+    warningThreshold: "99.95"
+    tags:
+      - "team:platform"
+      - "service:api"
+      - "test:true"
+    query:
+      numerator: "sum:http.requests{service:api,status_code:2xx}.as_count()"
+      denominator: "sum:http.requests{service:api}.as_count()"
+
+metrics:
+  queue-size:
+    enabled: true
+    query: "avg:redis.queue.size{queue:test}"
+    externalMetricName: "test_redis_queue_size"
+    maxAge: 120
+
+dashboards:
+  test-dashboard:
+    enabled: true
+    title: "Test Application Dashboard"
+    description: "Test dashboard for CI"
+    layout_type: "ordered"
+    is_read_only: false
+    widgets:
+      - definition:
+          title: "Test Request Rate"
+          type: "timeseries"
+          requests:
+            - q: "sum:http.requests{env:test} by {service}.as_rate()"
+              displayType: "line"
+        layout:
+          x: 0
+          y: 0
+          width: 4
+          height: 2
+
+downtimes:
+  test-maintenance:
+    enabled: true
+    scope: "host:test-*"
+    start: "2025-01-01T02:00:00Z"
+    end: "2025-01-01T04:00:00Z"
+    message: "Test maintenance window"
+    monitorTags: ["test:true"]

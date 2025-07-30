@@ -9,13 +9,10 @@ metadata:
   name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    {{- with $pvc.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $pvc.annotations }}
+    {{- include "generic.labels" (dict "context" $ "labels" $pvc.labels) | nindent 4 }}
+  {{- if or $pvc.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $pvc.annotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- if $pvc.accessModes }}
@@ -66,13 +63,10 @@ metadata:
   name: {{ include "generic.pvcName" . }}
   namespace: {{ include "generic.namespace" . }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.persistence.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.persistence.annotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.persistence.labels) | nindent 4 }}
+  {{- if or .Values.persistence.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.persistence.annotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- if .Values.persistence.accessModes }}

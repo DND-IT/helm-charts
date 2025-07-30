@@ -10,13 +10,10 @@ metadata:
   namespace: {{ include "generic.namespace" . }}
   {{- end }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.rbac.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.rbac.annotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.rbac.labels) | nindent 4 }}
+  {{- if or .Values.rbac.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.rbac.annotations) | nindent 4 }}
   {{- end }}
 {{- if .Values.rbac.aggregationRule }}
 aggregationRule:
@@ -34,13 +31,10 @@ metadata:
   namespace: {{ include "generic.namespace" . }}
   {{- end }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.rbac.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.rbac.annotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.rbac.labels) | nindent 4 }}
+  {{- if or .Values.rbac.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.rbac.annotations) | nindent 4 }}
   {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -67,13 +61,10 @@ metadata:
   namespace: {{ include "generic.namespace" $ }}
   {{- end }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    {{- with $role.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $role.annotations }}
+    {{- include "generic.labels" (dict "context" $ "labels" $role.labels) | nindent 4 }}
+  {{- if or $role.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $role.annotations) | nindent 4 }}
   {{- end }}
 {{- if $role.aggregationRule }}
 aggregationRule:
@@ -92,13 +83,10 @@ metadata:
   namespace: {{ include "generic.namespace" $ }}
   {{- end }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    {{- with $role.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $role.annotations }}
+    {{- include "generic.labels" (dict "context" $ "labels" $role.labels) | nindent 4 }}
+  {{- if or $role.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $role.annotations) | nindent 4 }}
   {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io

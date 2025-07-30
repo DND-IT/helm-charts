@@ -217,52 +217,6 @@ extraDeployments:
         containerPort: 8080
 ```
 
-## Upgrading
-
-### Breaking Changes in v0.0.2
-
-1. **Workload Structure Changed**:
-   - Removed `workload.type` configuration
-   - StatefulSet and DaemonSet no longer supported
-   - Use `deployment.enabled`, `cronjobs`, and `jobs` instead
-
-2. **Monitoring Resources Removed**:
-   - ServiceMonitor, PodMonitor, PrometheusRule removed
-   - Datadog custom resources moved to separate `datadog-resources` chart
-
-3. **Ingress Controller**:
-   - Removed `ingress.controller` field
-   - Only ALB ingress controller is supported
-   - Removed `ingress.nginx` configuration section
-
-### Migration Guide
-
-```yaml
-# Old structure
-workload:
-  type: deployment
-  enabled: true
-  replicas: 3
-
-# New structure
-deployment:
-  enabled: true
-  replicas: 3
-
-# Old CronJob
-workload:
-  type: cronjob
-  schedule: "0 * * * *"
-
-# New CronJob
-deployment:
-  enabled: false
-cronjobs:
-  mycron:
-    enabled: true
-    schedule: "0 * * * *"
-```
-
 {{ template "chart.homepageLine" . }}
 
 {{ template "chart.maintainersSection" . }}

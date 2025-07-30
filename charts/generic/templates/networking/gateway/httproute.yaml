@@ -5,13 +5,10 @@ metadata:
   name: {{ include "generic.fullname" . }}
   namespace: {{ include "generic.namespace" . }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    {{- with .Values.gateway.httpRoute.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.gateway.httpRoute.annotations }}
+    {{- include "generic.labels" (dict "context" . "labels" .Values.gateway.httpRoute.labels) | nindent 4 }}
+  {{- if or .Values.gateway.httpRoute.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.gateway.httpRoute.annotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- if .Values.gateway.httpRoute.parentRefs }}
@@ -256,13 +253,10 @@ metadata:
   name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
   namespace: {{ include "generic.namespace" $ }}
   labels:
-    {{- include "generic.labels" $ | nindent 4 }}
-    {{- with $route.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with $route.annotations }}
+    {{- include "generic.labels" (dict "context" $ "labels" $route.labels) | nindent 4 }}
+  {{- if or $route.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" $ "annotations" $route.annotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- with $route.parentRefs }}

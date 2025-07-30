@@ -5,20 +5,18 @@ kind: Namespace
 metadata:
   name: {{ include "generic.namespace" . }}
   labels:
-    {{- include "generic.labels" . | nindent 4 }}
-    pod-security.kubernetes.io/enforce: {{ .Values.podSecurity.podSecurityStandards.enforce }}
+    {{- $extraLabels := dict "pod-security.kubernetes.io/enforce" .Values.podSecurity.podSecurityStandards.enforce }}
     {{- if .Values.podSecurity.podSecurityStandards.audit }}
-    pod-security.kubernetes.io/audit: {{ .Values.podSecurity.podSecurityStandards.audit }}
+    {{- $_ := set $extraLabels "pod-security.kubernetes.io/audit" .Values.podSecurity.podSecurityStandards.audit }}
     {{- end }}
     {{- if .Values.podSecurity.podSecurityStandards.warn }}
-    pod-security.kubernetes.io/warn: {{ .Values.podSecurity.podSecurityStandards.warn }}
+    {{- $_ := set $extraLabels "pod-security.kubernetes.io/warn" .Values.podSecurity.podSecurityStandards.warn }}
     {{- end }}
-    {{- with .Values.podSecurity.podSecurityStandards.labels }}
-    {{- toYaml . | nindent 4 }}
-    {{- end }}
-  {{- with .Values.podSecurity.podSecurityStandards.annotations }}
+    {{- $allLabels := merge $extraLabels (.Values.podSecurity.podSecurityStandards.labels | default dict) }}
+    {{- include "generic.labels" (dict "context" . "labels" $allLabels) | nindent 4 }}
+  {{- if or .Values.podSecurity.podSecurityStandards.annotations .Values.commonAnnotations }}
   annotations:
-    {{- toYaml . | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.podSecurity.podSecurityStandards.annotations) | nindent 4 }}
   {{- end }}
 {{- end }}
 {{- end }}

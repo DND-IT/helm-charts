@@ -37,6 +37,15 @@ initContainers:
         cpu: "1m"
         memory: "4Mi"
 
+sidecarContainers:
+  - name: sidecar-log
+    image: busybox:1.36
+    command: ["sh", "-c", "while true; do echo 'Sidecar log running'; sleep 30; done"]
+    resources:
+      requests:
+        cpu: "1m"
+        memory: "4Mi"
+
 # Gateway API
 gateway:
   httpRoute:
