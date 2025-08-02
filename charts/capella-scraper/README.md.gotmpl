@@ -1,0 +1,42 @@
+{{ template "chart.header" . }}
+{{ template "chart.deprecationWarning" . }}
+
+{{ template "chart.badgesSection" . }}
+
+{{ template "chart.description" . }}
+
+## Usage
+
+
+```hcl
+resource "helm_release" "capella_scraper" {
+  name       = "capella-scraper"
+  repository = "https://dnd-it.github.io/helm-charts"
+  chart      = "capella-scraper"
+  version    = "0.1.0"
+  namespace  = "monitoring"
+
+  values = [
+    yamlencode({
+      image_repo = var.capella_container_registry_url
+      image_tag  = var.capella_image_tag
+
+      capellaFQDN = var.capella_FQDN
+      jobName     = "feed-capella-${var.environment}"
+      scrapeUser  = var.capella_scrape_user
+      scrapePass  = var.capella_scrape_pass
+
+      serviceAccountName = "prometheus-operator-kube-p-operator"  # Must exist in namespace
+    })
+  ]
+}
+```
+{{ template "chart.homepageLine" . }}
+
+{{ template "chart.maintainersSection" . }}
+
+{{ template "chart.sourcesSection" . }}
+
+{{ template "chart.requirementsSection" . }}
+
+{{ template "chart.valuesSection" . }}

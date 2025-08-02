@@ -1,0 +1,30 @@
+# Default values for capella-scraper.
+
+# Container image configuration
+image_repo: ""
+image_tag: ""
+image_pull_policy: Always
+
+# Capella configuration
+capellaFQDN: ""
+jobName: ""
+scrapeUser: ""
+scrapePass: ""
+
+# Service configuration
+service:
+  port: 8080
+  targetPort: 8080
+
+# Service account name (required - must exist in the namespace)
+# For production: typically "prometheus-operator-kube-p-operator"
+serviceAccountName: ""
+
+# Resource limits and requests
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "100m"
+  limits:
+    memory: "1024Mi"
+    cpu: "500m"
