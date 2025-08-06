@@ -20,6 +20,8 @@ tests:
         production-class:
           enabled: true
           amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       # EC2NodeClass template should create 1 document
       - hasDocuments:
@@ -72,9 +74,13 @@ tests:
         spot-config:
           enabled: true
           amiFamily: Bottlerocket
+          amiSelectorTerms:
+            - alias: bottlerocket@latest
         on-demand-config:
           enabled: true
           amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       # EC2NodeClass template should create 2 documents
       - hasDocuments:
@@ -113,6 +119,9 @@ tests:
           enabled: false
         custom-config:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       # Should create exactly 1 EC2NodeClass (only the enabled one)
       - hasDocuments:

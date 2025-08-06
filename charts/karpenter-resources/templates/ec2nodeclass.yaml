@@ -21,10 +21,9 @@ spec:
   amiFamily: {{ $nodeClass.amiFamily }}
   {{- end }}
 
-  {{- if $eksDiscoveryEnabled }}
+  {{- if and $eksDiscoveryEnabled $eksDiscoveryTags.subnets }}
   subnetSelectorTerms:
     - tags:
-        {{- if $eksDiscoveryTags.subnets }}
         {{- $hasDiscoveryKey := false }}
         {{- range $key, $value := $eksDiscoveryTags.subnets }}
         {{- if eq $key "karpenter.sh/discovery" }}
@@ -41,20 +40,20 @@ spec:
         {{- if not $hasDiscoveryKey }}
         karpenter.sh/discovery: {{ $clusterName | quote }}
         {{- end }}
-        {{- else }}
+  {{- else if and $eksDiscoveryEnabled $clusterName (not $eksDiscoveryTags) }}
+  subnetSelectorTerms:
+    - tags:
         karpenter.sh/discovery: {{ $clusterName | quote }}
-        {{- end }}
-  {{- else }}
+  {{- else if not $eksDiscoveryEnabled }}
   {{- with $nodeClass.subnetSelectorTerms }}
   subnetSelectorTerms:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- end }}
 
-  {{- if $eksDiscoveryEnabled }}
+  {{- if and $eksDiscoveryEnabled $eksDiscoveryTags.securityGroups }}
   securityGroupSelectorTerms:
     - tags:
-        {{- if $eksDiscoveryTags.securityGroups }}
         {{- $hasDiscoveryKey := false }}
         {{- range $key, $value := $eksDiscoveryTags.securityGroups }}
         {{- if eq $key "karpenter.sh/discovery" }}
@@ -71,10 +70,11 @@ spec:
         {{- if not $hasDiscoveryKey }}
         karpenter.sh/discovery: {{ $clusterName | quote }}
         {{- end }}
-        {{- else }}
+  {{- else if and $eksDiscoveryEnabled $clusterName (not $eksDiscoveryTags) }}
+  securityGroupSelectorTerms:
+    - tags:
         karpenter.sh/discovery: {{ $clusterName | quote }}
-        {{- end }}
-  {{- else }}
+  {{- else if not $eksDiscoveryEnabled }}
   {{- with $nodeClass.securityGroupSelectorTerms }}
   securityGroupSelectorTerms:
     {{- toYaml . | nindent 4 }}
@@ -87,11 +87,6 @@ spec:
   role: {{ $.Values.global.role }}
   {{- end }}
 
-  {{- if $nodeClass.instanceProfile }}
-  instanceProfile: {{ $nodeClass.instanceProfile }}
-  {{- else if and $.Values.global $.Values.global.instanceProfileName }}
-  instanceProfile: {{ $.Values.global.instanceProfileName }}
-  {{- end }}
 
   {{- with $nodeClass.amiSelectorTerms }}
   amiSelectorTerms:

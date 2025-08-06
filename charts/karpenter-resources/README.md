@@ -1,6 +1,6 @@
 # karpenter-resources
 
-![Version: 0.4.0](https://img.shields.io/badge/Version-0.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.3.3](https://img.shields.io/badge/AppVersion-1.3.3-informational?style=flat-square)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.0](https://img.shields.io/badge/AppVersion-1.6.0-informational?style=flat-square)
 
 A Helm chart for Karpenter Custom Resources
 
@@ -117,10 +117,13 @@ resource "helm_release" "karpenter_resources" {
 | ec2NodeClasses.default.blockDeviceMappings[1].ebs.encrypted | bool | `true` |  |
 | ec2NodeClasses.default.blockDeviceMappings[1].ebs.volumeSize | string | `"50Gi"` |  |
 | ec2NodeClasses.default.blockDeviceMappings[1].ebs.volumeType | string | `"gp3"` |  |
+| ec2NodeClasses.default.capacityReservationSelectorTerms | list | `[]` |  |
 | ec2NodeClasses.default.enabled | bool | `false` |  |
-| ec2NodeClasses.default.instanceProfile | string | `""` |  |
 | ec2NodeClasses.default.kubelet | object | `{}` |  |
+| ec2NodeClasses.default.metadataOptions.httpEndpoint | string | `"enabled"` |  |
+| ec2NodeClasses.default.metadataOptions.httpProtocolIPv6 | string | `"disabled"` |  |
 | ec2NodeClasses.default.metadataOptions.httpPutResponseHopLimit | int | `2` |  |
+| ec2NodeClasses.default.metadataOptions.httpTokens | string | `"required"` |  |
 | ec2NodeClasses.default.role | string | `""` |  |
 | ec2NodeClasses.default.securityGroupSelectorTerms | list | `[]` |  |
 | ec2NodeClasses.default.subnetSelectorTerms | list | `[]` |  |
@@ -130,7 +133,6 @@ resource "helm_release" "karpenter_resources" {
 | global.eksDiscovery.enabled | bool | `false` |  |
 | global.eksDiscovery.tags.securityGroups."karpenter.sh/discovery" | string | `""` |  |
 | global.eksDiscovery.tags.subnets."karpenter.sh/discovery" | string | `""` |  |
-| global.instanceProfileName | string | `""` |  |
 | global.role | string | `""` |  |
 | nameOverride | string | `""` |  |
 | nodePools.default.annotations | object | `{}` |  |
