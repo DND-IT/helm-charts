@@ -29,8 +29,6 @@ global:
 
   # Karpenter Role Name - Required for node IAM permissions
   role: ""
-  # Karpenter Instance Profile Name - Required for node IAM permissions
-  instanceProfileName: ""
 
 # NodePools configuration
 # Each key under nodePools becomes a separate NodePool resource
@@ -135,9 +133,29 @@ ec2NodeClasses:
       # clusterDNS: ["10.0.1.100"]
 
     # --- AMI configuration ---
+    # amiFamily is required and defines the UserData format and block device mappings
+    # Supported values: AL2, AL2023, Bottlerocket, Custom, Windows2019, Windows2022
     amiFamily: "Bottlerocket"
+    # amiSelectorTerms is REQUIRED in Karpenter v1+
     amiSelectorTerms:
-      - alias: bottlerocket@latest
+      - alias: bottlerocket@latest  # EKS optimized AMI selection (family@version)
+    # Alternative AMI selector examples:
+    # - id: "ami-1234567890abcdef0"  # Specific AMI ID
+    # - name: "my-custom-ami*"       # AMI name pattern
+    # - owner: "self"                # AWS account ("self", "amazon", "aws-marketplace")
+    # - tags:
+    #     Environment: "production"
+
+    # --- On-Demand Capacity Reservation (ODCR) configuration ---
+    # capacityReservationSelectorTerms specifies which ODCRs to target
+    capacityReservationSelectorTerms: []
+    # - id: "cr-1234567890abcdef0"  # Specific Capacity Reservation ID
+    # - tags:
+    #     karpenter.sh/discovery: "${clusterName}"
+    #     environment: "production"
+    # Note: When using ODCRs, consider setting:
+    # - requirements to match the ODCR instance types
+    # - taints to ensure only appropriate workloads use reserved capacity
 
     # --- Subnet configuration ---
     subnetSelectorTerms: []
@@ -153,13 +171,24 @@ ec2NodeClasses:
     #     karpenter.sh/discovery: "${clusterName}"
 
     # --- IAM configuration ---
+    # role is REQUIRED in Karpenter v1+
+    # Karpenter auto-generates the instance profile from the role
     role: ""
-    instanceProfile: ""
 
     # --- EC2 instance configuration ---
     tags: {}
+    # Controls public IP assignment for instances
+    # associatePublicIPAddress: false
+
+    # Instance metadata service configuration
     metadataOptions:
-      httpPutResponseHopLimit: 2
+      httpEndpoint: enabled               # Enable/disable IMDS
+      httpProtocolIPv6: disabled          # IPv6 endpoint support
+      httpPutResponseHopLimit: 2          # 2 is required for Karpenter in Fargate
+      httpTokens: required                # Require IMDSv2 tokens
+
+    # Instance store policy for NVMe SSD handling
+    # instanceStorePolicy: RAID0  # Options: RAID0, NVME
 
     # --- User data configuration ---
     # userData: |

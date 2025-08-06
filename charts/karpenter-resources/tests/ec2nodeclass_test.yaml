@@ -8,8 +8,9 @@ tests:
         default:
           enabled: true
           amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
           role: test-role
-          instanceProfile: test-profile
     asserts:
       - isKind:
           of: EC2NodeClass
@@ -22,43 +23,37 @@ tests:
       - equal:
           path: spec.role
           value: test-role
-      - equal:
-          path: spec.instanceProfile
-          value: test-profile
 
-  - it: should use global role and instanceProfile when not specified locally
+  - it: should use global role when not specified locally
     set:
       global:
         role: global-role
-        instanceProfileName: global-profile
       ec2NodeClasses:
         default:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       - equal:
           path: spec.role
           value: global-role
-      - equal:
-          path: spec.instanceProfile
-          value: global-profile
 
   - it: should prefer local role over global
     set:
       global:
         role: global-role
-        instanceProfileName: global-profile
       ec2NodeClasses:
         default:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
           role: local-role
-          instanceProfile: local-profile
     asserts:
       - equal:
           path: spec.role
           value: local-role
-      - equal:
-          path: spec.instanceProfile
-          value: local-profile
 
   - it: should create discovery tags when eksDiscovery is enabled
     set:
@@ -69,6 +64,9 @@ tests:
       ec2NodeClasses:
         default:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       - equal:
           path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
@@ -91,6 +89,9 @@ tests:
       ec2NodeClasses:
         default:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       - equal:
           path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
@@ -115,6 +116,9 @@ tests:
       ec2NodeClasses:
         default:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       - equal:
           path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
@@ -138,6 +142,9 @@ tests:
       ec2NodeClasses:
         default:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       - equal:
           path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
@@ -192,10 +199,19 @@ tests:
       ec2NodeClasses:
         default:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
         spot:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
         gpu:
           enabled: true
+          amiFamily: AL2023
+          amiSelectorTerms:
+            - alias: al2023@latest
     asserts:
       - hasDocuments:
           count: 3

@@ -40,3 +40,8 @@ ec2NodeClasses:
     tags:
       Environment: production
       ManagedBy: karpenter
+    metadataOptions:
+      httpEndpoint: enabled
+      httpProtocolIPv6: disabled
+      httpPutResponseHopLimit: 1
+      httpTokens: required
