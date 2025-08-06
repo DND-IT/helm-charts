@@ -1,0 +1,305 @@
+suite: test ec2nodeclass
+templates:
+  - ec2nodeclass.yaml
+tests:
+  - it: should create EC2NodeClass with basic configuration
+    set:
+      ec2NodeClasses:
+        default:
+          enabled: true
+          amiFamily: AL2023
+          role: test-role
+          instanceProfile: test-profile
+    asserts:
+      - isKind:
+          of: EC2NodeClass
+      - equal:
+          path: metadata.name
+          value: default
+      - equal:
+          path: spec.amiFamily
+          value: AL2023
+      - equal:
+          path: spec.role
+          value: test-role
+      - equal:
+          path: spec.instanceProfile
+          value: test-profile
+
+  - it: should use global role and instanceProfile when not specified locally
+    set:
+      global:
+        role: global-role
+        instanceProfileName: global-profile
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.role
+          value: global-role
+      - equal:
+          path: spec.instanceProfile
+          value: global-profile
+
+  - it: should prefer local role over global
+    set:
+      global:
+        role: global-role
+        instanceProfileName: global-profile
+      ec2NodeClasses:
+        default:
+          enabled: true
+          role: local-role
+          instanceProfile: local-profile
+    asserts:
+      - equal:
+          path: spec.role
+          value: local-role
+      - equal:
+          path: spec.instanceProfile
+          value: local-profile
+
+  - it: should create discovery tags when eksDiscovery is enabled
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: test-cluster
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: test-cluster
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: test-cluster
+
+  - it: should use custom discovery tags for subnets
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: test-cluster
+          tags:
+            subnets:
+              karpenter.sh/discovery: custom-value
+              environment: production
+              tier: private
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: custom-value
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags.environment
+          value: production
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags.tier
+          value: private
+
+  - it: should use custom discovery tags for security groups
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: test-cluster
+          tags:
+            securityGroups:
+              karpenter.sh/discovery: custom-sg-value
+              purpose: karpenter-nodes
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: custom-sg-value
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags.purpose
+          value: karpenter-nodes
+
+  - it: should fall back to clusterName when discovery tag value is empty
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: fallback-cluster
+          tags:
+            subnets:
+              karpenter.sh/discovery: ""
+              environment: test
+            securityGroups:
+              karpenter.sh/discovery: ""
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: fallback-cluster
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags.environment
+          value: test
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: fallback-cluster
+
+  - it: should use explicit selector terms when eksDiscovery is disabled
+    set:
+      global:
+        eksDiscovery:
+          enabled: false
+      ec2NodeClasses:
+        default:
+          enabled: true
+          subnetSelectorTerms:
+            - id: subnet-123
+            - tags:
+                Name: my-subnet
+          securityGroupSelectorTerms:
+            - id: sg-123
+            - name: my-sg
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].id
+          value: subnet-123
+      - equal:
+          path: spec.subnetSelectorTerms[1].tags.Name
+          value: my-subnet
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].id
+          value: sg-123
+      - equal:
+          path: spec.securityGroupSelectorTerms[1].name
+          value: my-sg
+
+  - it: should not create EC2NodeClass when disabled
+    set:
+      ec2NodeClasses:
+        default:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create multiple EC2NodeClasses
+    set:
+      ec2NodeClasses:
+        default:
+          enabled: true
+        spot:
+          enabled: true
+        gpu:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  - it: should set all optional fields correctly
+    set:
+      ec2NodeClasses:
+        default:
+          enabled: true
+          amiFamily: Bottlerocket
+          amiSelectorTerms:
+            - alias: bottlerocket@latest
+            - id: ami-123
+          capacityReservationSelectorTerms:
+            - id: cr-123
+          tags:
+            Environment: test
+            Team: platform
+          metadataOptions:
+            httpPutResponseHopLimit: 3
+            httpEndpoint: enabled
+          blockDeviceMappings:
+            - deviceName: /dev/xvda
+              ebs:
+                volumeSize: 100Gi
+                volumeType: gp3
+                encrypted: true
+          instanceStorePolicy: RAID0
+          userData: |
+            #!/bin/bash
+            echo "test"
+          marketOptions:
+            spotOptions:
+              maxPrice: "0.50"
+          detailedMonitoring: true
+          associatePublicIPAddress: false
+    asserts:
+      - equal:
+          path: spec.amiFamily
+          value: Bottlerocket
+      - equal:
+          path: spec.amiSelectorTerms[0].alias
+          value: bottlerocket@latest
+      - equal:
+          path: spec.amiSelectorTerms[1].id
+          value: ami-123
+      - equal:
+          path: spec.capacityReservationSelectorTerms[0].id
+          value: cr-123
+      - equal:
+          path: spec.tags.Environment
+          value: test
+      - equal:
+          path: spec.tags.Team
+          value: platform
+      - equal:
+          path: spec.metadataOptions.httpPutResponseHopLimit
+          value: 3
+      - equal:
+          path: spec.blockDeviceMappings[0].deviceName
+          value: /dev/xvda
+      - equal:
+          path: spec.blockDeviceMappings[0].ebs.volumeSize
+          value: 100Gi
+      - equal:
+          path: spec.instanceStorePolicy
+          value: RAID0
+      - matchRegex:
+          path: spec.userData
+          pattern: "echo \"test\""
+      - equal:
+          path: spec.marketOptions.spotOptions.maxPrice
+          value: "0.50"
+      - equal:
+          path: spec.detailedMonitoring
+          value: true
+      - equal:
+          path: spec.associatePublicIPAddress
+          value: false
+
+  - it: should include kubelet configuration when specified
+    set:
+      ec2NodeClasses:
+        default:
+          enabled: true
+          kubelet:
+            podsPerCore: 2
+            maxPods: 20
+            systemReserved:
+              cpu: 100m
+              memory: 100Mi
+            kubeReserved:
+              cpu: 200m
+              memory: 200Mi
+    asserts:
+      - equal:
+          path: spec.kubelet.podsPerCore
+          value: 2
+      - equal:
+          path: spec.kubelet.maxPods
+          value: 20
+      - equal:
+          path: spec.kubelet.systemReserved.cpu
+          value: 100m
+      - equal:
+          path: spec.kubelet.kubeReserved.memory
+          value: 200Mi

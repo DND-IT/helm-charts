@@ -1,0 +1,336 @@
+suite: test nodepool
+templates:
+  - nodepool.yaml
+tests:
+  - it: should create NodePool with basic configuration
+    set:
+      nodePools:
+        default:
+          enabled: true
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - isKind:
+          of: NodePool
+      - equal:
+          path: metadata.name
+          value: default
+      - equal:
+          path: spec.template.spec.nodeClassRef.group
+          value: karpenter.k8s.aws
+      - equal:
+          path: spec.template.spec.nodeClassRef.kind
+          value: EC2NodeClass
+      - equal:
+          path: spec.template.spec.nodeClassRef.name
+          value: default
+
+  - it: should set labels and annotations
+    set:
+      nodePools:
+        default:
+          enabled: true
+          labels:
+            environment: test
+            team: platform
+          annotations:
+            description: test nodepool
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: metadata.labels.environment
+          value: test
+      - equal:
+          path: metadata.labels.team
+          value: platform
+      - equal:
+          path: metadata.annotations.description
+          value: test nodepool
+
+  - it: should set taints correctly
+    set:
+      nodePools:
+        default:
+          enabled: true
+          taints:
+            - key: dedicated
+              value: gpu
+              effect: NoSchedule
+            - key: test
+              effect: NoExecute
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.taints[0].key
+          value: dedicated
+      - equal:
+          path: spec.template.spec.taints[0].value
+          value: gpu
+      - equal:
+          path: spec.template.spec.taints[0].effect
+          value: NoSchedule
+      - equal:
+          path: spec.template.spec.taints[1].key
+          value: test
+      - equal:
+          path: spec.template.spec.taints[1].effect
+          value: NoExecute
+
+  - it: should set startup taints
+    set:
+      nodePools:
+        default:
+          enabled: true
+          startupTaints:
+            - key: startup
+              value: initializing
+              effect: NoSchedule
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.startupTaints[0].key
+          value: startup
+      - equal:
+          path: spec.template.spec.startupTaints[0].value
+          value: initializing
+
+  - it: should set requirements
+    set:
+      nodePools:
+        default:
+          enabled: true
+          requirements:
+            - key: karpenter.k8s.aws/instance-category
+              operator: In
+              values: ["c", "m", "r"]
+            - key: karpenter.k8s.aws/instance-cpu
+              operator: Gt
+              values: ["4"]
+            - key: kubernetes.io/arch
+              operator: NotIn
+              values: ["arm64"]
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.requirements[0].key
+          value: karpenter.k8s.aws/instance-category
+      - equal:
+          path: spec.template.spec.requirements[0].operator
+          value: In
+      - contains:
+          path: spec.template.spec.requirements[0].values
+          content: "m"
+      - equal:
+          path: spec.template.spec.requirements[1].operator
+          value: Gt
+      - equal:
+          path: spec.template.spec.requirements[2].operator
+          value: NotIn
+
+  - it: should set expireAfter
+    set:
+      nodePools:
+        default:
+          enabled: true
+          expireAfter: 24h
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.expireAfter
+          value: 24h
+
+  - it: should set expireAfter to Never
+    set:
+      nodePools:
+        default:
+          enabled: true
+          expireAfter: Never
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.expireAfter
+          value: Never
+
+  - it: should set disruption configuration
+    set:
+      nodePools:
+        default:
+          enabled: true
+          disruption:
+            consolidationPolicy: WhenEmptyOrUnderutilized
+            consolidateAfter: 5m
+            budgets:
+              - nodes: "20%"
+                reasons:
+                  - Empty
+                  - Drifted
+              - nodes: "5"
+              - nodes: "0"
+                schedule: "@daily"
+                duration: 10m
+                reasons:
+                  - Underutilized
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.disruption.consolidationPolicy
+          value: WhenEmptyOrUnderutilized
+      - equal:
+          path: spec.disruption.consolidateAfter
+          value: 5m
+      - equal:
+          path: spec.disruption.budgets[0].nodes
+          value: "20%"
+      - contains:
+          path: spec.disruption.budgets[0].reasons
+          content: Empty
+      - equal:
+          path: spec.disruption.budgets[2].schedule
+          value: "@daily"
+      - equal:
+          path: spec.disruption.budgets[2].duration
+          value: 10m
+
+  - it: should set limits
+    set:
+      nodePools:
+        default:
+          enabled: true
+          limits:
+            cpu: 1000
+            memory: 4000Gi
+            nvidia.com/gpu: 100
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.limits.cpu
+          value: 1000
+      - equal:
+          path: spec.limits.memory
+          value: 4000Gi
+      - equal:
+          path: spec.limits["nvidia.com/gpu"]
+          value: 100
+
+  - it: should set weight
+    set:
+      nodePools:
+        default:
+          enabled: true
+          weight: 50
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.weight
+          value: 50
+
+  - it: should not create NodePool when disabled
+    set:
+      nodePools:
+        default:
+          enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should create multiple NodePools
+    set:
+      nodePools:
+        default:
+          enabled: true
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+          requirements:
+            - key: test
+              operator: In
+              values: ["test"]
+        spot:
+          enabled: true
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: spot
+          requirements:
+            - key: test
+              operator: In
+              values: ["test"]
+        gpu:
+          enabled: true
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: gpu
+          requirements:
+            - key: test
+              operator: In
+              values: ["test"]
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  - it: should set terminationGracePeriod
+    set:
+      nodePools:
+        default:
+          enabled: true
+          terminationGracePeriod: 2h
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriod
+          value: 2h
+
+  - it: should set requirements with minValues
+    set:
+      nodePools:
+        default:
+          enabled: true
+          requirements:
+            - key: karpenter.k8s.aws/instance-family
+              operator: In
+              values: ["m5", "m5d", "c5", "c5d"]
+              minValues: 2
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: default
+    asserts:
+      - equal:
+          path: spec.template.spec.requirements[0].minValues
+          value: 2
+
+  # Removed metadataOptions test as it's not supported in the current template

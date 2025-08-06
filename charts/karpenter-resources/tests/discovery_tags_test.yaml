@@ -1,0 +1,176 @@
+suite: test discovery tags functionality
+templates:
+  - ec2nodeclass.yaml
+tests:
+  - it: should handle empty discovery tag values with fallback to clusterName
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: my-cluster
+          tags:
+            subnets:
+              karpenter.sh/discovery: ""
+              environment: production
+            securityGroups:
+              karpenter.sh/discovery: ""
+              team: platform
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: my-cluster
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags.environment
+          value: production
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: my-cluster
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags.team
+          value: platform
+
+  - it: should override clusterName with explicit discovery tag values
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: my-cluster
+          tags:
+            subnets:
+              karpenter.sh/discovery: shared-subnets
+            securityGroups:
+              karpenter.sh/discovery: shared-security-groups
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: shared-subnets
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: shared-security-groups
+
+  - it: should add default discovery tag when not explicitly provided
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: my-cluster
+          tags:
+            subnets:
+              environment: dev
+              tier: private
+            securityGroups:
+              purpose: nodes
+              managed-by: karpenter
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags.environment
+          value: dev
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags.tier
+          value: private
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: my-cluster
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags.purpose
+          value: nodes
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["managed-by"]
+          value: karpenter
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: my-cluster
+
+  - it: should handle mixed tag configurations
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: fallback-cluster
+          tags:
+            subnets:
+              karpenter.sh/discovery: "subnet-discovery"
+              environment: staging
+              vpc: main
+            securityGroups:
+              karpenter.sh/discovery: ""
+              type: karpenter
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: subnet-discovery
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags.environment
+          value: staging
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags.vpc
+          value: main
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: fallback-cluster
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags.type
+          value: karpenter
+
+  - it: should use legacy behavior when tags are not specified
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: legacy-cluster
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: legacy-cluster
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: legacy-cluster
+      - hasDocuments:
+          count: 1
+
+  - it: should skip empty tag values
+    set:
+      global:
+        eksDiscovery:
+          enabled: true
+          clusterName: test-cluster
+          tags:
+            subnets:
+              karpenter.sh/discovery: "value"
+              empty-tag: ""
+              valid-tag: "valid"
+            securityGroups:
+              another-empty: ""
+              valid-sg-tag: "sg-value"
+      ec2NodeClasses:
+        default:
+          enabled: true
+    asserts:
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["karpenter.sh/discovery"]
+          value: value
+      - equal:
+          path: spec.subnetSelectorTerms[0].tags["valid-tag"]
+          value: valid
+      - notExists:
+          path: spec.subnetSelectorTerms[0].tags["empty-tag"]
+      - equal:
+          path: spec.securityGroupSelectorTerms[0].tags["valid-sg-tag"]
+          value: sg-value
+      - notExists:
+          path: spec.securityGroupSelectorTerms[0].tags["another-empty"]

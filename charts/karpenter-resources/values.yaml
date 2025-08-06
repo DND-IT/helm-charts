@@ -10,8 +10,22 @@ global:
   # Enable EKS discovery - uses standard EKS tags for subnets and security groups
   eksDiscovery:
     enabled: false
-    # Cluster name - used for tagging and discovery
+    # Cluster name - used for tagging and discovery (deprecated, use tags instead)
     clusterName: ""
+    # Custom discovery tags for subnets and security groups
+    # These tags will be used when enabled is true
+    tags:
+      # Tags for subnet discovery
+      subnets:
+        karpenter.sh/discovery: ""  # Will use clusterName if not specified
+        # Add additional tags as needed:
+        # environment: "production"
+        # tier: "private"
+      # Tags for security group discovery
+      securityGroups:
+        karpenter.sh/discovery: ""  # Will use clusterName if not specified
+        # Add additional tags as needed:
+        # purpose: "karpenter-nodes"
 
   # Karpenter Role Name - Required for node IAM permissions
   role: ""

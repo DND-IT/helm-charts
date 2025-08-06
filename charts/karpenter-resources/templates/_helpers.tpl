@@ -34,9 +34,18 @@ Create chart name and version as used by the chart label.
 Common labels
 */}}
 {{- define "karpenter-resources.labels" -}}
-helm.sh/chart: {{ include "karpenter-resources.chart" . }}s
+helm.sh/chart: {{ include "karpenter-resources.chart" . }}
+{{ include "karpenter-resources.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
 app.kubernetes.io/managed-by: {{ .Release.Service }}
+{{- end }}
+
+{{/*
+Selector labels
+*/}}
+{{- define "karpenter-resources.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "karpenter-resources.name" . }}
+app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
