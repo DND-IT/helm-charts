@@ -25,8 +25,10 @@ spec:
   subnetSelectorTerms:
     - tags:
         {{- if $eksDiscoveryTags.subnets }}
+        {{- $hasDiscoveryKey := false }}
         {{- range $key, $value := $eksDiscoveryTags.subnets }}
         {{- if eq $key "karpenter.sh/discovery" }}
+        {{- $hasDiscoveryKey = true }}
         {{- if $value }}
         {{ $key }}: {{ $value | quote }}
         {{- else if $clusterName }}
@@ -35,6 +37,9 @@ spec:
         {{- else if $value }}
         {{ $key }}: {{ $value | quote }}
         {{- end }}
+        {{- end }}
+        {{- if not $hasDiscoveryKey }}
+        karpenter.sh/discovery: {{ $clusterName | quote }}
         {{- end }}
         {{- else }}
         karpenter.sh/discovery: {{ $clusterName | quote }}
@@ -50,8 +55,10 @@ spec:
   securityGroupSelectorTerms:
     - tags:
         {{- if $eksDiscoveryTags.securityGroups }}
+        {{- $hasDiscoveryKey := false }}
         {{- range $key, $value := $eksDiscoveryTags.securityGroups }}
         {{- if eq $key "karpenter.sh/discovery" }}
+        {{- $hasDiscoveryKey = true }}
         {{- if $value }}
         {{ $key }}: {{ $value | quote }}
         {{- else if $clusterName }}
@@ -60,6 +67,9 @@ spec:
         {{- else if $value }}
         {{ $key }}: {{ $value | quote }}
         {{- end }}
+        {{- end }}
+        {{- if not $hasDiscoveryKey }}
+        karpenter.sh/discovery: {{ $clusterName | quote }}
         {{- end }}
         {{- else }}
         karpenter.sh/discovery: {{ $clusterName | quote }}

@@ -1,0 +1,134 @@
+suite: test custom nodepool and nodeclass names
+templates:
+  - ec2nodeclass.yaml
+  - nodepool.yaml
+tests:
+  - it: should create custom named NodePool and EC2NodeClass
+    set:
+      nodePools:
+        production-pool:
+          enabled: true
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: production-class
+          requirements:
+            - key: karpenter.sh/capacity-type
+              operator: In
+              values: ["on-demand"]
+      ec2NodeClasses:
+        production-class:
+          enabled: true
+          amiFamily: AL2023
+    asserts:
+      # EC2NodeClass template should create 1 document
+      - hasDocuments:
+          count: 1
+        template: ec2nodeclass.yaml
+      # NodePool template should create 1 document
+      - hasDocuments:
+          count: 1
+        template: nodepool.yaml
+      # Check EC2NodeClass name
+      - equal:
+          path: metadata.name
+          value: production-class
+        template: ec2nodeclass.yaml
+      # Check NodePool name
+      - equal:
+          path: metadata.name
+          value: production-pool
+        template: nodepool.yaml
+      # NodePool should reference the correct EC2NodeClass
+      - equal:
+          path: spec.template.spec.nodeClassRef.name
+          value: production-class
+        template: nodepool.yaml
+
+  - it: should work with spot and on-demand pools
+    set:
+      nodePools:
+        spot-workers:
+          enabled: true
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: spot-config
+          requirements:
+            - key: karpenter.sh/capacity-type
+              operator: In
+              values: ["spot"]
+        on-demand-workers:
+          enabled: true
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: on-demand-config
+          requirements:
+            - key: karpenter.sh/capacity-type
+              operator: In
+              values: ["on-demand"]
+      ec2NodeClasses:
+        spot-config:
+          enabled: true
+          amiFamily: Bottlerocket
+        on-demand-config:
+          enabled: true
+          amiFamily: AL2023
+    asserts:
+      # EC2NodeClass template should create 2 documents
+      - hasDocuments:
+          count: 2
+        template: ec2nodeclass.yaml
+      # NodePool template should create 2 documents
+      - hasDocuments:
+          count: 2
+        template: nodepool.yaml
+      # Both should be EC2NodeClass kind
+      - isKind:
+          of: EC2NodeClass
+        template: ec2nodeclass.yaml
+      # Both should be NodePool kind
+      - isKind:
+          of: NodePool
+        template: nodepool.yaml
+
+  - it: should disable default resources and only create custom ones
+    set:
+      nodePools:
+        default:
+          enabled: false
+        custom-workers:
+          enabled: true
+          nodeClassRef:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: custom-config
+          requirements:
+            - key: test
+              operator: In
+              values: ["test"]
+      ec2NodeClasses:
+        default:
+          enabled: false
+        custom-config:
+          enabled: true
+    asserts:
+      # Should create exactly 1 EC2NodeClass (only the enabled one)
+      - hasDocuments:
+          count: 1
+        template: ec2nodeclass.yaml
+      # Should create exactly 1 NodePool (only the enabled one)
+      - hasDocuments:
+          count: 1
+        template: nodepool.yaml
+      # NodePool should be named custom-workers
+      - equal:
+          path: metadata.name
+          value: custom-workers
+        template: nodepool.yaml
+      # EC2NodeClass should be named custom-config
+      - equal:
+          path: metadata.name
+          value: custom-config
+        template: ec2nodeclass.yaml
