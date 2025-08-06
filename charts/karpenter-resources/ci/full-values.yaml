@@ -3,7 +3,14 @@ global:
   eksDiscovery:
     enabled: true
     clusterName: basic-cluster
-    ownershipValue: "owned"
+    tags:
+      subnets:
+        karpenter.sh/discovery: basic-cluster
+        environment: test
+        tier: private
+      securityGroups:
+        karpenter.sh/discovery: basic-cluster
+        purpose: karpenter-nodes
 nodePools:
   default:
     enabled: true

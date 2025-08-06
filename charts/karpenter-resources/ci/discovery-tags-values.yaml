@@ -1,0 +1,42 @@
+global:
+  role: KarpenterNodeRole-MyCluster
+  eksDiscovery:
+    enabled: true
+    clusterName: my-cluster
+    # Discovery tags without explicit karpenter.sh/discovery value
+    # Will use clusterName automatically
+    tags:
+      subnets:
+        karpenter.sh/discovery: "shared"
+      securityGroups:
+        karpenter.sh/discovery: ""  # Will use "my-cluster"
+
+nodePools:
+  production:
+    enabled: true
+    labels:
+      environment: production
+    nodeClassRef:
+      group: karpenter.k8s.aws
+      kind: EC2NodeClass
+      name: production
+    requirements:
+      - key: "karpenter.k8s.aws/instance-category"
+        operator: In
+        values: ["m", "r"]
+      - key: "karpenter.sh/capacity-type"
+        operator: In
+        values: ["on-demand"]
+    limits:
+      cpu: 1000
+      memory: 4000Gi
+
+ec2NodeClasses:
+  production:
+    enabled: true
+    amiFamily: AL2023
+    amiSelectorTerms:
+      - alias: al2023@latest
+    tags:
+      Environment: production
+      ManagedBy: karpenter

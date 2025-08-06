@@ -24,10 +24,25 @@
               "type": "string",
               "description": "Cluster name for tagging and discovery"
             },
-            "ownershipValue": {
-              "type": "string",
-              "description": "Ownership value for the kubernetes.io/cluster tag",
-              "default": "owned"
+            "tags": {
+              "type": "object",
+              "description": "Custom discovery tags for subnets and security groups",
+              "properties": {
+                "subnets": {
+                  "type": "object",
+                  "description": "Tags for subnet discovery",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                },
+                "securityGroups": {
+                  "type": "object",
+                  "description": "Tags for security group discovery",
+                  "additionalProperties": {
+                    "type": "string"
+                  }
+                }
+              }
             }
           },
           "required": ["enabled"]

@@ -1,7 +1,7 @@
 {{- if .Values.ec2NodeClasses }}
 {{- $clusterName := .Values.global.eksDiscovery.clusterName }}
 {{- $eksDiscoveryEnabled := .Values.global.eksDiscovery.enabled }}
-{{- $eksOwnershipValue := .Values.global.eksDiscovery.ownershipValue }}
+{{- $eksDiscoveryTags := .Values.global.eksDiscovery.tags }}
 {{- range $name, $nodeClass := .Values.ec2NodeClasses }}
 {{- if $nodeClass.enabled }}
 ---
@@ -23,8 +23,22 @@ spec:
 
   {{- if $eksDiscoveryEnabled }}
   subnetSelectorTerms:
-  - tags:
-      karpenter.sh/discovery: {{ $clusterName }}
+    - tags:
+        {{- if $eksDiscoveryTags.subnets }}
+        {{- range $key, $value := $eksDiscoveryTags.subnets }}
+        {{- if eq $key "karpenter.sh/discovery" }}
+        {{- if $value }}
+        {{ $key }}: {{ $value | quote }}
+        {{- else if $clusterName }}
+        {{ $key }}: {{ $clusterName | quote }}
+        {{- end }}
+        {{- else if $value }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+        {{- else }}
+        karpenter.sh/discovery: {{ $clusterName | quote }}
+        {{- end }}
   {{- else }}
   {{- with $nodeClass.subnetSelectorTerms }}
   subnetSelectorTerms:
@@ -34,8 +48,22 @@ spec:
 
   {{- if $eksDiscoveryEnabled }}
   securityGroupSelectorTerms:
-  - tags:
-      karpenter.sh/discovery: {{ $clusterName }}
+    - tags:
+        {{- if $eksDiscoveryTags.securityGroups }}
+        {{- range $key, $value := $eksDiscoveryTags.securityGroups }}
+        {{- if eq $key "karpenter.sh/discovery" }}
+        {{- if $value }}
+        {{ $key }}: {{ $value | quote }}
+        {{- else if $clusterName }}
+        {{ $key }}: {{ $clusterName | quote }}
+        {{- end }}
+        {{- else if $value }}
+        {{ $key }}: {{ $value | quote }}
+        {{- end }}
+        {{- end }}
+        {{- else }}
+        karpenter.sh/discovery: {{ $clusterName | quote }}
+        {{- end }}
   {{- else }}
   {{- with $nodeClass.securityGroupSelectorTerms }}
   securityGroupSelectorTerms:
