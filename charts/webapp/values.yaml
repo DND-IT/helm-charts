@@ -72,6 +72,7 @@ ingress:
   annotations: {}
   hosts: []
   paths: ["/"]
+  pathType: Prefix  # This will effect all paths if changed
   tls: false
 
 resources:

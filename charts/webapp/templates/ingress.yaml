@@ -30,7 +30,7 @@ spec:
         paths:
         {{- range $.Values.ingress.paths }}
           - path: {{ . }}
-            pathType: Prefix
+            pathType: {{ $.Values.ingress.pathType }}
             backend:
               service:
                 name: {{ $.Values.service.name | default (include "webapp.name" $ ) }}
@@ -43,7 +43,7 @@ spec:
         paths:
         {{- range $.Values.ingress.paths }}
           - path: {{ . }}
-            pathType: Prefix
+            pathType: {{ $.Values.ingress.pathType }}
             backend:
               service:
                 name: {{ $.Values.service.name | default (include "webapp.name" $ ) }}

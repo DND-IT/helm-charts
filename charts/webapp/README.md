@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.10.0](https://img.shields.io/badge/Version-1.10.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.11.0](https://img.shields.io/badge/Version-1.11.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -27,6 +27,15 @@ resource "helm_release" "app" {
 ## Upgrading
 
 This section lists major and breaking changes of each Helm Chart version.
+
+<details>
+<summary>1.11.0</summary>
+
+- Updated API version for ExternalSecret to v1
+- Add support for ingress pathType
+
+```
+</details>
 
 <details>
 <summary>1.9.0</summary>
@@ -102,6 +111,7 @@ ingress:
 | ingress.className | string | `""` |  |
 | ingress.enabled | bool | `false` |  |
 | ingress.hosts | list | `[]` |  |
+| ingress.pathType | string | `"Prefix"` |  |
 | ingress.paths[0] | string | `"/"` |  |
 | ingress.tls | bool | `false` |  |
 | initContainer.args | list | `[]` |  |
