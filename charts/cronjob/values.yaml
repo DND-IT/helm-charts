@@ -21,6 +21,19 @@ cronjob:
   # cronjob.suspend -- If cronjob executions should be suspended.
   suspend: false
 
+  backoffLimit: 3
+
+  # History limits - controls how many completed job pods to keep
+  successfulJobsHistoryLimit: 3  # Keep last 3 successful jobs
+  failedJobsHistoryLimit: 1      # Keep last 1 failed job
+
+  # TTL for automatic cleanup (optional)
+  # ttlSecondsAfterFinished: 3600  # Delete job pods 1 hour after completion
+
+restartPolicy: "Never"
+concurrencyPolicy: "Allow"
+startingDeadlineSeconds: "120"
+
 resources:
   {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -39,10 +52,6 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
-
-restartPolicy: "Never"
-concurrencyPolicy: "Allow"
-startingDeadlineSeconds: "120"
 
 externalSecrets:
   refreshInterval: 5m

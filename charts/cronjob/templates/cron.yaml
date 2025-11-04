@@ -17,13 +17,19 @@ metadata:
     tags.datadoghq.com/version: {{ .Values.metadata.labels.datadog.version }}
     {{- end }}
 spec:
-  startingDeadlineSeconds: {{ .Values.cronjob.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ .Values.startingDeadlineSeconds }}
   schedule: {{ .Values.cronjob.schedule | quote }}
   timeZone: {{ .Values.cronjob.timeZone | quote }}
   suspend: {{ .Values.cronjob.suspend }}
   concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  successfulJobsHistoryLimit: {{ .Values.cronjob.successfulJobsHistoryLimit | default 3 }}
+  failedJobsHistoryLimit: {{ .Values.cronjob.failedJobsHistoryLimit | default 1 }}
   jobTemplate:
     spec:
+      backoffLimit: {{ .Values.cronjob.backoffLimit }}
+      {{- if .Values.cronjob.ttlSecondsAfterFinished }}
+      ttlSecondsAfterFinished: {{ .Values.cronjob.ttlSecondsAfterFinished }}
+      {{- end }}
       template:
         metadata:
           labels:
