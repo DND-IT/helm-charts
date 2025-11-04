@@ -17,11 +17,11 @@ metadata:
     tags.datadoghq.com/version: {{ .Values.metadata.labels.datadog.version }}
     {{- end }}
 spec:
-  startingDeadlineSeconds: {{ .Values.startingDeadlineSeconds }}
+  startingDeadlineSeconds: {{ .Values.cronjob.startingDeadlineSeconds }}
   schedule: {{ .Values.cronjob.schedule | quote }}
   timeZone: {{ .Values.cronjob.timeZone | quote }}
   suspend: {{ .Values.cronjob.suspend }}
-  concurrencyPolicy: {{ .Values.concurrencyPolicy }}
+  concurrencyPolicy: {{ .Values.cronjob.concurrencyPolicy }}
   successfulJobsHistoryLimit: {{ .Values.cronjob.successfulJobsHistoryLimit | default 3 }}
   failedJobsHistoryLimit: {{ .Values.cronjob.failedJobsHistoryLimit | default 1 }}
   jobTemplate:
@@ -109,7 +109,7 @@ spec:
                   protocol: TCP
               resources:
                 {{- toYaml .Values.resources | nindent 16 }}
-          restartPolicy: {{ .Values.restartPolicy }}
+          restartPolicy: {{ .Values.cronjob.restartPolicy }}
           {{- with .Values.nodeSelector }}
           nodeSelector:
             {{- toYaml . | nindent 12 }}
