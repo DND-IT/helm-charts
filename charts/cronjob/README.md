@@ -37,10 +37,12 @@ resource "helm_release" "cronjob" {
 | affinity | object | `{}` |  |
 | args | list | `[]` |  |
 | command | list | `[]` |  |
-| concurrencyPolicy | string | `"Allow"` |  |
 | cronjob.backoffLimit | int | `3` |  |
+| cronjob.concurrencyPolicy | string | `"Allow"` |  |
 | cronjob.failedJobsHistoryLimit | int | `1` |  |
+| cronjob.restartPolicy | string | `"Never"` |  |
 | cronjob.schedule | string | `"0 0 * * *"` |  |
+| cronjob.startingDeadlineSeconds | string | `"120"` |  |
 | cronjob.successfulJobsHistoryLimit | int | `3` |  |
 | cronjob.suspend | bool | `false` | If cronjob executions should be suspended. |
 | cronjob.timeZone | string | `"Etc/UTC"` |  |
@@ -62,6 +64,4 @@ resource "helm_release" "cronjob" {
 | nodeSelector | object | `{}` |  |
 | port | int | `80` |  |
 | resources | object | `{}` |  |
-| restartPolicy | string | `"Never"` |  |
-| startingDeadlineSeconds | string | `"120"` |  |
 | tolerations | list | `[]` |  |
