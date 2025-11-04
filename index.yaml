@@ -51,6 +51,18 @@ entries:
     version: 0.1.0
   cronjob:
   - apiVersion: v2
+    created: "2025-11-04T08:24:18.827252343Z"
+    description: A generic kubernetes cron job
+    digest: 93ace914e9d5b374312c914fb56af9042a8c5baedcdc411522ee135c12f8dd45
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: cronjob
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/cronjob-0.9.1/cronjob-0.9.1.tgz
+    version: 0.9.1
+  - apiVersion: v2
     created: "2025-10-08T12:03:26.640076053Z"
     description: A generic kubernetes cron job
     digest: ec8b2d6b302717b2c26bc247fff571576a824cbfb6bef1f2cd2f28ca6ba2a407
@@ -600,4 +612,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2025-10-08T12:03:26.640189055Z"
+generated: "2025-11-04T08:24:18.827366716Z"
