@@ -18,7 +18,7 @@ metadata:
     {{- end }}
 spec:
   startingDeadlineSeconds: {{ .Values.cronjob.startingDeadlineSeconds }}
-  schedule: {{ .Values.cronjob.schedule }}
+  schedule: {{ .Values.cronjob.schedule | quote }}
   timeZone: {{ .Values.cronjob.timeZone | quote }}
   suspend: {{ .Values.cronjob.suspend }}
   concurrencyPolicy: {{ .Values.concurrencyPolicy }}
