@@ -1,6 +1,6 @@
 # cronjob
 
-![Version: 0.9.1](https://img.shields.io/badge/Version-0.9.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.10.0](https://img.shields.io/badge/Version-0.10.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes cron job
 
@@ -37,8 +37,13 @@ resource "helm_release" "cronjob" {
 | affinity | object | `{}` |  |
 | args | list | `[]` |  |
 | command | list | `[]` |  |
-| concurrencyPolicy | string | `"Allow"` |  |
+| cronjob.backoffLimit | int | `3` |  |
+| cronjob.concurrencyPolicy | string | `"Allow"` |  |
+| cronjob.failedJobsHistoryLimit | int | `1` |  |
+| cronjob.restartPolicy | string | `"Never"` |  |
 | cronjob.schedule | string | `"0 0 * * *"` |  |
+| cronjob.startingDeadlineSeconds | string | `"120"` |  |
+| cronjob.successfulJobsHistoryLimit | int | `3` |  |
 | cronjob.suspend | bool | `false` | If cronjob executions should be suspended. |
 | cronjob.timeZone | string | `"Etc/UTC"` |  |
 | cronjobName | string | `""` |  |
@@ -59,6 +64,4 @@ resource "helm_release" "cronjob" {
 | nodeSelector | object | `{}` |  |
 | port | int | `80` |  |
 | resources | object | `{}` |  |
-| restartPolicy | string | `"Never"` |  |
-| startingDeadlineSeconds | string | `"120"` |  |
 | tolerations | list | `[]` |  |
