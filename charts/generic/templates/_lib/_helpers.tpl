@@ -117,10 +117,16 @@ Create the name of the PVC
 
 {{/*
 Create image name
+Usage: include "generic.image" (dict "image" .Values.image "context" .)
 */}}
 {{- define "generic.image" -}}
-{{- if .Values.image.tag }}
-{{- printf "%s:%s" .Values.image.repository .Values.image.tag }}
+{{- $image := .image -}}
+{{- if and $image $image.repository }}
+{{- if $image.tag }}
+{{- printf "%s:%s" $image.repository $image.tag }}
+{{- else }}
+{{- $image.repository }}
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -151,9 +157,9 @@ Get the service port
 */}}
 {{- define "generic.servicePort" -}}
 {{- if .Values.service.ports }}
-{{- (index .Values.service.ports 0).port | default .Values.service.port }}
+{{- (index .Values.service.ports 0).port }}
 {{- else }}
-{{- .Values.service.port }}
+{{- 80 }}
 {{- end }}
 {{- end }}
 
@@ -162,9 +168,9 @@ Get the service target port
 */}}
 {{- define "generic.serviceTargetPort" -}}
 {{- if .Values.service.ports }}
-{{- (index .Values.service.ports 0).targetPort | default .Values.service.targetPort }}
+{{- (index .Values.service.ports 0).targetPort }}
 {{- else }}
-{{- .Values.service.targetPort }}
+{{- 80 }}
 {{- end }}
 {{- end }}
 
@@ -172,11 +178,10 @@ Get the service target port
 Validate required values
 */}}
 {{- define "generic.validateValues" -}}
+{{- if .Values.enabled }}
 {{- if not .Values.image.repository }}
-{{- fail "image.repository is required" }}
+{{- fail "image.repository is required when deployment is enabled" }}
 {{- end }}
-{{- if and .Values.persistence.enabled (not .Values.persistence.size) }}
-{{- fail "persistence.size is required when persistence is enabled" }}
 {{- end }}
 {{- end }}
 

@@ -1,22 +1,22 @@
-{{- if .Values.podSecurity.podSecurityStandards.enabled }}
-{{- if .Values.podSecurity.podSecurityStandards.enforce }}
+{{- if .Values.security.podSecurityStandards.enabled }}
+{{- if .Values.security.podSecurityStandards.enforce }}
 apiVersion: v1
 kind: Namespace
 metadata:
   name: {{ include "generic.namespace" . }}
   labels:
-    {{- $extraLabels := dict "pod-security.kubernetes.io/enforce" .Values.podSecurity.podSecurityStandards.enforce }}
-    {{- if .Values.podSecurity.podSecurityStandards.audit }}
-    {{- $_ := set $extraLabels "pod-security.kubernetes.io/audit" .Values.podSecurity.podSecurityStandards.audit }}
+    {{- $extraLabels := dict "pod-security.kubernetes.io/enforce" .Values.security.podSecurityStandards.enforce }}
+    {{- if .Values.security.podSecurityStandards.audit }}
+    {{- $_ := set $extraLabels "pod-security.kubernetes.io/audit" .Values.security.podSecurityStandards.audit }}
     {{- end }}
-    {{- if .Values.podSecurity.podSecurityStandards.warn }}
-    {{- $_ := set $extraLabels "pod-security.kubernetes.io/warn" .Values.podSecurity.podSecurityStandards.warn }}
+    {{- if .Values.security.podSecurityStandards.warn }}
+    {{- $_ := set $extraLabels "pod-security.kubernetes.io/warn" .Values.security.podSecurityStandards.warn }}
     {{- end }}
-    {{- $allLabels := merge $extraLabels (.Values.podSecurity.podSecurityStandards.labels | default dict) }}
+    {{- $allLabels := merge $extraLabels (.Values.security.podSecurityStandards.labels | default dict) }}
     {{- include "generic.labels" (dict "context" . "labels" $allLabels) | nindent 4 }}
-  {{- if or .Values.podSecurity.podSecurityStandards.annotations .Values.commonAnnotations }}
+  {{- if or .Values.security.podSecurityStandards.annotations .Values.commonAnnotations }}
   annotations:
-    {{- include "generic.annotations" (dict "context" . "annotations" .Values.podSecurity.podSecurityStandards.annotations) | nindent 4 }}
+    {{- include "generic.annotations" (dict "context" . "annotations" .Values.security.podSecurityStandards.annotations) | nindent 4 }}
   {{- end }}
 {{- end }}
 {{- end }}

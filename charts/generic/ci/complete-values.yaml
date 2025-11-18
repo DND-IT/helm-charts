@@ -10,59 +10,57 @@ image:
   tag: "1.25-alpine"
   pullPolicy: IfNotPresent
 
-deployment:
-  enabled: true
-  replicas: 3
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
+replicas: 3
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
 
-  # Resource limits
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
+# Resource limits
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
 
-  # Health checks for nginx
-  livenessProbe:
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 30
-    periodSeconds: 10
+# Health checks for nginx
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
 
-  readinessProbe:
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 5
-    periodSeconds: 5
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
 
-  # Environment variables
-  env:
-    - name: ENV
-      value: "production"
-    - name: LOG_LEVEL
-      value: "info"
-    - name: DB_PASSWORD
-      valueFrom:
-        secretKeyRef:
-          name: db-secret
-          key: password
-    - name: MISSING_SECRET
-      valueFrom:
-        secretKeyRef:
-          name: missing-secret
-          key: password
-          optional: true  # Secret can be missing
+# Environment variables
+env:
+  - name: ENV
+    value: "production"
+  - name: LOG_LEVEL
+    value: "info"
+  - name: DB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: db-secret
+        key: password
+  - name: MISSING_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: missing-secret
+        key: password
+        optional: true  # Secret can be missing
 
 # nginx-unprivileged runs on port 8080 by default
-containerPorts:
+ports:
   - name: http
     containerPort: 8080
     protocol: TCP
@@ -87,13 +85,8 @@ ingress:
         - path: /
           pathType: Prefix
 
-# Enable persistence
-# NOTE: This will create a PVC - ensure the storageClass exists in your cluster
-persistence:
-  enabled: false  # Set to true if you need persistent storage
-  size: 10Gi
-  storageClass: ""  # Leave empty for default storage class
-  mountPath: /data
+# Persistence disabled for this test
+# To enable, use volumes.persistent configuration
 
 # Enable horizontal pod autoscaler (HPA)
 # NOTE: Requires metrics-server to be installed in the cluster
@@ -197,14 +190,15 @@ podDisruptionBudget:
   minAvailable: 1
 
 # Security contexts for non-root nginx
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 101     # nginx user in alpine
-  runAsGroup: 101
-  fsGroup: 101
-  fsGroupChangePolicy: OnRootMismatch
+pod:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101     # nginx user in alpine
+    runAsGroup: 101
+    fsGroup: 101
+    fsGroupChangePolicy: OnRootMismatch
 
-containerSecurityContext:
+securityContext:
   runAsNonRoot: true
   runAsUser: 101
   allowPrivilegeEscalation: false
@@ -214,10 +208,11 @@ containerSecurityContext:
     - ALL
 
 # EmptyDir volumes for nginx writable directories
-emptyDirVolumes:
-  nginx-cache:
-    mountPath: /var/cache/nginx
-    sizeLimit: 100Mi
-  nginx-pid:
-    mountPath: /tmp
-    sizeLimit: 10Mi
+volumes:
+  emptyDir:
+    nginx-cache:
+      mountPath: /var/cache/nginx
+      sizeLimit: 100Mi
+    nginx-pid:
+      mountPath: /tmp
+      sizeLimit: 10Mi

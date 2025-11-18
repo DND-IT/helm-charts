@@ -42,7 +42,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.podSecurityContext "defaults" $.Values.podSecurityContextDefaults) | nindent 8 }}
+        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
         image: {{ $hook.image }}
@@ -121,7 +121,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.podSecurityContext "defaults" $.Values.podSecurityContextDefaults) | nindent 8 }}
+        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
         image: {{ $hook.image }}
@@ -200,7 +200,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.podSecurityContext "defaults" $.Values.podSecurityContextDefaults) | nindent 8 }}
+        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
         image: {{ $hook.image }}
@@ -279,7 +279,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.podSecurityContext "defaults" $.Values.podSecurityContextDefaults) | nindent 8 }}
+        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
         image: {{ $hook.image }}
@@ -358,7 +358,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.podSecurityContext "defaults" $.Values.podSecurityContextDefaults) | nindent 8 }}
+        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
         image: {{ $hook.image }}
@@ -437,7 +437,7 @@ spec:
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.podSecurityContext "defaults" $.Values.podSecurityContextDefaults) | nindent 8 }}
+        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
         image: {{ $hook.image }}

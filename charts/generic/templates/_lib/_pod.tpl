@@ -9,18 +9,19 @@ Parameters:
 {{- $root := .root | default . -}}
 {{- $config := .config | default dict -}}
 {{- $componentName := .componentName | default "" -}}
+{{- $deployment := $root.Values -}}
 metadata:
   labels:
-    {{- $podLabels := $config.podLabels | default $root.Values.podLabels -}}
+    {{- $podLabels := $config.podLabels | default ($config.pod).labels | default $deployment.pod.labels -}}
     {{- if $componentName -}}
       {{- $podLabels = merge (dict "app.kubernetes.io/component" $componentName) $podLabels -}}
     {{- end -}}
     {{- include "generic.labels" (dict "context" $root "labels" $podLabels) | nindent 4 }}
   annotations:
-    {{- $podAnnotations := $config.podAnnotations | default $root.Values.podAnnotations -}}
+    {{- $podAnnotations := $config.podAnnotations | default ($config.pod).annotations | default $deployment.pod.annotations -}}
     {{- include "generic.podAnnotations" (dict "root" $root "annotations" $podAnnotations) | nindent 4 }}
 spec:
-  {{- $imagePullSecrets := $config.imagePullSecrets | default $root.Values.imagePullSecrets -}}
+  {{- $imagePullSecrets := $config.imagePullSecrets | default $deployment.imagePullSecrets -}}
   {{- with $imagePullSecrets }}
   imagePullSecrets:
     {{- toYaml . | nindent 4 }}
@@ -32,70 +33,70 @@ spec:
   {{- else if $root.Values.serviceAccount.name }}
   serviceAccountName: {{ $root.Values.serviceAccount.name }}
   {{- end }}
-  {{- with $config.hostAliases | default $root.Values.hostAliases }}
+  {{- with $config.hostAliases | default ($config.pod).hostAliases | default $deployment.pod.hostAliases }}
   hostAliases:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- if $config.hostNetwork | default $root.Values.hostNetwork }}
+  {{- if $config.hostNetwork | default ($config.pod).hostNetwork | default $deployment.pod.hostNetwork }}
   hostNetwork: true
   {{- end }}
-  {{- if $config.hostPID | default $root.Values.hostPID }}
+  {{- if $config.hostPID | default ($config.pod).hostPID | default $deployment.pod.hostPID }}
   hostPID: true
   {{- end }}
-  {{- if $config.hostIPC | default $root.Values.hostIPC }}
+  {{- if $config.hostIPC | default ($config.pod).hostIPC | default $deployment.pod.hostIPC }}
   hostIPC: true
   {{- end }}
-  {{- with $config.hostname | default $root.Values.hostname }}
+  {{- with $config.hostname | default ($config.pod).hostname | default $deployment.pod.hostname }}
   hostname: {{ . }}
   {{- end }}
-  {{- with $config.dnsPolicy | default $root.Values.dnsPolicy }}
+  {{- with $config.dnsPolicy | default ($config.pod).dnsPolicy | default $deployment.pod.dnsPolicy }}
   dnsPolicy: {{ . }}
   {{- end }}
-  {{- with $config.dnsConfig | default $root.Values.dnsConfig }}
+  {{- with $config.dnsConfig | default ($config.pod).dnsConfig | default $deployment.pod.dnsConfig }}
   dnsConfig:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with $config.priorityClassName | default $root.Values.priorityClassName }}
+  {{- with $config.priorityClassName | default ($config.pod).priorityClassName | default $deployment.pod.priorityClassName }}
   priorityClassName: {{ . }}
   {{- end }}
-  {{- with $config.priority | default $root.Values.priority }}
+  {{- with $config.priority | default ($config.pod).priority | default $deployment.pod.priority }}
   priority: {{ . }}
   {{- end }}
-  {{- with $config.runtimeClassName | default $root.Values.runtimeClassName }}
+  {{- with $config.runtimeClassName | default ($config.pod).runtimeClassName | default $deployment.pod.runtimeClassName }}
   runtimeClassName: {{ . }}
   {{- end }}
-  {{- with $config.schedulerName | default $root.Values.schedulerName }}
+  {{- with $config.schedulerName | default ($config.pod).schedulerName | default $deployment.pod.schedulerName }}
   schedulerName: {{ . }}
   {{- end }}
-  {{- $terminationGracePeriodSeconds := $config.terminationGracePeriodSeconds | default $root.Values.terminationGracePeriodSeconds -}}
+  {{- $terminationGracePeriodSeconds := $config.terminationGracePeriodSeconds | default ($config.pod).terminationGracePeriodSeconds | default $deployment.pod.terminationGracePeriodSeconds -}}
   {{- if $terminationGracePeriodSeconds }}
   terminationGracePeriodSeconds: {{ $terminationGracePeriodSeconds }}
   {{- end }}
-  {{- with $config.activeDeadlineSeconds | default $root.Values.activeDeadlineSeconds }}
+  {{- with $config.activeDeadlineSeconds | default ($config.pod).activeDeadlineSeconds | default $deployment.pod.activeDeadlineSeconds }}
   activeDeadlineSeconds: {{ . }}
   {{- end }}
-  {{- with $config.nodeSelector | default $root.Values.nodeSelector }}
+  {{- with $config.nodeSelector | default ($config.scheduling).nodeSelector | default $deployment.scheduling.nodeSelector }}
   nodeSelector:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with $config.affinity | default $root.Values.affinity }}
+  {{- with $config.affinity | default ($config.scheduling).affinity | default $deployment.scheduling.affinity }}
   affinity:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- with $config.tolerations | default $root.Values.tolerations }}
+  {{- with $config.tolerations | default ($config.scheduling).tolerations | default $deployment.scheduling.tolerations }}
   tolerations:
     {{- toYaml . | nindent 4 }}
   {{- end }}
-  {{- $topologySpreadConstraints := $config.topologySpreadConstraints | default $root.Values.topologySpreadConstraints -}}
+  {{- $topologySpreadConstraints := $config.topologySpreadConstraints | default ($config.scheduling).topologySpreadConstraints | default $deployment.scheduling.topologySpreadConstraints -}}
   {{- if $topologySpreadConstraints }}
   topologySpreadConstraints:
     {{- include "generic.topologySpreadConstraints" (dict "context" $root "componentName" $componentName "Values" (dict "topologySpreadConstraints" $topologySpreadConstraints)) | nindent 4 }}
   {{- end }}
   securityContext:
-    {{- $podSecurityContext := $config.podSecurityContext | default $root.Values.podSecurityContext -}}
-    {{- include "generic.podSecurityContext" (dict "securityContext" $podSecurityContext "defaults" $root.Values.podSecurityContextDefaults) | nindent 4 }}
-  {{- $initContainers := $config.initContainers | default $root.Values.initContainers -}}
-  {{- $sidecarContainers := $config.sidecarContainers | default $root.Values.sidecarContainers -}}
+    {{- $podSecurityContext := $config.podSecurityContext | default ($config.pod).securityContext | default $deployment.pod.securityContext | default $root.Values.security.defaultPodSecurityContext -}}
+    {{- include "generic.podSecurityContext" (dict "securityContext" $podSecurityContext "defaults" $root.Values.security.defaultPodSecurityContext) | nindent 4 }}
+  {{- $initContainers := $config.initContainers | default $deployment.initContainers -}}
+  {{- $sidecarContainers := $config.sidecarContainers | default $deployment.sidecarContainers -}}
   {{- if or $initContainers $sidecarContainers }}
   initContainers:
     {{- range $container := $initContainers }}
@@ -159,39 +160,39 @@ spec:
         {{- else }}
         {{- include "generic.containerSecurityContext" (dict "securityContext" nil "root" $root) | nindent 8 }}
         {{- end }}
-    {{- else if $root.Values.containers }}
-    {{- range $container := $root.Values.containers }}
+    {{- else if $deployment.extraContainers }}
+    {{- range $container := $deployment.extraContainers }}
     {{- include "generic.container" (dict "container" $container "root" $root) | nindent 4 }}
     {{- end }}
     {{- else }}
-    {{/* Default single container configuration for backward compatibility */}}
-    - name: {{ $root.Values.containerName | default "main" }}
-      image: {{ include "generic.image" $root }}
-      imagePullPolicy: {{ $root.Values.image.pullPolicy }}
-      {{- with $root.Values.deployment.command }}
+    {{/* Default single container configuration */}}
+    - name: main
+      image: {{ include "generic.image" (dict "image" $deployment.image "context" $root) }}
+      imagePullPolicy: {{ $deployment.image.pullPolicy }}
+      {{- with $deployment.command }}
       command:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $root.Values.deployment.args }}
+      {{- with $deployment.args }}
       args:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- if or $root.Values.deployment.env $root.Values.commonEnvVars }}
-      {{- if $root.Values.commonEnvVars }}
+      {{- if or $deployment.env $deployment.commonEnvVars }}
+      {{- if $deployment.commonEnvVars }}
       env:
         {{- include "generic.commonEnvVars" $root | nindent 8 }}
-        {{- with $root.Values.deployment.env }}
+        {{- with $deployment.env }}
         {{- include "generic.envVars" (dict "envVars" . "root" $root) | nindent 8 }}
         {{- end }}
-      {{- else if $root.Values.deployment.env }}
+      {{- else if $deployment.env }}
       env:
-        {{- include "generic.envVars" (dict "envVars" $root.Values.deployment.env "root" $root) | nindent 8 }}
+        {{- include "generic.envVars" (dict "envVars" $deployment.env "root" $root) | nindent 8 }}
       {{- end }}
       {{- end }}
       {{- include "generic.envFrom" $root | nindent 6 }}
-      {{- if $root.Values.containerPorts }}
+      {{- if $deployment.ports }}
       ports:
-        {{- range $root.Values.containerPorts }}
+        {{- range $deployment.ports }}
         - name: {{ .name }}
           containerPort: {{ .containerPort }}
           protocol: {{ .protocol | default "TCP" }}
@@ -202,29 +203,29 @@ spec:
           containerPort: {{ $root.Values.service.targetPort | default $root.Values.service.port | default 80 }}
           protocol: TCP
       {{- end }}
-      {{- with $root.Values.deployment.livenessProbe }}
+      {{- with $deployment.livenessProbe }}
       livenessProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $root.Values.deployment.readinessProbe }}
+      {{- with $deployment.readinessProbe }}
       readinessProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $root.Values.deployment.startupProbe }}
+      {{- with $deployment.startupProbe }}
       startupProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $root.Values.deployment.resources }}
+      {{- with $deployment.resources }}
       resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- include "generic.volumeMounts" (dict "container" $root.Values.deployment "root" $root) | nindent 6 }}
-      {{- with $root.Values.deployment.lifecycle }}
+      {{- include "generic.volumeMounts" (dict "container" $deployment "root" $root) | nindent 6 }}
+      {{- with $deployment.lifecycle }}
       lifecycle:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- include "generic.containerSecurityContext" (dict "securityContext" $root.Values.deployment.securityContext "root" $root) | nindent 8 }}
+        {{- include "generic.containerSecurityContext" (dict "securityContext" $deployment.securityContext "root" $root) | nindent 8 }}
     {{- end }}
   {{- with $config.volumes }}
   volumes:
@@ -232,7 +233,7 @@ spec:
   {{- else }}
   {{- include "generic.volumes" $root | nindent 2 }}
   {{- end }}
-  {{- with $config.restartPolicy | default $root.Values.restartPolicy }}
+  {{- with $config.restartPolicy | default ($config.pod).restartPolicy | default $deployment.pod.restartPolicy }}
   restartPolicy: {{ . }}
   {{- end }}
 {{- end -}}

@@ -4,8 +4,6 @@
 nameOverride: jobs-test
 
 # Disable main deployment for job-only test
-deployment:
-  enabled: false
 
 # Test Job
 jobs:

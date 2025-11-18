@@ -65,30 +65,30 @@ spec:
       {{- if $job.podSecurityContext }}
       securityContext:
         {{- toYaml $job.podSecurityContext | nindent 8 }}
-      {{- else if $.Values.podSecurityContext }}
+      {{- else if $.Values.security.defaultPodSecurityContext }}
       securityContext:
-        {{- toYaml $.Values.podSecurityContext | nindent 8 }}
+        {{- toYaml $.Values.security.defaultPodSecurityContext | nindent 8 }}
       {{- end }}
       {{- if $job.nodeSelector }}
       nodeSelector:
         {{- toYaml $job.nodeSelector | nindent 8 }}
-      {{- else if $.Values.nodeSelector }}
+      {{- else if $.Values.scheduling.nodeSelector }}
       nodeSelector:
-        {{- toYaml $.Values.nodeSelector | nindent 8 }}
+        {{- toYaml $.Values.scheduling.nodeSelector | nindent 8 }}
       {{- end }}
       {{- if $job.affinity }}
       affinity:
         {{- toYaml $job.affinity | nindent 8 }}
-      {{- else if $.Values.affinity }}
+      {{- else if $.Values.scheduling.affinity }}
       affinity:
-        {{- toYaml $.Values.affinity | nindent 8 }}
+        {{- toYaml $.Values.scheduling.affinity | nindent 8 }}
       {{- end }}
       {{- if $job.tolerations }}
       tolerations:
         {{- toYaml $job.tolerations | nindent 8 }}
-      {{- else if $.Values.tolerations }}
+      {{- else if $.Values.scheduling.tolerations }}
       tolerations:
-        {{- toYaml $.Values.tolerations | nindent 8 }}
+        {{- toYaml $.Values.scheduling.tolerations | nindent 8 }}
       {{- end }}
       {{- with $job.volumes }}
       volumes:
@@ -125,9 +125,9 @@ spec:
           {{- if $job.securityContext }}
           securityContext:
             {{- toYaml $job.securityContext | nindent 12 }}
-          {{- else if $.Values.containerSecurityContext }}
+          {{- else if $.Values.security.defaultContainerSecurityContext }}
           securityContext:
-            {{- toYaml $.Values.containerSecurityContext | nindent 12 }}
+            {{- toYaml $.Values.security.defaultContainerSecurityContext | nindent 12 }}
           {{- end }}
 {{- end }}
 {{- end }}

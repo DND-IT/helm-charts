@@ -108,7 +108,7 @@ Container security context with secure defaults
 {{- define "generic.containerSecurityContext" -}}
 {{- $securityContext := .securityContext | default dict -}}
 {{- $root := .root -}}
-{{- $defaults := $root.Values.containerSecurityContext | default dict -}}
+{{- $defaults := $root.Values.security.defaultContainerSecurityContext | default dict -}}
 {{- if not (hasKey $securityContext "runAsNonRoot") }}
 runAsNonRoot: {{ $defaults.runAsNonRoot | default true }}
 {{- else if $securityContext.runAsNonRoot }}
