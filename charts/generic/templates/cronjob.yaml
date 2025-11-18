@@ -91,30 +91,30 @@ spec:
           {{- if $cronjob.podSecurityContext }}
           securityContext:
             {{- toYaml $cronjob.podSecurityContext | nindent 12 }}
-          {{- else if $.Values.podSecurityContext }}
+          {{- else if $.Values.security.defaultPodSecurityContext }}
           securityContext:
-            {{- toYaml $.Values.podSecurityContext | nindent 12 }}
+            {{- toYaml $.Values.security.defaultPodSecurityContext | nindent 12 }}
           {{- end }}
           {{- if $cronjob.nodeSelector }}
           nodeSelector:
             {{- toYaml $cronjob.nodeSelector | nindent 12 }}
-          {{- else if $.Values.nodeSelector }}
+          {{- else if $.Values.scheduling.nodeSelector }}
           nodeSelector:
-            {{- toYaml $.Values.nodeSelector | nindent 12 }}
+            {{- toYaml $.Values.scheduling.nodeSelector | nindent 12 }}
           {{- end }}
           {{- if $cronjob.affinity }}
           affinity:
             {{- toYaml $cronjob.affinity | nindent 12 }}
-          {{- else if $.Values.affinity }}
+          {{- else if $.Values.scheduling.affinity }}
           affinity:
-            {{- toYaml $.Values.affinity | nindent 12 }}
+            {{- toYaml $.Values.scheduling.affinity | nindent 12 }}
           {{- end }}
           {{- if $cronjob.tolerations }}
           tolerations:
             {{- toYaml $cronjob.tolerations | nindent 12 }}
-          {{- else if $.Values.tolerations }}
+          {{- else if $.Values.scheduling.tolerations }}
           tolerations:
-            {{- toYaml $.Values.tolerations | nindent 12 }}
+            {{- toYaml $.Values.scheduling.tolerations | nindent 12 }}
           {{- end }}
           {{- with $cronjob.volumes }}
           volumes:
@@ -151,9 +151,9 @@ spec:
               {{- if $cronjob.securityContext }}
               securityContext:
                 {{- toYaml $cronjob.securityContext | nindent 16 }}
-              {{- else if $.Values.containerSecurityContext }}
+              {{- else if $.Values.security.defaultContainerSecurityContext }}
               securityContext:
-                {{- toYaml $.Values.containerSecurityContext | nindent 16 }}
+                {{- toYaml $.Values.security.defaultContainerSecurityContext | nindent 16 }}
               {{- end }}
 {{- end }}
 {{- end }}

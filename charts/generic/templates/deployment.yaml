@@ -1,5 +1,5 @@
 {{- include "generic.validateValues" . -}}
-{{- if .Values.deployment.enabled }}
+{{- if .Values.enabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -13,21 +13,21 @@ metadata:
   {{- end }}
 spec:
   {{- if not .Values.hpa.enabled }}
-  replicas: {{ .Values.deployment.replicas | default 1 }}
+  replicas: {{ .Values.replicas | default 1 }}
   {{- end }}
-  {{- with .Values.deployment.revisionHistoryLimit }}
+  {{- with .Values.revisionHistoryLimit }}
   revisionHistoryLimit: {{ . }}
   {{- end }}
-  {{- with .Values.deployment.progressDeadlineSeconds }}
+  {{- with .Values.progressDeadlineSeconds }}
   progressDeadlineSeconds: {{ . }}
   {{- end }}
-  {{- with .Values.deployment.minReadySeconds }}
+  {{- with .Values.minReadySeconds }}
   minReadySeconds: {{ . }}
   {{- end }}
   selector:
     matchLabels:
       {{- include "generic.selectorLabels" . | nindent 6 }}
-  {{- with .Values.deployment.strategy }}
+  {{- with .Values.strategy }}
   strategy:
     {{- toYaml . | nindent 4 }}
   {{- end }}

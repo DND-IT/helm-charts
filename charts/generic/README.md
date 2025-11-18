@@ -1,6 +1,6 @@
 # generic
 
-![Version: 0.0.3](https://img.shields.io/badge/Version-0.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.0.4](https://img.shields.io/badge/Version-0.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A highly flexible and unopinionated Helm chart for deploying Kubernetes workloads.
 Supports Deployments, CronJobs, and Jobs with extensive configuration options.
@@ -239,8 +239,8 @@ Kubernetes: `>=1.29.0-0`
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| activeDeadlineSeconds | string | `nil` |  |
-| affinity | object | `{}` |  |
+| args | list | `[]` |  |
+| command | list | `[]` |  |
 | commonAnnotations | object | `{}` |  |
 | commonEnvVars | bool | `false` |  |
 | commonLabels | object | `{}` |  |
@@ -252,51 +252,20 @@ Kubernetes: `>=1.29.0-0`
 | configMap.labels | object | `{}` |  |
 | configMap.mountPath | string | `""` |  |
 | configMap.subPath | string | `""` |  |
-| containerPorts | list | `[]` |  |
-| containerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
-| containerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
-| containerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
-| containerSecurityContext.runAsNonRoot | bool | `true` |  |
-| containerSecurityContext.runAsUser | int | `1000` |  |
-| containerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| containers | list | `[]` |  |
 | cronjobs | object | `{}` |  |
-| deployment.args | list | `[]` |  |
-| deployment.command | list | `[]` |  |
-| deployment.enabled | bool | `true` |  |
-| deployment.env | list | `[]` |  |
-| deployment.envFrom | list | `[]` |  |
-| deployment.lifecycle | object | `{}` |  |
-| deployment.livenessProbe | object | `{}` |  |
-| deployment.progressDeadlineSeconds | int | `600` |  |
-| deployment.readinessProbe | object | `{}` |  |
-| deployment.replicas | int | `1` |  |
-| deployment.resources.limits.memory | string | `"256Mi"` |  |
-| deployment.resources.requests.cpu | string | `"100m"` |  |
-| deployment.resources.requests.memory | string | `"128Mi"` |  |
-| deployment.revisionHistoryLimit | int | `2` |  |
-| deployment.securityContext | object | `{}` |  |
-| deployment.startupProbe | object | `{}` |  |
-| deployment.strategy.rollingUpdate.maxSurge | string | `"25%"` |  |
-| deployment.strategy.rollingUpdate.maxUnavailable | string | `"25%"` |  |
-| deployment.strategy.type | string | `"RollingUpdate"` |  |
-| deployment.volumeMounts | list | `[]` |  |
-| dnsConfig | object | `{}` |  |
-| dnsPolicy | string | `""` |  |
-| emptyDirVolumes | object | `{}` |  |
+| enabled | bool | `true` |  |
 | env | list | `[]` |  |
 | envFrom | list | `[]` |  |
 | externalSecrets | object | `{}` |  |
 | extraConfigMaps | object | `{}` |  |
-| extraDeployments | object | `{}` |  |
+| extraContainers | list | `[]` |  |
+| extraDeployments | string | `nil` |  |
 | extraEnvFrom | list | `[]` |  |
 | extraIngresses | object | `{}` |  |
 | extraObjects | list | `[]` |  |
 | extraSecrets | object | `{}` |  |
 | extraServices | object | `{}` |  |
 | extraTargetGroupBindings | object | `{}` |  |
-| extraVolumeMounts | list | `[]` |  |
-| extraVolumes | list | `[]` |  |
 | fullnameOverride | string | `""` |  |
 | gateway.httpRoute.annotations | object | `{}` |  |
 | gateway.httpRoute.enabled | bool | `false` |  |
@@ -326,12 +295,6 @@ Kubernetes: `>=1.29.0-0`
 | hooks.preDelete | list | `[]` |  |
 | hooks.preInstall | list | `[]` |  |
 | hooks.preUpgrade | list | `[]` |  |
-| hostAliases | list | `[]` |  |
-| hostIPC | bool | `false` |  |
-| hostNetwork | bool | `false` |  |
-| hostPID | bool | `false` |  |
-| hostPathVolumes | object | `{}` |  |
-| hostname | string | `""` |  |
 | hpa.behavior | object | `{}` |  |
 | hpa.enabled | bool | `false` |  |
 | hpa.maxReplicas | int | `10` |  |
@@ -356,6 +319,8 @@ Kubernetes: `>=1.29.0-0`
 | ingress.labels | object | `{}` |  |
 | initContainers | list | `[]` |  |
 | jobs | object | `{}` |  |
+| lifecycle | object | `{}` |  |
+| livenessProbe | object | `{}` |  |
 | nameOverride | string | `""` |  |
 | namespaceOverride | string | `""` |  |
 | networkPolicy.egress | list | `[]` |  |
@@ -363,39 +328,28 @@ Kubernetes: `>=1.29.0-0`
 | networkPolicy.ingress | list | `[]` |  |
 | networkPolicy.policyTypes[0] | string | `"Ingress"` |  |
 | networkPolicy.policyTypes[1] | string | `"Egress"` |  |
-| nodeSelector | object | `{}` |  |
-| persistence.accessMode | string | `"ReadWriteOnce"` |  |
-| persistence.annotations | object | `{}` |  |
-| persistence.dataSource | object | `{}` |  |
-| persistence.enabled | bool | `false` |  |
-| persistence.labels | object | `{}` |  |
-| persistence.mountPath | string | `"/data"` |  |
-| persistence.selector | object | `{}` |  |
-| persistence.size | string | `"8Gi"` |  |
-| persistence.storageClass | string | `""` |  |
-| persistence.subPath | string | `""` |  |
-| persistence.volumeMode | string | `"Filesystem"` |  |
-| persistence.volumes | object | `{}` |  |
-| podAnnotations | object | `{}` |  |
+| pod.activeDeadlineSeconds | string | `""` |  |
+| pod.annotations | object | `{}` |  |
+| pod.dnsConfig | object | `{}` |  |
+| pod.dnsPolicy | string | `""` |  |
+| pod.hostAliases | list | `[]` |  |
+| pod.hostIPC | bool | `false` |  |
+| pod.hostNetwork | bool | `false` |  |
+| pod.hostPID | bool | `false` |  |
+| pod.hostname | string | `""` |  |
+| pod.labels | object | `{}` |  |
+| pod.priority | string | `""` |  |
+| pod.priorityClassName | string | `""` |  |
+| pod.restartPolicy | string | `""` |  |
+| pod.runtimeClassName | string | `""` |  |
+| pod.schedulerName | string | `""` |  |
+| pod.securityContext | object | `{}` |  |
+| pod.terminationGracePeriodSeconds | int | `30` |  |
 | podDisruptionBudget.enabled | bool | `false` |  |
 | podDisruptionBudget.minAvailable | int | `1` |  |
 | podDisruptionBudget.unhealthyPodEvictionPolicy | string | `""` |  |
-| podLabels | object | `{}` |  |
-| podSecurity.podSecurityStandards.annotations | object | `{}` |  |
-| podSecurity.podSecurityStandards.audit | string | `""` |  |
-| podSecurity.podSecurityStandards.enabled | bool | `false` |  |
-| podSecurity.podSecurityStandards.enforce | string | `""` |  |
-| podSecurity.podSecurityStandards.labels | object | `{}` |  |
-| podSecurity.podSecurityStandards.namespaceEnforcement | bool | `false` |  |
-| podSecurity.podSecurityStandards.warn | string | `""` |  |
-| podSecurityContext.fsGroup | int | `1000` |  |
-| podSecurityContext.fsGroupChangePolicy | string | `"OnRootMismatch"` |  |
-| podSecurityContext.runAsGroup | int | `1000` |  |
-| podSecurityContext.runAsNonRoot | bool | `true` |  |
-| podSecurityContext.runAsUser | int | `1000` |  |
-| podSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| priority | string | `nil` |  |
-| priorityClassName | string | `""` |  |
+| ports | list | `[]` |  |
+| progressDeadlineSeconds | int | `600` |  |
 | rbac.aggregationRule | object | `{}` |  |
 | rbac.annotations | object | `{}` |  |
 | rbac.enabled | bool | `false` |  |
@@ -405,9 +359,21 @@ Kubernetes: `>=1.29.0-0`
 | rbac.rules | list | `[]` |  |
 | rbac.subjects | list | `[]` |  |
 | rbac.type | string | `"Role"` |  |
-| restartPolicy | string | `nil` |  |
-| runtimeClassName | string | `""` |  |
-| schedulerName | string | `""` |  |
+| readinessProbe | object | `{}` |  |
+| replicas | int | `1` |  |
+| resources.limits.memory | string | `"256Mi"` |  |
+| resources.requests.cpu | string | `"100m"` |  |
+| resources.requests.memory | string | `"128Mi"` |  |
+| revisionHistoryLimit | int | `2` |  |
+| scheduling.affinity | object | `{}` |  |
+| scheduling.nodeSelector | object | `{}` |  |
+| scheduling.tolerations | list | `[]` |  |
+| scheduling.topologySpreadConstraints[0].maxSkew | int | `1` |  |
+| scheduling.topologySpreadConstraints[0].topologyKey | string | `"kubernetes.io/hostname"` |  |
+| scheduling.topologySpreadConstraints[0].whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
+| scheduling.topologySpreadConstraints[1].maxSkew | int | `1` |  |
+| scheduling.topologySpreadConstraints[1].topologyKey | string | `"topology.kubernetes.io/zone"` |  |
+| scheduling.topologySpreadConstraints[1].whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
 | secret.annotations | object | `{}` |  |
 | secret.data | object | `{}` |  |
 | secret.enabled | bool | `false` |  |
@@ -419,13 +385,30 @@ Kubernetes: `>=1.29.0-0`
 | secret.type | string | `"Opaque"` |  |
 | security.apparmor.enabled | bool | `false` |  |
 | security.apparmor.profile | string | `"runtime/default"` |  |
+| security.defaultContainerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
+| security.defaultContainerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
+| security.defaultContainerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
+| security.defaultContainerSecurityContext.runAsNonRoot | bool | `true` |  |
+| security.defaultContainerSecurityContext.runAsUser | int | `1000` |  |
+| security.defaultContainerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| security.defaultPodSecurityContext.fsGroup | int | `1000` |  |
+| security.defaultPodSecurityContext.fsGroupChangePolicy | string | `"OnRootMismatch"` |  |
+| security.defaultPodSecurityContext.runAsGroup | int | `1000` |  |
+| security.defaultPodSecurityContext.runAsNonRoot | bool | `true` |  |
+| security.defaultPodSecurityContext.runAsUser | int | `1000` |  |
+| security.defaultPodSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| security.podSecurityStandards.annotations | object | `{}` |  |
 | security.podSecurityStandards.audit | string | `""` |  |
+| security.podSecurityStandards.enabled | bool | `false` |  |
 | security.podSecurityStandards.enforce | string | `""` |  |
+| security.podSecurityStandards.labels | object | `{}` |  |
+| security.podSecurityStandards.namespaceEnforcement | bool | `false` |  |
 | security.podSecurityStandards.warn | string | `""` |  |
+| securityContext | object | `{}` |  |
 | service.annotations | object | `{}` |  |
 | service.clusterIP | string | `""` |  |
 | service.enabled | bool | `true` |  |
-| service.externalTrafficPolicy | string | `nil` |  |
+| service.externalTrafficPolicy | string | `""` |  |
 | service.labels | object | `{}` |  |
 | service.loadBalancerIP | string | `""` |  |
 | service.loadBalancerSourceRanges | list | `[]` |  |
@@ -434,7 +417,7 @@ Kubernetes: `>=1.29.0-0`
 | service.ports[0].protocol | string | `"TCP"` |  |
 | service.ports[0].targetPort | int | `80` |  |
 | service.publishNotReadyAddresses | bool | `false` |  |
-| service.sessionAffinity | string | `nil` |  |
+| service.sessionAffinity | string | `""` |  |
 | service.sessionAffinityConfig | object | `{}` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
@@ -443,6 +426,10 @@ Kubernetes: `>=1.29.0-0`
 | serviceAccount.labels | object | `{}` |  |
 | serviceAccount.name | string | `""` |  |
 | sidecarContainers | list | `[]` |  |
+| startupProbe | object | `{}` |  |
+| strategy.rollingUpdate.maxSurge | string | `"25%"` |  |
+| strategy.rollingUpdate.maxUnavailable | string | `"25%"` |  |
+| strategy.type | string | `"RollingUpdate"` |  |
 | targetGroupBinding.annotations | object | `{}` |  |
 | targetGroupBinding.enabled | bool | `false` |  |
 | targetGroupBinding.ipAddressType | string | `""` |  |
@@ -452,14 +439,11 @@ Kubernetes: `>=1.29.0-0`
 | targetGroupBinding.serviceRef.port | string | `"http"` |  |
 | targetGroupBinding.targetGroupARN | string | `""` |  |
 | targetGroupBinding.targetType | string | `""` |  |
-| terminationGracePeriodSeconds | int | `30` |  |
-| tolerations | list | `[]` |  |
-| topologySpreadConstraints[0].maxSkew | int | `1` |  |
-| topologySpreadConstraints[0].topologyKey | string | `"kubernetes.io/hostname"` |  |
-| topologySpreadConstraints[0].whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
-| topologySpreadConstraints[1].maxSkew | int | `1` |  |
-| topologySpreadConstraints[1].topologyKey | string | `"topology.kubernetes.io/zone"` |  |
-| topologySpreadConstraints[1].whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
+| volumes.emptyDir | object | `{}` |  |
+| volumes.extra | list | `[]` |  |
+| volumes.extraMounts | list | `[]` |  |
+| volumes.hostPath | object | `{}` |  |
+| volumes.persistent | object | `{}` |  |
 | vpa.annotations | object | `{}` |  |
 | vpa.containerPolicies | list | `[]` |  |
 | vpa.enabled | bool | `false` |  |
@@ -470,4 +454,4 @@ Kubernetes: `>=1.29.0-0`
 | vpa.updatePolicy | object | `{}` |  |
 
 ----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v0.0.3](https://github.com/norwoodj/helm-docs/releases/v0.0.3)
+Autogenerated from chart metadata using [helm-docs v0.0.4](https://github.com/norwoodj/helm-docs/releases/v0.0.4)

@@ -8,54 +8,53 @@ image:
   repository: nginxinc/nginx-unprivileged
   tag: "1.25-alpine"
 
-deployment:
-  enabled: true
-  replicas: 2
-  strategy:
-    type: RollingUpdate
-    rollingUpdate:
-      maxUnavailable: 1
-      maxSurge: 1
-  resources:
-    requests:
-      cpu: "50m"
-      memory: "64Mi"
-    limits:
-      cpu: "200m"
-      memory: "256Mi"
-  livenessProbe:
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 10
-  readinessProbe:
-    httpGet:
-      path: /
-      port: http
-    initialDelaySeconds: 5
-  env:
-    - name: ENV
-      value: "production"
-    - name: API_KEY
-      valueFrom:
-        secretKeyRef:
-          name: api-secret
-          key: key
-          optional: true  # Allow missing secrets
+replicas: 2
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1
+    maxSurge: 1
+resources:
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+  limits:
+    cpu: "200m"
+    memory: "256Mi"
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 10
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+  initialDelaySeconds: 5
+env:
+  - name: ENV
+    value: "production"
+  - name: API_KEY
+    valueFrom:
+      secretKeyRef:
+        name: api-secret
+        key: key
+        optional: true  # Allow missing secrets
 
 # nginx-unprivileged port
-containerPorts:
+ports:
   - name: http
     containerPort: 8080
 
 # Non-root security
-podSecurityContext:
-  runAsNonRoot: true
-  runAsUser: 101
-  runAsGroup: 101
-  fsGroup: 101
+pod:
+  securityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    fsGroup: 101
 
-containerSecurityContext:
+securityContext:
   runAsNonRoot: true
   runAsUser: 101
   allowPrivilegeEscalation: false
@@ -65,13 +64,14 @@ containerSecurityContext:
     - ALL
 
 # nginx writable directories
-emptyDirVolumes:
-  nginx-cache:
-    mountPath: /var/cache/nginx
-    sizeLimit: 100Mi
-  nginx-pid:
-    mountPath: /tmp
-    sizeLimit: 10Mi
+volumes:
+  emptyDir:
+    nginx-cache:
+      mountPath: /var/cache/nginx
+      sizeLimit: 100Mi
+    nginx-pid:
+      mountPath: /tmp
+      sizeLimit: 10Mi
 
 service:
   enabled: true

@@ -50,20 +50,15 @@ Volumes template for generic workloads
 {{- end -}}
 
 {{/* Persistent volumes */}}
-{{- if .Values.persistence.enabled -}}
-  {{- range $name, $pvc := .Values.persistence.volumes -}}
-    {{- if $pvc.enabled | default true -}}
-      {{- $volume := dict "name" $name "persistentVolumeClaim" (dict "claimName" (printf "%s-%s" (include "generic.fullname" $root) $name)) -}}
-      {{- $volumes = append $volumes $volume -}}
-    {{- end -}}
+{{- range $name, $pvc := .Values.volumes.persistent -}}
+  {{- if $pvc.enabled | default true -}}
+    {{- $volume := dict "name" $name "persistentVolumeClaim" (dict "claimName" (printf "%s-%s" (include "generic.fullname" $root) $name)) -}}
+    {{- $volumes = append $volumes $volume -}}
   {{- end -}}
-{{- else if .Values.persistence.enabled -}}
-  {{- $volume := dict "name" "data" "persistentVolumeClaim" (dict "claimName" (include "generic.pvcName" .)) -}}
-  {{- $volumes = append $volumes $volume -}}
 {{- end -}}
 
 {{/* EmptyDir volumes */}}
-{{- range $name, $config := .Values.emptyDirVolumes -}}
+{{- range $name, $config := .Values.volumes.emptyDir -}}
   {{- $volume := dict "name" $name "emptyDir" dict -}}
   {{- if $config.medium -}}
     {{- $_ := set $volume.emptyDir "medium" $config.medium -}}
@@ -75,7 +70,7 @@ Volumes template for generic workloads
 {{- end -}}
 
 {{/* HostPath volumes */}}
-{{- range $name, $config := .Values.hostPathVolumes -}}
+{{- range $name, $config := .Values.volumes.hostPath -}}
   {{- $volume := dict "name" $name "hostPath" (dict "path" $config.path) -}}
   {{- if $config.type -}}
     {{- $_ := set $volume.hostPath "type" $config.type -}}
@@ -84,7 +79,7 @@ Volumes template for generic workloads
 {{- end -}}
 
 {{/* Extra volumes */}}
-{{- with .Values.extraVolumes -}}
+{{- with .Values.volumes.extra -}}
   {{- $volumes = concat $volumes . -}}
 {{- end -}}
 
@@ -154,29 +149,21 @@ Volume mounts template
 {{- end -}}
 
 {{/* Persistent volume mounts */}}
-{{- if $root.Values.persistence.enabled -}}
-  {{- range $name, $pvc := $root.Values.persistence.volumes -}}
-    {{- if $pvc.enabled | default true -}}
-      {{- $mount := dict "name" $name "mountPath" $pvc.mountPath -}}
-      {{- if $pvc.subPath -}}
-        {{- $_ := set $mount "subPath" $pvc.subPath -}}
-      {{- end -}}
-      {{- if $pvc.readOnly -}}
-        {{- $_ := set $mount "readOnly" $pvc.readOnly -}}
-      {{- end -}}
-      {{- $mounts = append $mounts $mount -}}
+{{- range $name, $pvc := $root.Values.volumes.persistent -}}
+  {{- if $pvc.enabled | default true -}}
+    {{- $mount := dict "name" $name "mountPath" $pvc.mountPath -}}
+    {{- if $pvc.subPath -}}
+      {{- $_ := set $mount "subPath" $pvc.subPath -}}
     {{- end -}}
+    {{- if $pvc.readOnly -}}
+      {{- $_ := set $mount "readOnly" $pvc.readOnly -}}
+    {{- end -}}
+    {{- $mounts = append $mounts $mount -}}
   {{- end -}}
-{{- else if $root.Values.persistence.enabled -}}
-  {{- $mount := dict "name" "data" "mountPath" ($root.Values.persistence.mountPath | default "/data") -}}
-  {{- if $root.Values.persistence.subPath -}}
-    {{- $_ := set $mount "subPath" $root.Values.persistence.subPath -}}
-  {{- end -}}
-  {{- $mounts = append $mounts $mount -}}
 {{- end -}}
 
 {{/* EmptyDir mounts */}}
-{{- range $name, $config := $root.Values.emptyDirVolumes -}}
+{{- range $name, $config := $root.Values.volumes.emptyDir -}}
   {{- $mount := dict "name" $name "mountPath" $config.mountPath -}}
   {{- if $config.subPath -}}
     {{- $_ := set $mount "subPath" $config.subPath -}}
@@ -188,7 +175,7 @@ Volume mounts template
 {{- end -}}
 
 {{/* HostPath mounts */}}
-{{- range $name, $config := $root.Values.hostPathVolumes -}}
+{{- range $name, $config := $root.Values.volumes.hostPath -}}
   {{- $mount := dict "name" $name "mountPath" $config.mountPath -}}
   {{- if $config.subPath -}}
     {{- $_ := set $mount "subPath" $config.subPath -}}
@@ -205,7 +192,7 @@ Volume mounts template
 {{- end -}}
 
 {{/* Extra volume mounts */}}
-{{- with $root.Values.extraVolumeMounts -}}
+{{- with $root.Values.volumes.extraMounts -}}
   {{- $mounts = concat $mounts . -}}
 {{- end -}}
 

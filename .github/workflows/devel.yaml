@@ -1,11 +1,6 @@
 name: devcontainer
 on:
-  push:
-    branches:
-      - '**'
-      - '!main'
-
-
+  workflow_dispatch:
 jobs:
   devcontainer-test:
     runs-on: ubuntu-latest

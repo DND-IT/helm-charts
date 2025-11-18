@@ -3,22 +3,14 @@
 
 nameOverride: advanced-test
 
-deployment:
-  enabled: true
-  replicas: 1
-  resources:
-    requests:
-      cpu: "10m"
-      memory: "32Mi"
+replicas: 1
+resources:
+  requests:
+    cpu: "10m"
+    memory: "32Mi"
 
 # Multi-container pod
-containers:
-  - name: main
-    image: registry.k8s.io/pause:3.9
-    resources:
-      requests:
-        cpu: "1m"
-        memory: "4Mi"
+extraContainers:
   - name: sidecar
     image: busybox:1.36
     command: ["sh", "-c", "while true; do echo 'Sidecar running'; sleep 30; done"]
@@ -91,18 +83,13 @@ externalSecrets:
           key: secret/data/api
           property: key
 
-# Persistence
-persistence:
-  enabled: false  # Disabled by default
-  volumes:
-    data:
-      enabled: true
-      size: 1Gi
-      mountPath: /data
-    cache:
-      enabled: true
-      size: 500Mi
-      mountPath: /cache
+# Persistence (disabled by default, would timeout in test)
+# volumes:
+#   persistent:
+#     data:
+#       enabled: false
+#       size: 1Gi
+#       mountPath: /data
 
 # Network Policy
 networkPolicy:
@@ -149,7 +136,7 @@ extraServices:
         targetPort: 9090
 
 # Security policies
-podSecurity:
+security:
   podSecurityStandards:
     enabled: false  # Disabled for ct install testing
     enforce: "baseline"
