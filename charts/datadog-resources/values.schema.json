@@ -1,0 +1,41 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "commonAnnotations": {
+            "type": "object"
+        },
+        "commonLabels": {
+            "type": "object"
+        },
+        "dashboards": {
+            "type": "object"
+        },
+        "downtimes": {
+            "type": "object"
+        },
+        "global": {
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "type": "object"
+                },
+                "datadogSite": {
+                    "type": "string"
+                },
+                "labels": {
+                    "type": "object"
+                }
+            }
+        },
+        "metrics": {
+            "type": "object"
+        },
+        "monitors": {
+            "type": "object"
+        },
+        "slos": {
+            "type": "object"
+        }
+    }
+}

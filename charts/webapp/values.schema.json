@@ -1,0 +1,291 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "affinity": {
+            "type": "object"
+        },
+        "args": {
+            "type": "array"
+        },
+        "aws_iam_role_arn": {
+            "type": "string"
+        },
+        "command": {
+            "type": "array"
+        },
+        "deploymentServiceAccountName": {
+            "type": "string"
+        },
+        "env": {
+            "type": "object"
+        },
+        "externalSecrets": {
+            "type": "object",
+            "properties": {
+                "clusterSecretStore": {
+                    "type": "string"
+                },
+                "refreshInterval": {
+                    "type": "string"
+                },
+                "secretNames": {
+                    "type": "array"
+                }
+            }
+        },
+        "extraEnvFrom": {
+            "type": "array"
+        },
+        "extraObjects": {
+            "type": "array"
+        },
+        "image_pull_policy": {
+            "type": "string"
+        },
+        "image_repo": {
+            "type": "string"
+        },
+        "image_tag": {
+            "type": "string"
+        },
+        "ingress": {
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "type": "object"
+                },
+                "className": {
+                    "type": "string"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "hosts": {
+                    "type": "array"
+                },
+                "pathType": {
+                    "type": "string"
+                },
+                "paths": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "tls": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "initContainer": {
+            "type": "object",
+            "properties": {
+                "args": {
+                    "type": "array"
+                },
+                "command": {
+                    "type": "array"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "image": {
+                    "type": "string"
+                },
+                "image_tag": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "metadata": {
+            "type": "object",
+            "properties": {
+                "deploymentAnnotations": {
+                    "type": "object"
+                },
+                "hpaAnnotations": {
+                    "type": "object"
+                },
+                "labels": {
+                    "type": "object",
+                    "properties": {
+                        "datadog": {
+                            "type": "object",
+                            "properties": {
+                                "env": {
+                                    "type": "string"
+                                },
+                                "service": {
+                                    "type": "string"
+                                },
+                                "version": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "podAnnotations": {
+                    "type": "object"
+                }
+            }
+        },
+        "nameOverride": {
+            "type": "string"
+        },
+        "nodeSelector": {
+            "type": "object"
+        },
+        "probe": {
+            "type": "object",
+            "properties": {
+                "liveness": {
+                    "type": "string"
+                },
+                "livenessInitialDelaySeconds": {
+                    "type": "integer"
+                },
+                "livenessPeriodSeconds": {
+                    "type": "integer"
+                },
+                "livenessTimeoutSeconds": {
+                    "type": "integer"
+                },
+                "readiness": {
+                    "type": "string"
+                },
+                "readinessFailureThreshold": {
+                    "type": "integer"
+                },
+                "readinessInitialDelaySeconds": {
+                    "type": "integer"
+                },
+                "readinessPeriodSeconds": {
+                    "type": "integer"
+                },
+                "readinessTimeoutSeconds": {
+                    "type": "integer"
+                },
+                "startup": {
+                    "type": "null"
+                },
+                "startupHttpHeaders": {
+                    "type": "null"
+                },
+                "startupTimeoutSeconds": {
+                    "type": "integer"
+                }
+            }
+        },
+        "replicas": {
+            "type": "integer"
+        },
+        "resources": {
+            "type": "object"
+        },
+        "revisionHistoryLimit": {
+            "type": "integer"
+        },
+        "scale": {
+            "type": "object",
+            "properties": {
+                "cpuThresholdPercentage": {
+                    "type": "integer"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxReplicas": {
+                    "type": "integer"
+                },
+                "memoryThresholdPercentage": {
+                    "type": "integer"
+                },
+                "minAvailable": {
+                    "type": "string"
+                },
+                "minReplicas": {
+                    "type": "integer"
+                }
+            }
+        },
+        "service": {
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "type": "object"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "port": {
+                    "type": "integer"
+                },
+                "portName": {
+                    "type": "string"
+                },
+                "targetPort": {
+                    "type": "integer"
+                },
+                "type": {
+                    "type": "string"
+                }
+            }
+        },
+        "serviceAccountName": {
+            "type": "string"
+        },
+        "targetGroupBinding": {
+            "type": "object",
+            "properties": {
+                "annotations": {
+                    "type": "object"
+                },
+                "enabled": {
+                    "type": "boolean"
+                },
+                "targetGroupARN": {
+                    "type": "string"
+                }
+            }
+        },
+        "tolerations": {
+            "type": "array"
+        },
+        "topologySpreadConstraints": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxSkew": {
+                    "type": "integer"
+                },
+                "topologyKeys": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "whenUnsatisfiable": {
+                    "type": "string"
+                }
+            }
+        },
+        "update": {
+            "type": "object",
+            "properties": {
+                "maxSurge": {
+                    "type": "string"
+                },
+                "maxUnavailable": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

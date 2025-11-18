@@ -68,7 +68,7 @@
             "type": "array"
         },
         "extraDeployments": {
-            "type": "null"
+            "type": "object"
         },
         "extraEnvFrom": {
             "type": "array"
@@ -256,6 +256,9 @@
             "type": "object",
             "properties": {
                 "pullPolicy": {
+                    "type": "string"
+                },
+                "registry": {
                     "type": "string"
                 },
                 "repository": {
@@ -682,7 +685,10 @@
                                 "type": "string"
                             },
                             "targetPort": {
-                                "type": "integer"
+                                "type": [
+                                    "integer",
+                                    "string"
+                                ]
                             }
                         }
                     }

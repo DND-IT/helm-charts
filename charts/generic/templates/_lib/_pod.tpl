@@ -111,7 +111,7 @@ spec:
     {{- if $config }}
     {{/* Handle extra deployments */}}
     - name: {{ $componentName | default "main" }}
-      image: {{ $config.image.repository }}:{{ $config.image.tag | default $root.Values.image.tag }}
+      image: {{ include "generic.image" (dict "image" $config.image "context" $root) }}
       imagePullPolicy: {{ $config.image.pullPolicy | default $root.Values.image.pullPolicy }}
       {{- with $config.command }}
       command:
@@ -166,9 +166,10 @@ spec:
     {{- end }}
     {{- else }}
     {{/* Default single container configuration */}}
+    {{- $imageConfig := $config.image | default $deployment.image -}}
     - name: main
-      image: {{ include "generic.image" (dict "image" $deployment.image "context" $root) }}
-      imagePullPolicy: {{ $deployment.image.pullPolicy }}
+      image: {{ include "generic.image" (dict "image" $imageConfig "context" $root) }}
+      imagePullPolicy: {{ $imageConfig.pullPolicy }}
       {{- with $deployment.command }}
       command:
         {{- toYaml . | nindent 8 }}

@@ -116,19 +116,42 @@ Create the name of the PVC
 {{- end }}
 
 {{/*
-Create image name
+Create image name with optional registry override
 Usage: include "generic.image" (dict "image" .Values.image "context" .)
+Supports:
+  image.registry: "my-registry.com" - Prepends custom registry
+  image.repository: "nginx" or "docker.io/library/nginx"
+  image.tag: "1.25"
+If registry is set and repository contains an existing registry, it will be replaced.
 */}}
 {{- define "generic.image" -}}
-{{- $image := .image -}}
-{{- if and $image $image.repository }}
-{{- if $image.tag }}
-{{- printf "%s:%s" $image.repository $image.tag }}
-{{- else }}
-{{- $image.repository }}
-{{- end }}
-{{- end }}
-{{- end }}
+  {{- $image := .image -}}
+  {{- if and $image $image.repository -}}
+    {{- $registry := $image.registry | default "" -}}
+    {{- $repository := $image.repository -}}
+    {{- $tag := $image.tag | default "" -}}
+    {{- if $registry -}}
+      {{- if contains "/" $repository -}}
+        {{- $firstPart := index (splitList "/" $repository) 0 -}}
+        {{- if or (contains "." $firstPart) (contains ":" $firstPart) -}}
+          {{- $repoPath := trimPrefix (printf "%s/" $firstPart) $repository -}}
+          {{- $repository = $repoPath -}}
+        {{- end -}}
+      {{- end -}}
+      {{- if $tag -}}
+        {{- printf "%s/%s:%s" $registry $repository $tag -}}
+      {{- else -}}
+        {{- printf "%s/%s" $registry $repository -}}
+      {{- end -}}
+    {{- else -}}
+      {{- if $tag -}}
+        {{- printf "%s:%s" $repository $tag -}}
+      {{- else -}}
+        {{- $repository -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
 
 {{/*
 Create namespace

@@ -1,63 +1,226 @@
 {
-  "$schema": "https://json-schema.org/draft-07/schema#",
-  "type": "object",
-  "properties": {
-    "nameOverride": {
-      "type": "string",
-      "description": "Override the chart name"
-    },
-    "fullnameOverride": {
-      "type": "string",
-      "description": "Override the full chart name"
-    },
-    "global": {
-      "type": "object",
-      "properties": {
-        "eksDiscovery": {
-          "type": "object",
-          "properties": {
-            "enabled": {
-              "type": "boolean",
-              "description": "Enable EKS discovery"
-            },
-            "clusterName": {
-              "type": "string",
-              "description": "Cluster name for tagging and discovery"
-            },
-            "tags": {
-              "type": "object",
-              "description": "Custom discovery tags for subnets and security groups",
-              "properties": {
-                "subnets": {
-                  "type": "object",
-                  "description": "Tags for subnet discovery",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
-                },
-                "securityGroups": {
-                  "type": "object",
-                  "description": "Tags for security group discovery",
-                  "additionalProperties": {
-                    "type": "string"
-                  }
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "ec2NodeClasses": {
+            "type": "object",
+            "properties": {
+                "default": {
+                    "type": "object",
+                    "properties": {
+                        "amiFamily": {
+                            "type": "string"
+                        },
+                        "amiSelectorTerms": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "alias": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        },
+                        "blockDeviceMappings": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "deviceName": {
+                                        "type": "string"
+                                    },
+                                    "ebs": {
+                                        "type": "object",
+                                        "properties": {
+                                            "deleteOnTermination": {
+                                                "type": "boolean"
+                                            },
+                                            "encrypted": {
+                                                "type": "boolean"
+                                            },
+                                            "volumeSize": {
+                                                "type": "string"
+                                            },
+                                            "volumeType": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "capacityReservationSelectorTerms": {
+                            "type": "array"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "kubelet": {
+                            "type": "object"
+                        },
+                        "metadataOptions": {
+                            "type": "object",
+                            "properties": {
+                                "httpEndpoint": {
+                                    "type": "string"
+                                },
+                                "httpProtocolIPv6": {
+                                    "type": "string"
+                                },
+                                "httpPutResponseHopLimit": {
+                                    "type": "integer"
+                                },
+                                "httpTokens": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "role": {
+                            "type": "string"
+                        },
+                        "securityGroupSelectorTerms": {
+                            "type": "array"
+                        },
+                        "subnetSelectorTerms": {
+                            "type": "array"
+                        },
+                        "tags": {
+                            "type": "object"
+                        }
+                    }
                 }
-              }
             }
-          }
         },
-        "role": {
-          "type": "string",
-          "description": "Karpenter Role Name for node IAM permissions"
+        "fullnameOverride": {
+            "type": "string"
+        },
+        "global": {
+            "type": "object",
+            "properties": {
+                "eksDiscovery": {
+                    "type": "object",
+                    "properties": {
+                        "clusterName": {
+                            "type": "string"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "tags": {
+                            "type": "object",
+                            "properties": {
+                                "securityGroups": {
+                                    "type": "object",
+                                    "properties": {
+                                        "karpenter.sh/discovery": {
+                                            "type": "string"
+                                        }
+                                    }
+                                },
+                                "subnets": {
+                                    "type": "object",
+                                    "properties": {
+                                        "karpenter.sh/discovery": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "role": {
+                    "type": "string"
+                }
+            }
+        },
+        "nameOverride": {
+            "type": "string"
+        },
+        "nodePools": {
+            "type": "object",
+            "properties": {
+                "default": {
+                    "type": "object",
+                    "properties": {
+                        "annotations": {
+                            "type": "object"
+                        },
+                        "disruption": {
+                            "type": "object",
+                            "properties": {
+                                "consolidateAfter": {
+                                    "type": "string"
+                                },
+                                "consolidationPolicy": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "expireAfter": {
+                            "type": "string"
+                        },
+                        "labels": {
+                            "type": "object"
+                        },
+                        "limits": {
+                            "type": "object",
+                            "properties": {
+                                "cpu": {
+                                    "type": "integer"
+                                },
+                                "memory": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "nodeClassRef": {
+                            "type": "object",
+                            "properties": {
+                                "group": {
+                                    "type": "string"
+                                },
+                                "kind": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "requirements": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "key": {
+                                        "type": "string"
+                                    },
+                                    "operator": {
+                                        "type": "string"
+                                    },
+                                    "values": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        "startupTaints": {
+                            "type": "array"
+                        },
+                        "taints": {
+                            "type": "array"
+                        }
+                    }
+                }
+            }
         }
-      },
-      "required": ["role"]
-    },
-    "nodePools": {
-      "type": "object"
-    },
-    "ec2NodeClasses": {
-      "type": "object"
     }
-  }
 }
