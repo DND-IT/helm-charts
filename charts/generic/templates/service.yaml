@@ -15,8 +15,8 @@ metadata:
   {{- end }}
 spec:
   type: {{ $serviceType }}
-  {{- if or $isHeadless (hasKey .Values.service "clusterIP") }}
-  clusterIP: {{ .Values.service.clusterIP | default "" }}
+  {{- if or $isHeadless (and (hasKey .Values.service "clusterIP") (ne (.Values.service.clusterIP | default "") "")) }}
+  clusterIP: {{ .Values.service.clusterIP }}
   {{- end }}
   {{- if and (eq $serviceType "LoadBalancer") .Values.service.loadBalancerIP }}
   loadBalancerIP: {{ .Values.service.loadBalancerIP }}
@@ -117,7 +117,8 @@ metadata:
   {{- end }}
 spec:
   type: {{ $service.type | default "ClusterIP" }}
-  {{- if hasKey $service "clusterIP" }}
+  {{- $isHeadlessExtra := and (eq ($service.type | default "ClusterIP") "ClusterIP") (eq ($service.clusterIP | default "") "None") }}
+  {{- if or $isHeadlessExtra (and (hasKey $service "clusterIP") (ne ($service.clusterIP | default "") "")) }}
   clusterIP: {{ $service.clusterIP }}
   {{- end }}
   {{- if and (eq ($service.type | default "ClusterIP") "LoadBalancer") $service.loadBalancerIP }}

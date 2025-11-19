@@ -5,6 +5,15 @@ All notable changes to the generic Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0] - 2025-11-19
+
+Preparing for prod release
+
+### Changed
+
+- Reworked most of the chart to put deployment spec into the root of the values.yaml
+
+
 ## [0.0.3] - 2025-08-01
 
 ### Added

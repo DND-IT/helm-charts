@@ -30,7 +30,7 @@
                     "type": "string"
                 },
                 "startingDeadlineSeconds": {
-                    "type": "string"
+                    "type": "integer"
                 },
                 "successfulJobsHistoryLimit": {
                     "type": "integer"
