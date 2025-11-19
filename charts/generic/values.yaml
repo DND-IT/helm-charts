@@ -81,7 +81,17 @@ progressDeadlineSeconds: 600
 
 # Image configuration
 image:
+  # Optional registry override - useful for private registries or mirrors
+  # If set, will replace any existing registry in repository
+  # Example: "my-registry.com" or "my-registry.com:5000"
+  registry: ""
+
+  # Image repository - can include registry or just image name
+  # Examples:
+  #   - "nginx" (uses default registry)
+  #   - "docker.io/library/nginx" (explicit registry, will be replaced if image.registry is set)
   repository: registry.k8s.io/pause
+
   tag: "3.10"
   pullPolicy: IfNotPresent
 
@@ -381,7 +391,7 @@ volumes:
   #   readOnly: true
 
 # Extra deployments (same structure as above)
-extraDeployments:
+extraDeployments: {}
 # worker:
 #   enabled: true
 #   replicas: 2

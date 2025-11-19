@@ -1,6 +1,6 @@
 # cronjob
 
-![Version: 0.10.0](https://img.shields.io/badge/Version-0.10.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.10.1](https://img.shields.io/badge/Version-0.10.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes cron job
 
@@ -42,7 +42,7 @@ resource "helm_release" "cronjob" {
 | cronjob.failedJobsHistoryLimit | int | `1` |  |
 | cronjob.restartPolicy | string | `"Never"` |  |
 | cronjob.schedule | string | `"0 0 * * *"` |  |
-| cronjob.startingDeadlineSeconds | string | `"120"` |  |
+| cronjob.startingDeadlineSeconds | int | `120` |  |
 | cronjob.successfulJobsHistoryLimit | int | `3` |  |
 | cronjob.suspend | bool | `false` | If cronjob executions should be suspended. |
 | cronjob.timeZone | string | `"Etc/UTC"` |  |

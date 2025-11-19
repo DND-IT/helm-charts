@@ -1,0 +1,37 @@
+# CI Test: Registry Values
+# Note: Registry injection feature is validated via template tests
+# This CI test focuses on successful deployment with standard images
+
+enabled: true
+
+# Use standard public registry image
+image:
+  repository: "registry.k8s.io/pause"
+  tag: "3.10"
+  pullPolicy: IfNotPresent
+
+replicas: 1
+
+# pause container doesn't need ports
+ports: []
+
+# Service disabled - pause container doesn't expose services
+service:
+  enabled: false
+
+# Extra deployments disabled for CI to keep test simple and fast
+extraDeployments: {}
+
+# Minimal resources for quick deployment
+resources:
+  requests:
+    cpu: 10m
+    memory: 16Mi
+  limits:
+    cpu: 50m
+    memory: 32Mi
+
+# No health checks needed for pause container
+livenessProbe: {}
+readinessProbe: {}
+startupProbe: {}

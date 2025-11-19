@@ -32,7 +32,7 @@ cronjob:
 
   restartPolicy: "Never"
   concurrencyPolicy: "Allow"
-  startingDeadlineSeconds: "120"
+  startingDeadlineSeconds: 120
 
 resources:
   {}

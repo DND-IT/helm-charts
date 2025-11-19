@@ -1,0 +1,124 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "affinity": {
+            "type": "object"
+        },
+        "args": {
+            "type": "array"
+        },
+        "command": {
+            "type": "array"
+        },
+        "cronjob": {
+            "type": "object",
+            "properties": {
+                "backoffLimit": {
+                    "type": "integer"
+                },
+                "concurrencyPolicy": {
+                    "type": "string"
+                },
+                "failedJobsHistoryLimit": {
+                    "type": "integer"
+                },
+                "restartPolicy": {
+                    "type": "string"
+                },
+                "schedule": {
+                    "type": "string"
+                },
+                "startingDeadlineSeconds": {
+                    "type": "integer"
+                },
+                "successfulJobsHistoryLimit": {
+                    "type": "integer"
+                },
+                "suspend": {
+                    "type": "boolean"
+                },
+                "timeZone": {
+                    "type": "string"
+                }
+            }
+        },
+        "cronjobName": {
+            "type": "string"
+        },
+        "env": {
+            "type": "object"
+        },
+        "externalSecrets": {
+            "type": "object",
+            "properties": {
+                "clusterSecretStore": {
+                    "type": "string"
+                },
+                "refreshInterval": {
+                    "type": "string"
+                },
+                "secretNames": {
+                    "type": "array"
+                }
+            }
+        },
+        "extraEnvFrom": {
+            "type": "array"
+        },
+        "extraObjects": {
+            "type": "array"
+        },
+        "fullnameOverride": {
+            "type": "string"
+        },
+        "image_pull_policy": {
+            "type": "string"
+        },
+        "image_repo": {
+            "type": "string"
+        },
+        "image_tag": {
+            "type": "string"
+        },
+        "metadata": {
+            "type": "object",
+            "properties": {
+                "labels": {
+                    "type": "object",
+                    "properties": {
+                        "datadog": {
+                            "type": "object",
+                            "properties": {
+                                "env": {
+                                    "type": "string"
+                                },
+                                "service": {
+                                    "type": "string"
+                                },
+                                "version": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "nameOverride": {
+            "type": "string"
+        },
+        "nodeSelector": {
+            "type": "object"
+        },
+        "port": {
+            "type": "integer"
+        },
+        "resources": {
+            "type": "object"
+        },
+        "tolerations": {
+            "type": "array"
+        }
+    }
+}
