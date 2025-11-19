@@ -51,6 +51,18 @@ entries:
     version: 0.1.0
   cronjob:
   - apiVersion: v2
+    created: "2025-11-19T05:22:08.413920755Z"
+    description: A generic kubernetes cron job
+    digest: 0b78f300769c2c4aee893d4473f7517a61593ef241a609f4cfad7eb5f591d2b8
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: cronjob
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/cronjob-0.10.1/cronjob-0.10.1.tgz
+    version: 0.10.1
+  - apiVersion: v2
     created: "2025-11-05T14:44:40.397573975Z"
     description: A generic kubernetes cron job
     digest: 53d04065e96428291185bb4455a87dcb683d1e495ba76fe94342d71eca27087c
@@ -208,6 +220,18 @@ entries:
     version: 0.1.0
   custom-resources:
   - apiVersion: v2
+    created: "2025-11-19T05:22:08.575724697Z"
+    description: Deploy custom resources via Helm
+    digest: e07046c143519983ec9f724815a9c2abfb789e938a800997678963337793dc0f
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: custom-resources
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/custom-resources-0.1.3/custom-resources-0.1.3.tgz
+    version: 0.1.3
+  - apiVersion: v2
     created: "2024-09-12T12:19:06.781934894Z"
     description: Deploy custom resources via Helm
     digest: dd3284697505057b860ac09e5b2c95d7198cb3d4056403e48609f7371b12fac1
@@ -248,6 +272,31 @@ entries:
       category: Monitoring
     apiVersion: v2
     appVersion: 1.0.0
+    created: "2025-11-19T05:22:08.723984668Z"
+    description: A Helm chart for managing Datadog custom resources (monitors, dashboards,
+      SLOs)
+    digest: e300b3eaf3c377190519f334d7a4cb263af8d84a8594109b3222615c0b95ffee
+    home: https://github.com/DND-IT/helm-charts
+    keywords:
+    - datadog
+    - monitoring
+    - observability
+    - apm
+    - metrics
+    maintainers:
+    - email: platform@example.com
+      name: Platform Team
+    name: datadog-resources
+    sources:
+    - https://github.com/DND-IT/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/datadog-resources-0.1.1/datadog-resources-0.1.1.tgz
+    version: 0.1.1
+  - annotations:
+      category: Monitoring
+    apiVersion: v2
+    appVersion: 1.0.0
     created: "2025-07-30T14:23:50.504579748Z"
     description: A Helm chart for managing Datadog custom resources (monitors, dashboards,
       SLOs)
@@ -270,6 +319,29 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/datadog-resources-0.1.0/datadog-resources-0.1.0.tgz
     version: 0.1.0
   generic:
+  - apiVersion: v2
+    created: "2025-11-19T05:22:08.887364348Z"
+    description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
+      workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
+      options. Designed for maximum flexibility while maintaining security best practices
+      by default. Optimized for AWS with ALB ingress controller support. '
+    digest: 807544d89eb9d60b80aaba9ee0cfe4ec61ed169306a3f257d13d77e122e069b2
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - application
+    - kubernetes
+    - generic
+    kubeVersion: '>=1.29.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: generic
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/generic-0.1.0/generic-0.1.0.tgz
+    version: 0.1.0
   - apiVersion: v2
     created: "2025-11-18T13:50:44.965391627Z"
     description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
@@ -349,6 +421,19 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/generic-0.0.1/generic-0.0.1.tgz
     version: 0.0.1
   karpenter-resources:
+  - apiVersion: v2
+    appVersion: 1.6.0
+    created: "2025-11-19T05:22:09.030805666Z"
+    description: A Helm chart for Karpenter Custom Resources
+    digest: b41645e3912abb146689ea5feb7ac2e10d1fb447b70f60ea56393d81ab3dafbc
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: karpenter-resources
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/karpenter-resources-1.0.2/karpenter-resources-1.0.2.tgz
+    version: 1.0.2
   - apiVersion: v2
     appVersion: 1.6.0
     created: "2025-09-16T09:51:42.618660589Z"
@@ -467,6 +552,18 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/karpenter-resources-0.1.0/karpenter-resources-0.1.0.tgz
     version: 0.1.0
   webapp:
+  - apiVersion: v2
+    created: "2025-11-19T05:22:09.148382748Z"
+    description: A generic kubernetes application
+    digest: 9f6b00aec6ba7b3f86d1939539b8673cea24c73c23f50da07388aac4eb74d136
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: webapp
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/webapp-1.11.1/webapp-1.11.1.tgz
+    version: 1.11.1
   - apiVersion: v2
     created: "2025-09-12T15:13:52.413769109Z"
     description: A generic kubernetes application
@@ -647,4 +744,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2025-11-18T13:50:44.965492205Z"
+generated: "2025-11-19T05:22:09.148731632Z"
