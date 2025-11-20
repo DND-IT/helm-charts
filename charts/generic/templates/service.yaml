@@ -89,6 +89,20 @@ spec:
       appProtocol: {{ .appProtocol }}
       {{- end }}
     {{- end }}
+    {{- else if .Values.ports }}
+    # Use top-level ports configuration
+    {{- range .Values.ports }}
+    - name: {{ .name | default "http" }}
+      port: {{ .port | default .containerPort }}
+      targetPort: {{ .containerPort }}
+      protocol: {{ .protocol | default "TCP" }}
+      {{- if and (or (eq $serviceType "NodePort") (eq $serviceType "LoadBalancer")) .nodePort }}
+      nodePort: {{ .nodePort }}
+      {{- end }}
+      {{- if .appProtocol }}
+      appProtocol: {{ .appProtocol }}
+      {{- end }}
+    {{- end }}
     {{- else }}
     # Fallback to single port configuration for backward compatibility
     - name: http

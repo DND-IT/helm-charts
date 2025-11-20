@@ -84,3 +84,80 @@ tests:
       - equal:
           path: metadata.annotations["service.beta.kubernetes.io/aws-load-balancer-type"]
           value: "nlb"
+
+  - it: should default to top-level ports configuration
+    set:
+      ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+        - name: metrics
+          containerPort: 9090
+          protocol: TCP
+      service:
+        enabled: true
+        ports: []
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 2
+      - equal:
+          path: spec.ports[0].name
+          value: http
+      - equal:
+          path: spec.ports[0].port
+          value: 8000
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8000
+      - equal:
+          path: spec.ports[1].name
+          value: metrics
+      - equal:
+          path: spec.ports[1].port
+          value: 9090
+      - equal:
+          path: spec.ports[1].targetPort
+          value: 9090
+
+  - it: should allow service.ports to override top-level ports
+    set:
+      ports:
+        - name: http
+          containerPort: 8000
+          protocol: TCP
+      service:
+        enabled: true
+        ports:
+          - name: http
+            port: 80
+            targetPort: 8000
+            protocol: TCP
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 1
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8000
+
+  - it: should support port field in top-level ports for custom service port
+    set:
+      ports:
+        - name: http
+          containerPort: 8080
+          port: 80
+          protocol: TCP
+      service:
+        enabled: true
+        ports: []
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 80
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
