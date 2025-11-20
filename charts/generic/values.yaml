@@ -7,6 +7,13 @@
 # ============================================================================
 
 # Common labels and annotations applied to all resources
+# Supports Helm template syntax for dynamic values
+# Example:
+# commonLabels:
+#   app.kubernetes.io/version: "{{ .Values.image.tag }}"
+#   environment: "{{ .Values.generic.environment }}"
+# commonAnnotations:
+#   deployment.version: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 commonLabels: {}
 commonAnnotations: {}
 
@@ -103,10 +110,16 @@ command: []
 args: []
 
 # Container ports
+# These ports are used for:
+# 1. Container port definitions in the Pod spec
+# 2. Service port configuration (when service.ports is not specified)
+# If service.ports is not defined, the service will automatically use these ports
+# You can optionally specify a 'port' field to use a different service port than containerPort
 ports: []
 # - name: http
-#   containerPort: 80
+#   containerPort: 8000
 #   protocol: TCP
+#   port: 80  # Optional: Use port 80 for service, 8000 for container
 # - name: metrics
 #   containerPort: 9090
 #   protocol: TCP
@@ -533,11 +546,15 @@ jobs: {}
 service:
   enabled: true
   type: ClusterIP
-  ports:
-  - name: http
-    port: 80
-    targetPort: 80
-    protocol: TCP
+  # Service ports - defaults to top-level ports configuration if not specified
+  # If neither service.ports nor top-level ports are set, defaults to port 80
+  ports: []
+  # - name: http
+  #   port: 80
+  #   targetPort: 80  # Optional: defaults to port if not specified
+  #   protocol: TCP
+  #   nodePort: 30080  # Optional: for NodePort/LoadBalancer services
+  #   appProtocol: http  # Optional: application protocol
   annotations: {}
   labels: {}
   clusterIP: ""

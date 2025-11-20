@@ -6,7 +6,7 @@ description: |
   Designed for maximum flexibility while maintaining security best practices by default.
   Optimized for AWS with ALB ingress controller support.
 type: application
-version: 0.1.1
+version: 0.1.2
 
 keywords:
   - application

@@ -16,6 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - Container images now support template evaluation using `tpl` function for dynamic image composition
+- Service now defaults to top-level `ports` configuration when `service.ports` is not specified
+- Support for `port` field in top-level ports to specify different service port from containerPort
+- Template evaluation support for `commonLabels` and `commonAnnotations` (e.g., `app.kubernetes.io/version: "{{ .Values.image.tag }}"`)
+- New `generic.tplYaml` helper for template evaluation in YAML dictionaries
+
+### Changed
+
+- Changed `service.ports` default from port 80 to empty array to enable automatic port detection from container ports
 
 ## [0.1.0] - 2025-11-19
 

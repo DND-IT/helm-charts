@@ -94,13 +94,50 @@ tests:
   - it: should handle template values in env
     set:
       nameOverride: myapp
-      deployment:
-        env:
-          - name: APP_NAME
-            value: "{{ .Values.nameOverride }}"
+      env:
+        - name: APP_NAME
+          value: "{{ .Values.nameOverride }}"
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: APP_NAME
             value: myapp
+
+  - it: should evaluate templates in commonLabels
+    set:
+      image:
+        repository: "myapp"
+        tag: "v1.2.3"
+      generic:
+        environment: "production"
+      commonLabels:
+        app.kubernetes.io/version: "{{ .Values.image.tag }}"
+        app.environment: "{{ .Values.generic.environment }}"
+        combined: "{{ .Release.Name }}-{{ .Values.image.tag }}"
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/version"]
+          value: v1.2.3
+      - equal:
+          path: metadata.labels["app.environment"]
+          value: production
+      - equal:
+          path: metadata.labels["combined"]
+          value: RELEASE-NAME-v1.2.3
+
+  - it: should evaluate templates in commonAnnotations
+    set:
+      image:
+        repository: "myapp"
+        tag: "v1.2.3"
+      commonAnnotations:
+        app.version: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+        release: "{{ .Release.Name }}"
+    asserts:
+      - equal:
+          path: metadata.annotations["app.version"]
+          value: myapp:v1.2.3
+      - equal:
+          path: metadata.annotations["release"]
+          value: RELEASE-NAME

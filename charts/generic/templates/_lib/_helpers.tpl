@@ -40,10 +40,10 @@ helm.sh/chart: {{ include "generic.chart" $context }}
 {{ include "generic.selectorLabels" $context }}
 app.kubernetes.io/managed-by: {{ $context.Release.Service }}
 {{- with $context.Values.commonLabels }}
-{{ toYaml . }}
+{{- include "generic.tplYaml" (dict "value" . "context" $context) | nindent 0 }}
 {{- end }}
 {{- with $labels }}
-{{ toYaml . }}
+{{- include "generic.tplYaml" (dict "value" . "context" $context) | nindent 0 }}
 {{- end }}
 {{- end }}
 
@@ -54,10 +54,10 @@ Common annotations
 {{- $context := .context | default . -}}
 {{- $annotations := .annotations | default dict -}}
 {{- with $context.Values.commonAnnotations }}
-{{ toYaml . }}
+{{- include "generic.tplYaml" (dict "value" . "context" $context) | nindent 0 }}
 {{- end }}
 {{- with $annotations }}
-{{ toYaml . }}
+{{- include "generic.tplYaml" (dict "value" . "context" $context) | nindent 0 }}
 {{- end }}
 {{- end }}
 
@@ -172,6 +172,26 @@ Render value with template support
 {{- tpl .value .context }}
 {{- else }}
 {{- tpl (.value | toYaml) .context }}
+{{- end }}
+{{- end }}
+
+{{/*
+Render YAML dict/map with template support for string values
+Recursively evaluates template strings in dictionary values
+*/}}
+{{- define "generic.tplYaml" -}}
+{{- $context := .context -}}
+{{- $value := .value -}}
+{{- range $key, $val := $value }}
+{{- if kindIs "string" $val }}
+{{- if contains "{{" $val }}
+{{ $key }}: {{ tpl $val $context }}
+{{- else }}
+{{ $key }}: {{ $val }}
+{{- end }}
+{{- else }}
+{{ $key }}: {{ $val }}
+{{- end }}
 {{- end }}
 {{- end }}
 
