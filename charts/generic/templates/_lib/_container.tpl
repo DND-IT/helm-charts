@@ -85,20 +85,38 @@ Container template for generic workloads
 
 {{/*
 Container image helper
+Supports same registry override functionality as generic.image
+If container.image.registry is not set, inherits from root image.registry
+Supports template strings with {{ }} syntax via tpl function
 */}}
 {{- define "generic.containerImage" -}}
 {{- $container := .container -}}
 {{- $root := .root -}}
 {{- if $container.image -}}
   {{- if kindIs "string" $container.image -}}
-    {{- $container.image -}}
-  {{- else if and $container.image.repository $container.image.tag -}}
-    {{- printf "%s:%s" $container.image.repository $container.image.tag -}}
+    {{- if contains "{{" $container.image -}}
+      {{- tpl $container.image $root -}}
+    {{- else -}}
+      {{- $container.image -}}
+    {{- end -}}
+  {{- else if $container.image.repository -}}
+    {{- $imageConfig := dict -}}
+    {{- range $key, $value := $container.image -}}
+      {{- if and (kindIs "string" $value) (contains "{{" $value) -}}
+        {{- $_ := set $imageConfig $key (tpl $value $root) -}}
+      {{- else -}}
+        {{- $_ := set $imageConfig $key $value -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if and (not $imageConfig.registry) $root.Values.image.registry -}}
+      {{- $imageConfig = merge (dict "registry" $root.Values.image.registry) $imageConfig -}}
+    {{- end -}}
+    {{- include "generic.image" (dict "image" $imageConfig "context" $root) -}}
   {{- else -}}
     {{- $container.image -}}
   {{- end -}}
 {{- else -}}
-  {{- include "generic.image" $root -}}
+  {{- include "generic.image" (dict "image" $root.Values.image "context" $root) -}}
 {{- end -}}
 {{- end -}}
 
