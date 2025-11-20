@@ -110,3 +110,169 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[1].restartPolicy
           value: Always
+
+  - it: should support registry override for init containers
+    set:
+      image:
+        registry: "my-registry.example.com"
+        repository: "nginx"
+        tag: "1.25"
+      initContainers:
+        - name: wait-for-db
+          image:
+            registry: "custom-registry.io"
+            repository: "busybox"
+            tag: "1.35"
+          command: ['sh', '-c']
+          args: ['echo "waiting"']
+        - name: setup
+          image:
+            repository: "alpine"
+            tag: "3.18"
+          command: ['sh', '-c', 'echo "setup"']
+      service:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: custom-registry.io/busybox:1.35
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: my-registry.example.com/alpine:3.18
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: my-registry.example.com/nginx:1.25
+
+  - it: should handle string images in init containers
+    set:
+      image:
+        registry: "my-registry.example.com"
+        repository: "nginx"
+        tag: "1.25"
+      initContainers:
+        - name: setup
+          image: "docker.io/alpine:3.18"
+          command: ['sh', '-c', 'echo "setup"']
+      service:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: docker.io/alpine:3.18
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: my-registry.example.com/nginx:1.25
+
+  - it: should handle registry replacement in init containers
+    set:
+      image:
+        registry: "my-registry.example.com"
+        repository: "nginx"
+        tag: "1.25"
+      initContainers:
+        - name: setup
+          image:
+            registry: "override-registry.io"
+            repository: "docker.io/alpine"
+            tag: "3.18"
+          command: ['sh', '-c', 'echo "setup"']
+      service:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: override-registry.io/alpine:3.18
+
+  - it: should support template strings in init container images
+    set:
+      image:
+        registry: "my-registry.example.com"
+        repository: "myapp"
+        tag: "v1.2.3"
+      initContainers:
+        - name: run-migrations
+          image: "{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ['sh', '-c', 'echo "migrations"']
+        - name: partial-template
+          image: "docker.io/{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          command: ['sh', '-c', 'echo "partial"']
+      service:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: my-registry.example.com/myapp:v1.2.3
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: docker.io/myapp:v1.2.3
+
+  - it: should support template strings in sidecar and extra containers
+    set:
+      image:
+        registry: "my-registry.example.com"
+        repository: "myapp"
+        tag: "v1.0.0"
+      sidecarContainers:
+        - name: sidecar-template
+          image: "{{ .Values.image.registry }}/prometheus:latest"
+      extraContainers:
+        - name: extra-template
+          image: "{{ .Values.image.registry }}/fluent-bit:{{ .Values.image.tag }}"
+      service:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: my-registry.example.com/prometheus:latest
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: my-registry.example.com/fluent-bit:v1.0.0
+
+  - it: should support templates in structured image fields
+    set:
+      image:
+        registry: "my-registry.example.com"
+        repository: "myapp"
+        tag: "v1.2.3"
+      initContainers:
+        - name: same-image
+          image:
+            repository: "{{ .Values.image.repository }}"
+            tag: "{{ .Values.image.tag }}"
+          command: ['sh', '-c', 'echo "migrations"']
+        - name: custom-tag
+          image:
+            repository: "{{ .Values.image.repository }}"
+            tag: "migration-{{ .Values.image.tag }}"
+          command: ['sh', '-c', 'echo "custom"']
+      service:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: my-registry.example.com/myapp:v1.2.3
+      - equal:
+          path: spec.template.spec.initContainers[1].image
+          value: my-registry.example.com/myapp:migration-v1.2.3
+
+  - it: should handle empty registry with structured templates
+    set:
+      image:
+        registry: ""
+        repository: "nginx"
+        tag: "1.25"
+      initContainers:
+        - name: structured-template
+          image:
+            repository: "{{ .Values.image.repository }}"
+            tag: "{{ .Values.image.tag }}"
+          command: ['sh', '-c', 'echo "test"']
+      service:
+        enabled: false
+    asserts:
+      - equal:
+          path: spec.template.spec.initContainers[0].image
+          value: nginx:1.25
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: nginx:1.25

@@ -197,6 +197,12 @@ extraContainers: []
 #       memory: "64Mi"
 
 # Init containers
+# Supports multiple image formats:
+# 1. String image: "busybox:1.35"
+# 2. Structured image: { repository: "busybox", tag: "1.35", registry: "my-registry.io" }
+#    - Structured images automatically inherit image.registry if not specified
+# 3. Template string: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+#    - Note: Use structured image format if you need registry inheritance
 initContainers: []
 # - name: wait-for-db
 #   image: busybox:1.35
@@ -216,6 +222,18 @@ initContainers: []
 #     limits:
 #       cpu: 50m
 #       memory: 64Mi
+# - name: run-migrations
+#   # Recommended: Use structured format to inherit registry automatically
+#   image:
+#     repository: "{{ .Values.image.repository }}"
+#     tag: "{{ .Values.image.tag }}"
+#   command: ['sh', '-c', 'migrate up']
+# - name: with-different-tag
+#   # Use template in structured format for custom combinations
+#   image:
+#     repository: "{{ .Values.image.repository }}"
+#     tag: "migration-{{ .Values.image.tag }}"
+#   command: ['sh', '-c', 'special-migrate']
 
 # Sidecar containers (implemented as init containers with restartPolicy: Always)
 sidecarContainers: []
