@@ -1,8 +1,8 @@
 {{/*
-Expand the name of the chart.
+Create a default name.
 */}}
 {{- define "generic.name" -}}
-{{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- default .Release.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
@@ -39,6 +39,7 @@ Common labels
 helm.sh/chart: {{ include "generic.chart" $context }}
 {{ include "generic.selectorLabels" $context }}
 app.kubernetes.io/managed-by: {{ $context.Release.Service }}
+app.kubernetes.io/version: {{ $context.Values.image.tag | quote }}
 {{- with $context.Values.commonLabels }}
 {{- include "generic.tplYaml" (dict "value" . "context" $context) | nindent 0 }}
 {{- end }}
