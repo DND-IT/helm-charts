@@ -320,6 +320,29 @@ entries:
     version: 0.1.0
   generic:
   - apiVersion: v2
+    created: "2025-11-28T11:02:30.542901929Z"
+    description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
+      workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
+      options. Designed for maximum flexibility while maintaining security best practices
+      by default. Optimized for AWS with ALB ingress controller support. '
+    digest: eb035a045aacb1c2ad8865cb6b94b23308cc9418a0f8ab12760880ac3cad3a96
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - application
+    - kubernetes
+    - generic
+    kubeVersion: '>=1.29.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: generic
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/generic-0.2.1/generic-0.2.1.tgz
+    version: 0.2.1
+  - apiVersion: v2
     created: "2025-11-21T13:26:39.187262469Z"
     description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
       workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
@@ -490,6 +513,19 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/generic-0.0.1/generic-0.0.1.tgz
     version: 0.0.1
   karpenter-resources:
+  - apiVersion: v2
+    appVersion: 1.6.0
+    created: "2025-11-28T11:02:30.695028449Z"
+    description: A Helm chart for Karpenter Custom Resources
+    digest: 9f81dcbc12c7e6b9f7c9a09d1ae5172c53045734173f3115510638c82f811214
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: karpenter-resources
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/karpenter-resources-1.0.3/karpenter-resources-1.0.3.tgz
+    version: 1.0.3
   - apiVersion: v2
     appVersion: 1.6.0
     created: "2025-11-19T05:22:09.030805666Z"
@@ -813,4 +849,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2025-11-21T13:26:39.187387001Z"
+generated: "2025-11-28T11:02:30.695195914Z"
