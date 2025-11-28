@@ -1,7 +1,7 @@
 {{- if .Values.ingress.enabled -}}
 {{- $fullName := include "generic.fullname" . -}}
 {{- $namespace := include "generic.namespace" . -}}
-{{- $svcPort := include "generic.servicePort" . -}}
+{{- $svcPortName := include "generic.servicePortName" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -57,7 +57,7 @@ spec:
               service:
                 name: {{ $fullName }}
                 port:
-                  number: {{ $svcPort }}
+                  name: {{ $svcPortName }}
               {{- end }}
           {{- end }}
     {{- end }}

@@ -16,14 +16,14 @@ tests:
 
   - it: should not create deployment when disabled
     set:
-      deployment.enabled: false
+      enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
   - it: should set replicas
     set:
-      deployment.replicas: 5
+      replicas: 5
     asserts:
       - equal:
           path: spec.replicas
@@ -31,9 +31,10 @@ tests:
 
   - it: should add labels
     set:
-      podLabels:
-        custom: label
-        environment: test
+      pod:
+        labels:
+          custom: label
+          environment: test
     asserts:
       - equal:
           path: spec.template.metadata.labels.custom

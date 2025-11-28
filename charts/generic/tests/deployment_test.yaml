@@ -15,7 +15,7 @@ tests:
 
   - it: should create deployment when enabled
     set:
-      deployment.enabled: true
+      enabled: true
       configMap.enabled: false
       secret.enabled: false
     asserts:
@@ -26,7 +26,7 @@ tests:
 
   - it: should not create deployment when disabled
     set:
-      deployment.enabled: false
+      enabled: false
       configMap.enabled: false
       secret.enabled: false
     asserts:
@@ -37,7 +37,7 @@ tests:
     set:
       configMap.enabled: false
       secret.enabled: false
-      deployment.replicas: 3
+      replicas: 3
     asserts:
       - equal:
           path: spec.replicas
@@ -47,7 +47,7 @@ tests:
     set:
       configMap.enabled: false
       secret.enabled: false
-      deployment.strategy:
+      strategy:
         type: RollingUpdate
         rollingUpdate:
           maxUnavailable: 1
@@ -72,7 +72,7 @@ tests:
           path: spec.template.metadata.labels
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/name"]
-          value: generic
+          value: RELEASE-NAME
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/instance"]
           value: RELEASE-NAME
@@ -82,10 +82,11 @@ tests:
     set:
       configMap.enabled: false
       secret.enabled: false
-      podSecurityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
-        fsGroup: 1000
+      pod:
+        securityContext:
+          runAsUser: 1000
+          runAsGroup: 1000
+          fsGroup: 1000
     asserts:
       - equal:
           path: spec.template.spec.securityContext.runAsUser
