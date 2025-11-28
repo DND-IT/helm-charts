@@ -202,6 +202,8 @@ Get the service port
 {{- define "generic.servicePort" -}}
 {{- if .Values.service.ports }}
 {{- (index .Values.service.ports 0).port }}
+{{- else if .Values.ports }}
+{{- (index .Values.ports 0).port | default (index .Values.ports 0).containerPort }}
 {{- else }}
 {{- 80 }}
 {{- end }}
@@ -213,8 +215,23 @@ Get the service target port
 {{- define "generic.serviceTargetPort" -}}
 {{- if .Values.service.ports }}
 {{- (index .Values.service.ports 0).targetPort }}
+{{- else if .Values.ports }}
+{{- (index .Values.ports 0).containerPort }}
 {{- else }}
 {{- 80 }}
+{{- end }}
+{{- end }}
+
+{{/*
+Get the service port name
+*/}}
+{{- define "generic.servicePortName" -}}
+{{- if .Values.service.ports }}
+{{- (index .Values.service.ports 0).name | default "http" }}
+{{- else if .Values.ports }}
+{{- (index .Values.ports 0).name | default "http" }}
+{{- else }}
+{{- "http" }}
 {{- end }}
 {{- end }}
 

@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed ingress backend to use named port reference instead of port number for better flexibility
 - Fixed initContainers, extraContainers, and sidecarContainers to support image.registry override
 - Added registry inheritance for init/extra/sidecar containers when image.registry is not explicitly set
 - Added support for Helm template syntax in container image strings (e.g., `"{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"`)

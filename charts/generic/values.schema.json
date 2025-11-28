@@ -777,7 +777,10 @@
                             "type": "string"
                         },
                         "port": {
-                            "type": "string"
+                            "oneOf": [
+                                { "type": "string" },
+                                { "type": "integer" }
+                            ]
                         }
                     }
                 },

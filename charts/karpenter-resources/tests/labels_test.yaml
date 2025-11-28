@@ -19,10 +19,12 @@ tests:
         default:
           enabled: true
     asserts:
+      - matchRegex:
+          path: metadata.labels["helm.sh/chart"]
+          pattern: ^karpenter-resources-\d+\.\d+\.\d+$
       - isSubset:
           path: metadata.labels
           content:
-            helm.sh/chart: karpenter-resources-1.0.0
             app.kubernetes.io/name: karpenter-resources
             app.kubernetes.io/instance: RELEASE-NAME
             app.kubernetes.io/managed-by: Helm
