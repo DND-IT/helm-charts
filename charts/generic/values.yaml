@@ -421,11 +421,16 @@ volumes:
   #   mountPath: /config
   #   readOnly: true
 
-# Extra deployments (same structure as above)
+# Extra deployments
+# Note: Unlike the main deployment, extraDeployments require raw Kubernetes format for:
+#   - volumes: Use standard K8s volume array format (not the structured volumes.emptyDir/persistent format)
+#   - volumeMounts: Use standard K8s volumeMount array format
+#   - initContainers/sidecarContainers: Not inherited from root by default (set inheritInitContainers: true to inherit)
 extraDeployments: {}
 # worker:
 #   enabled: true
 #   replicas: 2
+#   inheritInitContainers: false  # Set to true to inherit root-level initContainers/sidecarContainers
 #   image:
 #     repository: myapp
 #     tag: worker-1.0.0
@@ -437,6 +442,18 @@ extraDeployments: {}
 #   env:
 #     - name: WORKER_TYPE
 #       value: background
+#   # Volumes must be in raw Kubernetes format
+#   volumes:
+#     - name: tmp
+#       emptyDir: {}
+#     - name: cache
+#       emptyDir:
+#         sizeLimit: 1Gi
+#   volumeMounts:
+#     - name: tmp
+#       mountPath: /tmp
+#     - name: cache
+#       mountPath: /cache
 #   scheduling:
 #     nodeSelector:
 #       workload-type: batch

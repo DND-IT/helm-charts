@@ -95,8 +95,10 @@ spec:
   securityContext:
     {{- $podSecurityContext := $config.podSecurityContext | default ($config.pod).securityContext | default $deployment.pod.securityContext | default $root.Values.security.defaultPodSecurityContext -}}
     {{- include "generic.podSecurityContext" (dict "securityContext" $podSecurityContext "defaults" $root.Values.security.defaultPodSecurityContext) | nindent 4 }}
-  {{- $initContainers := $config.initContainers | default $deployment.initContainers -}}
-  {{- $sidecarContainers := $config.sidecarContainers | default $deployment.sidecarContainers -}}
+  {{- /* For extraDeployments, only inherit root initContainers/sidecarContainers if inheritInitContainers is true */ -}}
+  {{- $inheritInit := $config.inheritInitContainers | default false -}}
+  {{- $initContainers := $config.initContainers | default (ternary $deployment.initContainers list (or (empty $config) $inheritInit)) -}}
+  {{- $sidecarContainers := $config.sidecarContainers | default (ternary $deployment.sidecarContainers list (or (empty $config) $inheritInit)) -}}
   {{- if or $initContainers $sidecarContainers }}
   initContainers:
     {{- range $container := $initContainers }}
