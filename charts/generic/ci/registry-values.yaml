@@ -2,7 +2,7 @@
 # Note: Registry injection feature is validated via template tests
 # This CI test focuses on successful deployment with standard images
 
-enabled: true
+deploymentEnabled: true
 
 # Use standard public registry image
 image:

@@ -16,7 +16,7 @@ tests:
 
   - it: should not create deployment when disabled
     set:
-      enabled: false
+      deploymentEnabled: false
     asserts:
       - hasDocuments:
           count: 0

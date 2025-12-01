@@ -49,7 +49,7 @@
         "cronjobs": {
             "type": "object"
         },
-        "enabled": {
+        "deploymentEnabled": {
             "type": "boolean"
         },
         "env": {

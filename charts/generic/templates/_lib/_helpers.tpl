@@ -239,7 +239,7 @@ Get the service port name
 Validate required values
 */}}
 {{- define "generic.validateValues" -}}
-{{- if .Values.enabled }}
+{{- if .Values.deploymentEnabled }}
 {{- if not .Values.image.repository }}
 {{- fail "image.repository is required when deployment is enabled" }}
 {{- end }}

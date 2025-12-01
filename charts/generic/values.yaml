@@ -74,7 +74,7 @@ security:
 # ============================================================================
 
 # Enable/disable the primary deployment
-enabled: true
+deploymentEnabled: true
 replicas: 1
 revisionHistoryLimit: 2
 

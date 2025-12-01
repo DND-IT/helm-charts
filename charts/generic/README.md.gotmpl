@@ -36,13 +36,12 @@ helm install my-release dnd-it/generic -f values.yaml
 
 # Deploy with custom image
 helm install my-release dnd-it/generic \
-  --set deployment.enabled=true \
   --set image.repository=myorg/myapp \
   --set image.tag=v1.0.0
 
 # Deploy a CronJob
 helm install my-release dnd-it/generic \
-  --set deployment.enabled=false \
+  --set enabled=false \
   --set cronjobs.backup.enabled=true \
   --set cronjobs.backup.schedule="0 * * * *" \
   --set cronjobs.backup.image.repository=myorg/backup-job
@@ -57,55 +56,58 @@ image:
   repository: nginx
   tag: "1.21-alpine"
 
+ports:
+  - name: http
+    containerPort: 8080
+
 service:
-  port: 80
-  targetPort: 8080
+  enabled: true
 
 ingress:
   enabled: true
-  className: alb
-  alb:
-    annotations:
-      alb.ingress.kubernetes.io/scheme: internet-facing
-      alb.ingress.kubernetes.io/target-type: ip
+  ingressClassName: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
   hosts:
     - host: myapp.example.com
       paths:
         - path: /
           pathType: Prefix
 
-deployment:
-  resources:
-    limits:
-      cpu: 500m
-      memory: 512Mi
-    requests:
-      cpu: 100m
-      memory: 128Mi
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
 ```
 
 ### Application with ALB Ingress
 
 ```yaml
-deployment:
-  enabled: true
-  replicas: 2
+deploymentEnabled: true
+replicas: 2
 
 image:
   repository: myorg/webapp
   tag: "v2.0.0"
 
+ports:
+  - name: http
+    containerPort: 8080
+
 ingress:
   enabled: true
-  className: alb
-  alb:
-    annotations:
-      alb.ingress.kubernetes.io/scheme: internet-facing
-      alb.ingress.kubernetes.io/target-type: ip
-      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678
-      alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-      alb.ingress.kubernetes.io/ssl-redirect: "443"
-      alb.ingress.kubernetes.io/group.name: shared-alb
+  ingressClassName: alb
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789012:certificate/12345678
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/ssl-redirect: "443"
+    alb.ingress.kubernetes.io/group.name: shared-alb
   hosts:
     - host: app.example.com
       paths:
@@ -116,8 +118,7 @@ ingress:
 ### CronJob Example
 
 ```yaml
-deployment:
-  enabled: false  # Disable main deployment
+deploymentEnabled: false  # Disable main deployment
 
 cronjobs:
   backup:
@@ -151,8 +152,7 @@ cronjobs:
 ### Job Example
 
 ```yaml
-deployment:
-  enabled: false  # Disable main deployment
+deploymentEnabled: false  # Disable main deployment
 
 jobs:
   migration:
@@ -178,18 +178,20 @@ jobs:
 
 ```yaml
 # Main deployment
-deployment:
-  enabled: true
-  replicas: 3
-  env:
-    - name: SERVICE_TYPE
-      value: "api"
+deploymentEnabled: true
+replicas: 3
 
 image:
   repository: myorg/api
   tag: "v1.0.0"
 
+env:
+  - name: SERVICE_TYPE
+    value: "api"
+
 # Additional deployments
+# Note: extraDeployments use raw Kubernetes format for volumes/volumeMounts
+# and do not inherit initContainers by default
 extraDeployments:
   worker:
     replicas: 2
@@ -203,9 +205,18 @@ extraDeployments:
       requests:
         cpu: 200m
         memory: 512Mi
+    # Volumes in raw Kubernetes format
+    volumes:
+      - name: tmp
+        emptyDir: {}
+    volumeMounts:
+      - name: tmp
+        mountPath: /tmp
 
   admin:
     replicas: 1
+    # Set to true to inherit root-level initContainers
+    inheritInitContainers: false
     image:
       repository: myorg/admin
       tag: "v1.0.0"
