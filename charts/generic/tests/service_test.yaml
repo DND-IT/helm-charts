@@ -161,3 +161,82 @@ tests:
       - equal:
           path: spec.ports[0].targetPort
           value: 8080
+
+  - it: extraServices should use component selector when matching extraDeployment exists
+    set:
+      service.enabled: false
+      extraDeployments:
+        worker:
+          image:
+            repository: nginx
+            tag: latest
+      extraServices:
+        worker:
+          enabled: true
+          ports:
+            - name: http
+              port: 8080
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-worker
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: RELEASE-NAME
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
+      - equal:
+          path: spec.selector["app.kubernetes.io/component"]
+          value: worker
+
+  - it: extraServices should use base selector when no matching extraDeployment
+    set:
+      service.enabled: false
+      extraServices:
+        external-api:
+          enabled: true
+          ports:
+            - name: http
+              port: 8080
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-external-api
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: RELEASE-NAME
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
+      - isNull:
+          path: spec.selector["app.kubernetes.io/component"]
+
+  - it: extraServices should allow custom selector override
+    set:
+      service.enabled: false
+      extraDeployments:
+        worker:
+          image:
+            repository: nginx
+            tag: latest
+      extraServices:
+        worker:
+          enabled: true
+          ports:
+            - name: http
+              port: 8080
+          selector:
+            custom-label: custom-value
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.selector["custom-label"]
+          value: custom-value
+      - isNull:
+          path: spec.selector["app.kubernetes.io/component"]

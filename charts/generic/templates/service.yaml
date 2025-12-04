@@ -172,6 +172,11 @@ spec:
   {{- if $service.selector }}
   selector:
     {{- toYaml $service.selector | nindent 4 }}
+  {{- else if hasKey $.Values.extraDeployments $name }}
+  {{- /* Service name matches an extraDeployment, use component-specific selector */}}
+  selector:
+    {{- include "generic.selectorLabels" $ | nindent 4 }}
+    app.kubernetes.io/component: {{ $name }}
   {{- else }}
   selector:
     {{- include "generic.selectorLabels" $ | nindent 4 }}
