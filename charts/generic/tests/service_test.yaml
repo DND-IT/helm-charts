@@ -10,6 +10,18 @@ tests:
           path: metadata.name
           value: RELEASE-NAME
 
+  - it: should have component main in selector to distinguish from extraDeployments
+    asserts:
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: RELEASE-NAME
+      - equal:
+          path: spec.selector["app.kubernetes.io/instance"]
+          value: RELEASE-NAME
+      - equal:
+          path: spec.selector["app.kubernetes.io/component"]
+          value: main
+
   - it: should not create service when disabled
     set:
       service.enabled: false
@@ -192,7 +204,7 @@ tests:
           path: spec.selector["app.kubernetes.io/component"]
           value: worker
 
-  - it: extraServices should use base selector when no matching extraDeployment
+  - it: extraServices should use base selector without component when no matching extraDeployment
     set:
       service.enabled: false
       extraServices:
@@ -213,6 +225,7 @@ tests:
       - equal:
           path: spec.selector["app.kubernetes.io/instance"]
           value: RELEASE-NAME
+      # No component label when extraService doesn't match an extraDeployment
       - isNull:
           path: spec.selector["app.kubernetes.io/component"]
 

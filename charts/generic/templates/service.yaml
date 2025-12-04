@@ -112,6 +112,7 @@ spec:
     {{- end }}
   selector:
     {{- include "generic.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: main
   {{- end }}
 {{- end }}
 {{- if .Values.extraServices }}

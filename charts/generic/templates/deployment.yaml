@@ -27,6 +27,7 @@ spec:
   selector:
     matchLabels:
       {{- include "generic.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: main
   {{- with .Values.strategy }}
   strategy:
     {{- toYaml . | nindent 4 }}

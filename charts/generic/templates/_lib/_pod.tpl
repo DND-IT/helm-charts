@@ -8,14 +8,12 @@ Parameters:
 {{- define "generic.podTemplate" -}}
 {{- $root := .root | default . -}}
 {{- $config := .config | default dict -}}
-{{- $componentName := .componentName | default "" -}}
+{{- $componentName := .componentName | default "main" -}}
 {{- $deployment := $root.Values -}}
 metadata:
   labels:
     {{- $podLabels := $config.podLabels | default ($config.pod).labels | default $deployment.pod.labels -}}
-    {{- if $componentName -}}
-      {{- $podLabels = merge (dict "app.kubernetes.io/component" $componentName) $podLabels -}}
-    {{- end -}}
+    {{- $podLabels = merge (dict "app.kubernetes.io/component" $componentName) $podLabels -}}
     {{- include "generic.labels" (dict "context" $root "labels" $podLabels) | nindent 4 }}
   annotations:
     {{- $podAnnotations := $config.podAnnotations | default ($config.pod).annotations | default $deployment.pod.annotations -}}

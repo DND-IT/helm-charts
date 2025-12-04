@@ -13,7 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed initContainers, extraContainers, and sidecarContainers to support image.registry override
 - Added registry inheritance for init/extra/sidecar containers when image.registry is not explicitly set
 - Added support for Helm template syntax in container image strings (e.g., `"{{ .Values.image.registry }}/{{ .Values.image.repository }}:{{ .Values.image.tag }}"`)
-- Fixed extraServices selector to use component-specific labels when a matching extraDeployment exists (services now correctly target their corresponding extra deployment pods instead of the main deployment)
+- Fixed service selectors to use `app.kubernetes.io/component` label for proper pod targeting:
+  - Main deployment and service now use `app.kubernetes.io/component: main`
+  - extraDeployments use `app.kubernetes.io/component: <name>` (e.g., `worker`, `mcp-argocd`)
+  - extraServices automatically use matching component selector when a corresponding extraDeployment exists
+  - This prevents services from accidentally selecting pods from other deployments
 
 ### Added
 
