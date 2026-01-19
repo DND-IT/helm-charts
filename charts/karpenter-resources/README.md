@@ -1,6 +1,6 @@
 # karpenter-resources
 
-![Version: 1.0.3](https://img.shields.io/badge/Version-1.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.0](https://img.shields.io/badge/AppVersion-1.6.0-informational?style=flat-square)
+![Version: 1.0.4](https://img.shields.io/badge/Version-1.0.4-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.0](https://img.shields.io/badge/AppVersion-1.6.0-informational?style=flat-square)
 
 A Helm chart for Karpenter Custom Resources
 
@@ -141,7 +141,7 @@ resource "helm_release" "karpenter_resources" {
 | nodePools.default.enabled | bool | `false` |  |
 | nodePools.default.expireAfter | string | `"720h"` |  |
 | nodePools.default.labels | object | `{}` |  |
-| nodePools.default.limits.cpu | int | `1000` |  |
+| nodePools.default.limits.cpu | int | `400` |  |
 | nodePools.default.limits.memory | string | `"4000Gi"` |  |
 | nodePools.default.nodeClassRef.group | string | `"karpenter.k8s.aws"` |  |
 | nodePools.default.nodeClassRef.kind | string | `"EC2NodeClass"` |  |
@@ -150,14 +150,11 @@ resource "helm_release" "karpenter_resources" {
 | nodePools.default.requirements[0].operator | string | `"In"` |  |
 | nodePools.default.requirements[0].values[0] | string | `"c"` |  |
 | nodePools.default.requirements[0].values[1] | string | `"m"` |  |
-| nodePools.default.requirements[0].values[2] | string | `"r"` |  |
-| nodePools.default.requirements[0].values[3] | string | `"t"` |  |
 | nodePools.default.requirements[1].key | string | `"karpenter.k8s.aws/instance-cpu"` |  |
 | nodePools.default.requirements[1].operator | string | `"In"` |  |
 | nodePools.default.requirements[1].values[0] | string | `"4"` |  |
 | nodePools.default.requirements[1].values[1] | string | `"8"` |  |
 | nodePools.default.requirements[1].values[2] | string | `"16"` |  |
-| nodePools.default.requirements[1].values[3] | string | `"32"` |  |
 | nodePools.default.requirements[2].key | string | `"karpenter.k8s.aws/instance-hypervisor"` |  |
 | nodePools.default.requirements[2].operator | string | `"In"` |  |
 | nodePools.default.requirements[2].values[0] | string | `"nitro"` |  |
