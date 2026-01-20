@@ -99,6 +99,7 @@ ingress:
 | command | list | `[]` |  |
 | deploymentServiceAccountName | string | `""` |  |
 | env | object | `{}` |  |
+| externalSecrets.annotations | object | `{}` |  |
 | externalSecrets.clusterSecretStore | string | `"aws-secretsmanager"` |  |
 | externalSecrets.refreshInterval | string | `"5m"` |  |
 | externalSecrets.secretNames | list | `[]` |  |
