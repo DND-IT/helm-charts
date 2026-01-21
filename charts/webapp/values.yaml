@@ -123,6 +123,7 @@ update:
 externalSecrets:
   refreshInterval: 5m
   clusterSecretStore: aws-secretsmanager
+  annotations: {}
   # secret names that should be fetched and made available to the Pods
   secretNames: []
 
