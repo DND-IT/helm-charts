@@ -1,12 +1,8 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "baseBranches": ["main"],
-  "extends": [
-    "github>tx-pts-dai/renovate-config"
-  ],
-  "schedule": [
-    "after 9am on Monday"
-  ],
+  "baseBranchPatterns": ["main"],
+  "extends": ["github>tx-pts-dai/renovate-config"],
+  "schedule": ["after 9am on Monday"],
   "assignees": ["swibrow"],
   "hostRules": [
     {
@@ -18,7 +14,7 @@
     {
       "customType": "regex",
       "description": "Update kindest kubernetes references",
-      "fileMatch": ["^\\.github\\/workflows\\/[^/]+\\.ya?ml$"],
+      "managerFilePatterns": ["/^\\.github\\/workflows\\/[^/]+\\.ya?ml$/"],
       "matchStrings": [
         " +- (?<currentValue>v\\d+\\.\\d+\\.\\d+) # renovate: kindest\\n"
       ],
