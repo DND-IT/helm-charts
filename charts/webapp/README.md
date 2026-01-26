@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.11.1](https://img.shields.io/badge/Version-1.11.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.12.0](https://img.shields.io/badge/Version-1.12.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -99,6 +99,7 @@ ingress:
 | command | list | `[]` |  |
 | deploymentServiceAccountName | string | `""` |  |
 | env | object | `{}` |  |
+| externalSecrets.annotations | object | `{}` |  |
 | externalSecrets.clusterSecretStore | string | `"aws-secretsmanager"` |  |
 | externalSecrets.refreshInterval | string | `"5m"` |  |
 | externalSecrets.secretNames | list | `[]` |  |
