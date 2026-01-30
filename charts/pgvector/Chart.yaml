@@ -1,0 +1,26 @@
+apiVersion: v2
+name: pgvector
+description: |
+  A simple PostgreSQL chart with pgvector extension for vector similarity search.
+  Designed for feature branch and development use cases.
+  Deploys a single-instance StatefulSet with persistent storage.
+type: application
+version: 0.1.0
+appVersion: "0.8.0-pg17"
+
+keywords:
+  - postgresql
+  - pgvector
+  - database
+  - vector
+
+home: https://github.com/dnd-it/helm-charts
+sources:
+  - https://github.com/dnd-it/helm-charts
+  - https://github.com/pgvector/pgvector
+
+maintainers:
+  - name: DAI
+    email: abc@abc.com
+
+kubeVersion: '>=1.29.0-0'

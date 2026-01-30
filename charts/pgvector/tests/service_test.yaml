@@ -1,0 +1,39 @@
+suite: service
+templates:
+  - service.yaml
+tests:
+  - it: should render a Service
+    set:
+      auth:
+        postgresPassword: "test"
+    asserts:
+      - isKind:
+          of: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+
+  - it: should use configured port
+    set:
+      auth:
+        postgresPassword: "test"
+      service:
+        port: 5433
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 5433
+
+  - it: should include metrics port when enabled
+    set:
+      auth:
+        postgresPassword: "test"
+      metrics:
+        enabled: true
+    asserts:
+      - lengthEqual:
+          path: spec.ports
+          count: 2
+      - equal:
+          path: spec.ports[1].name
+          value: metrics
