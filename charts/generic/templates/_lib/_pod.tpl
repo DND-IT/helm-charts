@@ -111,7 +111,8 @@ spec:
     {{- if $config }}
     {{/* Handle extra deployments */}}
     - name: {{ $componentName | default "main" }}
-      image: {{ include "generic.image" (dict "image" $config.image "context" $root) }}
+      {{- $extraImage := dict "registry" ($config.image.registry | default $root.Values.image.registry) "repository" ($config.image.repository | default $root.Values.image.repository) "tag" ($config.image.tag | default $root.Values.image.tag) }}
+      image: {{ include "generic.image" (dict "image" $extraImage "context" $root) }}
       imagePullPolicy: {{ $config.image.pullPolicy | default $root.Values.image.pullPolicy }}
       {{- with $config.command }}
       command:

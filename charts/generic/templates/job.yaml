@@ -96,7 +96,8 @@ spec:
       {{- end }}
       containers:
         - name: {{ $name }}
-          image: {{ $job.image.repository | default $.Values.image.repository }}:{{ $job.image.tag | default $.Values.image.tag }}
+          {{- $jobImage := dict "registry" ($job.image.registry | default $.Values.image.registry) "repository" ($job.image.repository | default $.Values.image.repository) "tag" ($job.image.tag | default $.Values.image.tag) }}
+          image: {{ include "generic.image" (dict "image" $jobImage "context" $) }}
           imagePullPolicy: {{ $job.image.pullPolicy | default $.Values.image.pullPolicy }}
           {{- with $job.command }}
           command:
