@@ -122,7 +122,8 @@ spec:
           {{- end }}
           containers:
             - name: {{ $name }}
-              image: {{ $cronjob.image.repository | default $.Values.image.repository }}:{{ $cronjob.image.tag | default $.Values.image.tag }}
+              {{- $cronjobImage := dict "registry" ($cronjob.image.registry | default $.Values.image.registry) "repository" ($cronjob.image.repository | default $.Values.image.repository) "tag" ($cronjob.image.tag | default $.Values.image.tag) }}
+              image: {{ include "generic.image" (dict "image" $cronjobImage "context" $) }}
               imagePullPolicy: {{ $cronjob.image.pullPolicy | default $.Values.image.pullPolicy }}
               {{- with $cronjob.command }}
               command:
