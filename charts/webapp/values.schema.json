@@ -23,6 +23,9 @@
         "externalSecrets": {
             "type": "object",
             "properties": {
+                "annotations": {
+                    "type": "object"
+                },
                 "clusterSecretStore": {
                     "type": "string"
                 },
@@ -206,7 +209,10 @@
                     "type": "integer"
                 },
                 "minAvailable": {
-                    "type": "string"
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
                 },
                 "minReplicas": {
                     "type": "integer"

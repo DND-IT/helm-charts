@@ -1,3 +1,4 @@
+# yaml-language-server: $schema=values.schema.json
 # Override resource names. Default is the helm release name
 nameOverride: ""
 
@@ -18,6 +19,7 @@ scale:
   enabled: true
   minReplicas: 1
   maxReplicas: 10
+  # @schema type: [string, integer]
   minAvailable: 50%
   cpuThresholdPercentage: 100
   # -1 means "unset". Use positive integer to enable it.

@@ -71,6 +71,76 @@ helm install my-job dnd-it/generic \
   --set image.repository=myorg/backup-job
 ```
 
+## Values Schema Generation
+
+Each chart includes a `values.schema.json` file that provides JSON Schema validation for `values.yaml`. These schemas are generated using the [helm-schema](https://github.com/losisin/helm-values-schema-json) Helm plugin.
+
+### Installing the Plugin
+
+```bash
+helm plugin install https://github.com/losisin/helm-values-schema-json
+```
+
+### Generating Schemas
+
+Use the Makefile targets to generate schemas:
+
+```bash
+# Generate schema for a specific chart
+make schema CHART=generic
+
+# Generate schemas for all charts
+make schema-all
+```
+
+Or run `helm schema` directly from the chart directory:
+
+```bash
+cd charts/generic
+helm schema
+```
+
+This reads `values.yaml` and produces `values.schema.json` using the [JSON Schema Draft 2020-12](https://json-schema.org/draft/2020-12/schema) specification.
+
+You can also generate from multiple values files (e.g. to capture CI test values):
+
+```bash
+helm schema -f values.yaml -f ci/test-values.yaml
+```
+
+### Schema Annotations
+
+You can control schema generation by adding `@schema` annotations as comments in `values.yaml`. Each annotation must have `@schema` followed by the property on the **same line**:
+
+```yaml
+# @schema type: string
+# @schema required: true
+image:
+  repository: nginx
+
+# @schema minimum: 1
+replicaCount: 1
+
+# @schema type: [string, integer]
+minAvailable: 50%
+```
+
+**Important:** Multi-line annotations require `@schema` on each line:
+
+```yaml
+# Correct
+# @schema type: [string, integer]
+# @schema minimum: 0
+minAvailable: 50%
+
+# Wrong - will not work
+# @schema
+# type: [string, integer]
+minAvailable: 50%
+```
+
+See the [helm-schema documentation](https://github.com/losisin/helm-values-schema-json#annotations) for the full list of supported annotations.
+
 ## Contributing
 
 We welcome contributions! When working with this repository locally:
