@@ -35,7 +35,8 @@ TARGETS_WITHOUT_CHART := help list-charts lint-all test-all template-all package
                         integration-test-all security-scan-all clean clean-releases \
                         repo-lint repo-test repo-package quality-all prepare-release \
                         kind-create kind-delete kind-test-all dependency-update-all \
-                        check-tools version-all ci-setup ci-test help-chart kubeconform-all
+                        check-tools version-all ci-setup ci-test help-chart kubeconform-all \
+                        schema-all
 
 ifeq ($(filter $(MAKECMDGOALS),$(TARGETS_WITHOUT_CHART)),)
     ifeq ($(CHART),)
@@ -227,6 +228,28 @@ docs-all: ## Generate documentation for all charts
 	else \
 		echo "helm-docs not available. Install it with: go install github.com/norwoodj/helm-docs/cmd/helm-docs@latest"; \
 	fi
+
+# Schema generation
+schema: validate-chart ## Generate JSON schema for specified chart
+	@echo "Generating JSON schema for $(CHART)..."
+	@if helm plugin list | grep -q schema; then \
+		cd $(CHART_PATH) && helm schema; \
+		echo "Schema generated at $(CHART_PATH)/values.schema.json"; \
+	else \
+		echo "helm-schema plugin not available. Install it with: helm plugin install https://github.com/losisin/helm-values-schema-json"; \
+		exit 1; \
+	fi
+
+schema-all: ## Generate JSON schemas for all charts
+	@echo "Generating JSON schemas for all charts..."
+	@if ! helm plugin list | grep -q schema; then \
+		echo "helm-schema plugin not available. Install it with: helm plugin install https://github.com/losisin/helm-values-schema-json"; \
+		exit 1; \
+	fi
+	@for chart in $(CHARTS_AVAILABLE); do \
+		echo "Generating schema for $$chart..."; \
+		$(MAKE) schema CHART=$$chart || exit 1; \
+	done
 
 # Development
 dev-install: validate-chart ## Install chart in development mode with auto-reload
