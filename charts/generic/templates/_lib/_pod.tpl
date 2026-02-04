@@ -124,7 +124,7 @@ spec:
       {{- end }}
       {{- with $config.env }}
       env:
-        {{- toYaml . | nindent 8 }}
+        {{- include "generic.envVars" (dict "envVars" . "root" $root) | nindent 8 }}
       {{- end }}
       {{- with $config.envFrom }}
       envFrom:

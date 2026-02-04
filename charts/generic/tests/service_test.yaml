@@ -22,6 +22,17 @@ tests:
           path: spec.selector["app.kubernetes.io/component"]
           value: main
 
+  - it: should use fullnameOverride in service name and selector
+    set:
+      fullnameOverride: my-custom-app
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-custom-app
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: my-custom-app
+
   - it: should not create service when disabled
     set:
       service.enabled: false
@@ -253,3 +264,61 @@ tests:
           value: custom-value
       - isNull:
           path: spec.selector["app.kubernetes.io/component"]
+
+  - it: extraServices should use fullnameOverride in name and selector
+    set:
+      service.enabled: false
+      fullnameOverride: my-app
+      extraDeployments:
+        worker:
+          image:
+            repository: nginx
+            tag: latest
+      extraServices:
+        worker:
+          enabled: true
+          ports:
+            - name: http
+              port: 8080
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-app-worker
+      - equal:
+          path: spec.selector["app.kubernetes.io/name"]
+          value: my-app
+      - equal:
+          path: spec.selector["app.kubernetes.io/component"]
+          value: worker
+
+  - it: should include common labels with fullnameOverride
+    set:
+      fullnameOverride: my-app
+      commonLabels:
+        environment: production
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-app
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: my-app
+      - equal:
+          path: metadata.labels.environment
+          value: production
+
+  - it: should support template in commonLabels with fullnameOverride
+    set:
+      fullnameOverride: my-app
+      image:
+        repository: nginx
+        tag: "2.0.0"
+      commonLabels:
+        app.version: "{{ .Values.image.tag }}"
+    asserts:
+      - equal:
+          path: metadata.labels["app.kubernetes.io/name"]
+          value: my-app
+      - equal:
+          path: metadata.labels["app.version"]
+          value: "2.0.0"
