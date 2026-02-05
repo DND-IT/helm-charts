@@ -88,8 +88,8 @@ revisionHistoryLimit: 2
 strategy:
   type: RollingUpdate
   rollingUpdate:
-    maxUnavailable: 25%
-    maxSurge: 25%
+    maxUnavailable: 25%  # @schema type:[string, integer]
+    maxSurge: 25%  # @schema type:[string, integer]
 progressDeadlineSeconds: 600
 
 # Image configuration
@@ -1098,7 +1098,7 @@ targetGroupBinding:
     # Service name (defaults to release name)
     name: ""
     # Service port name or number
-    port: "http"
+    port: "http"  # @schema type:[string, integer]
   # Target type: instance (default) or ip
   targetType: ""
   # IP address type: ipv4 (default) or dualstack

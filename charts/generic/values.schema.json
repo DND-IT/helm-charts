@@ -728,10 +728,16 @@
                     "type": "object",
                     "properties": {
                         "maxSurge": {
-                            "type": "string"
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
                         },
                         "maxUnavailable": {
-                            "type": "string"
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
                         }
                     }
                 },
@@ -765,7 +771,10 @@
                             "type": "string"
                         },
                         "port": {
-                            "type": "string"
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
                         }
                     }
                 },
