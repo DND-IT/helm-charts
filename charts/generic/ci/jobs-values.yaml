@@ -12,7 +12,7 @@ jobs:
     backoffLimit: 3
     ttlSecondsAfterFinished: 300
     image:
-      repository: busybox
+      repository: public.ecr.aws/docker/library/busybox
       tag: "1.36"
     command: ["/bin/sh"]
     args: ["-c", "echo 'Running migration'; sleep 5; echo 'Migration complete'"]
@@ -33,7 +33,7 @@ cronjobs:
     successfulJobsHistoryLimit: 1
     failedJobsHistoryLimit: 1
     image:
-      repository: busybox
+      repository: public.ecr.aws/docker/library/busybox
       tag: "1.36"
     command: ["/bin/sh"]
     args: ["-c", "echo 'Backup started at $(date)'; sleep 2; echo 'Backup completed'"]
@@ -48,7 +48,7 @@ hooks:
   enabled: false
   preInstall:
     - name: pre-install-check
-      image: busybox:1.36
+      image: public.ecr.aws/docker/library/busybox:1.36
       command: ["sh", "-c"]
       args: ["echo 'Pre-install check passed'"]
       weight: 1
@@ -61,7 +61,7 @@ hooks:
 
   postInstall:
     - name: post-install-notify
-      image: curlimages/curl:8.5.0
+      image: public.ecr.aws/docker/library/busybox:1.36
       command: ["sh", "-c"]
       args: ["echo 'Installation completed successfully'"]
       weight: 1

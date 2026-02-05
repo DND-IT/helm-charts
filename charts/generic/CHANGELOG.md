@@ -5,10 +5,13 @@ All notable changes to the generic Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.6.0] - 2026-02-04
 
 ### Fixed
 
+- Fixed `fullnameOverride` not being applied to `app.kubernetes.io/name` label in selector labels
+- Fixed environment variables in `extraDeployments` not processing Helm template syntax (e.g., `{{ .Release.Name }}`)
+- Fixed `extraDeployments` not respecting the `enabled: false` flag
 - Fixed ingress backend to use named port reference instead of port number for better flexibility
 - Fixed initContainers, extraContainers, and sidecarContainers to support image.registry override
 - Added registry inheritance for init/extra/sidecar containers when image.registry is not explicitly set
@@ -30,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Changed `service.ports` default from port 80 to empty array to enable automatic port detection from container ports
+- Switched CI test images from Docker Hub to public mirrors (`public.ecr.aws`, `registry.k8s.io`) to avoid rate limits
 
 ## [0.1.0] - 2025-11-19
 

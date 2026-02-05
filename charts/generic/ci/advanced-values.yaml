@@ -12,7 +12,7 @@ resources:
 # Multi-container pod
 extraContainers:
   - name: sidecar
-    image: busybox:1.36
+    image: public.ecr.aws/docker/library/busybox:1.36
     command: ["sh", "-c", "while true; do echo 'Sidecar running'; sleep 30; done"]
     resources:
       requests:
@@ -22,7 +22,7 @@ extraContainers:
 # Init container
 initContainers:
   - name: init-check
-    image: busybox:1.36
+    image: public.ecr.aws/docker/library/busybox:1.36
     command: ["sh", "-c", "echo 'Initialization complete'"]
     resources:
       requests:
@@ -31,7 +31,7 @@ initContainers:
 
 sidecarContainers:
   - name: sidecar-log
-    image: busybox:1.36
+    image: public.ecr.aws/docker/library/busybox:1.36
     command: ["sh", "-c", "while true; do echo 'Sidecar log running'; sleep 30; done"]
     resources:
       requests:

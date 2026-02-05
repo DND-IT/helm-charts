@@ -36,6 +36,7 @@ spec:
     {{- include "generic.podTemplate" . | nindent 4 }}
 {{- end }}
 {{- range $name, $deployment := .Values.extraDeployments }}
+{{- if ne (toString $deployment.enabled) "false" }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -72,4 +73,5 @@ spec:
   {{- end }}
   template:
     {{- include "generic.podTemplate" (dict "root" $ "config" $deployment "componentName" $name) | nindent 4 }}
+{{- end }}
 {{- end }}

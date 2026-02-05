@@ -2,7 +2,11 @@
 Create a default name.
 */}}
 {{- define "generic.name" -}}
+{{- if .Values.fullnameOverride }}
+{{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
+{{- else }}
 {{- default .Release.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
+{{- end }}
 {{- end }}
 
 {{/*
