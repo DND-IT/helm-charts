@@ -6,6 +6,12 @@
 # Applied to all resources in the chart
 # ============================================================================
 
+# Global values - passed down to subcharts following Helm convention
+global:
+  # Container registry prepended to all images that don't specify one
+  # Lowest priority: overridden by image.registry and per-container registry
+  registry: ""
+
 # Common labels and annotations applied to all resources
 # Supports Helm template syntax for dynamic values
 # Example:

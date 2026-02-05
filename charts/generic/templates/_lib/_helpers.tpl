@@ -128,11 +128,13 @@ Supports:
   image.repository: "nginx" or "docker.io/library/nginx"
   image.tag: "1.25"
 If registry is set and repository contains an existing registry, it will be replaced.
+Falls back to global.registry when no per-image registry is specified.
 */}}
 {{- define "generic.image" -}}
   {{- $image := .image -}}
+  {{- $context := .context | default dict -}}
   {{- if and $image $image.repository -}}
-    {{- $registry := $image.registry | default "" -}}
+    {{- $registry := $image.registry | default (($context.Values).global).registry | default "" -}}
     {{- $repository := $image.repository -}}
     {{- $tag := $image.tag | default "" -}}
     {{- if $registry -}}
@@ -154,6 +156,39 @@ If registry is set and repository contains an existing registry, it will be repl
       {{- else -}}
         {{- $repository -}}
       {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+
+{{/*
+Resolve a plain string image with global registry support
+Usage: include "generic.resolveStringImage" (dict "image" "nginx:1.25" "root" $)
+- If the image string contains {{ }}, it is passed through unchanged (template control)
+- If the first path segment already contains "." or ":", it already has a registry
+- Otherwise, prepends the effective registry (image.registry → global.registry fallback)
+*/}}
+{{- define "generic.resolveStringImage" -}}
+  {{- $image := .image -}}
+  {{- $root := .root -}}
+  {{- if contains "{{" $image -}}
+    {{- tpl $image $root -}}
+  {{- else -}}
+    {{- $registry := $root.Values.image.registry | default ($root.Values.global).registry | default "" -}}
+    {{- if and $registry (ne $registry "") -}}
+      {{- $hasRegistry := false -}}
+      {{- if contains "/" $image -}}
+        {{- $firstPart := index (splitList "/" $image) 0 -}}
+        {{- if or (contains "." $firstPart) (contains ":" $firstPart) -}}
+          {{- $hasRegistry = true -}}
+        {{- end -}}
+      {{- end -}}
+      {{- if $hasRegistry -}}
+        {{- $image -}}
+      {{- else -}}
+        {{- printf "%s/%s" $registry $image -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $image -}}
     {{- end -}}
   {{- end -}}
 {{- end -}}

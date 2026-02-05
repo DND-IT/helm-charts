@@ -5,6 +5,16 @@ All notable changes to the generic Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] - 2026-02-05
+
+### Added
+
+- Added `global.registry` support to prepend a default container registry to all images
+  - Follows standard Helm `global` convention for parent-to-subchart value passing
+  - Registry precedence (highest to lowest): per-image registry → `image.registry` → `global.registry`
+  - Applies to main deployment, init containers, sidecar containers, extra deployments, jobs, cronjobs, and hooks
+  - String images already containing a registry (detected by `.` or `:` in first path segment) are not modified
+
 ## [0.6.0] - 2026-02-04
 
 ### Fixed
