@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Changed `service.ports` default from port 80 to empty array to enable automatic port detection from container ports
+- Switched CI test images from Docker Hub to public mirrors (`public.ecr.aws`, `registry.k8s.io`) to avoid rate limits
 
 ## [0.1.0] - 2025-11-19
 
