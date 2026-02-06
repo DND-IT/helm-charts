@@ -332,6 +332,29 @@ entries:
     version: 0.1.0
   generic:
   - apiVersion: v2
+    created: "2026-02-06T11:36:56.583160784Z"
+    description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
+      workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
+      options. Designed for maximum flexibility while maintaining security best practices
+      by default. Optimized for AWS with ALB ingress controller support. '
+    digest: 104ca6160a06b0cfe6494460ea8123c570cf6ad41d54787f3bbde05755c3d5c6
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - application
+    - kubernetes
+    - generic
+    kubeVersion: '>=1.29.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: generic
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/generic-0.7.1/generic-0.7.1.tgz
+    version: 0.7.1
+  - apiVersion: v2
     created: "2026-02-06T11:03:27.737586279Z"
     description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
       workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
@@ -1046,4 +1069,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2026-02-06T11:03:27.737821726Z"
+generated: "2026-02-06T11:36:56.583391366Z"
