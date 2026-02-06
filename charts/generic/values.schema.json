@@ -179,6 +179,14 @@
                 }
             }
         },
+        "global": {
+            "type": "object",
+            "properties": {
+                "registry": {
+                    "type": "string"
+                }
+            }
+        },
         "hooks": {
             "type": "object",
             "properties": {
@@ -671,27 +679,7 @@
                     "type": "array"
                 },
                 "ports": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "name": {
-                                "type": "string"
-                            },
-                            "port": {
-                                "type": "integer"
-                            },
-                            "protocol": {
-                                "type": "string"
-                            },
-                            "targetPort": {
-                                "type": [
-                                    "integer",
-                                    "string"
-                                ]
-                            }
-                        }
-                    }
+                    "type": "array"
                 },
                 "publishNotReadyAddresses": {
                     "type": "boolean"
@@ -740,10 +728,16 @@
                     "type": "object",
                     "properties": {
                         "maxSurge": {
-                            "type": ["string", "integer"]
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
                         },
                         "maxUnavailable": {
-                            "type": ["string", "integer"]
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
                         }
                     }
                 },
@@ -777,9 +771,9 @@
                             "type": "string"
                         },
                         "port": {
-                            "oneOf": [
-                                { "type": "string" },
-                                { "type": "integer" }
+                            "type": [
+                                "string",
+                                "integer"
                             ]
                         }
                     }

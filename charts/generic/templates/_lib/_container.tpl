@@ -94,11 +94,7 @@ Supports template strings with {{ }} syntax via tpl function
 {{- $root := .root -}}
 {{- if $container.image -}}
   {{- if kindIs "string" $container.image -}}
-    {{- if contains "{{" $container.image -}}
-      {{- tpl $container.image $root -}}
-    {{- else -}}
-      {{- $container.image -}}
-    {{- end -}}
+    {{- include "generic.resolveStringImage" (dict "image" $container.image "root" $root) -}}
   {{- else if $container.image.repository -}}
     {{- $imageConfig := dict -}}
     {{- range $key, $value := $container.image -}}
@@ -108,8 +104,11 @@ Supports template strings with {{ }} syntax via tpl function
         {{- $_ := set $imageConfig $key $value -}}
       {{- end -}}
     {{- end -}}
-    {{- if and (not $imageConfig.registry) $root.Values.image.registry -}}
-      {{- $imageConfig = merge (dict "registry" $root.Values.image.registry) $imageConfig -}}
+    {{- if not $imageConfig.registry -}}
+      {{- $effectiveRegistry := $root.Values.image.registry | default ($root.Values.global).registry | default "" -}}
+      {{- if $effectiveRegistry -}}
+        {{- $imageConfig = merge (dict "registry" $effectiveRegistry) $imageConfig -}}
+      {{- end -}}
     {{- end -}}
     {{- include "generic.image" (dict "image" $imageConfig "context" $root) -}}
   {{- else -}}
