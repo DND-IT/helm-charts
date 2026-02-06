@@ -5,6 +5,12 @@ All notable changes to the generic Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] - 2026-02-06
+
+### Fixed
+
+- Fixed cronjob templates failing when `image` block is not specified, now defaults to empty dict and inherits from main `image` config
+
 ## [0.7.0] - 2026-02-05
 
 ### Added
