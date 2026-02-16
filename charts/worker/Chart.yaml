@@ -1,0 +1,30 @@
+apiVersion: v2
+name: worker
+description: |
+  A Helm chart for deploying background worker processes to Kubernetes.
+  Includes Deployment, HPA, PDB, and ServiceAccount.
+  Designed for background processing workloads that don't expose HTTP endpoints.
+  No service or ingress by default.
+type: application
+version: 1.0.0
+
+keywords:
+  - worker
+  - background
+  - processing
+  - kubernetes
+
+home: https://github.com/dnd-it/helm-charts
+sources:
+  - https://github.com/dnd-it/helm-charts
+
+maintainers:
+  - name: DAI
+    email: abc@abc.com
+
+kubeVersion: '>=1.29.0-0'
+
+dependencies:
+  - name: common
+    version: "1.x.x"
+    repository: "file://../common"

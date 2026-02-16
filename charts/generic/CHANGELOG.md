@@ -5,6 +5,22 @@ All notable changes to the generic Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.8.0] - 2026-02-10
+
+### Changed
+
+- Migrated to use common library chart as a dependency
+- All templates now use `common.*` helpers directly (removed `_lib/` wrapper files)
+- No breaking changes to existing values or template outputs
+
+### Added
+
+- Dependency on `common` library chart (1.x.x)
+
+### Removed
+
+- Removed `templates/_lib/` directory (helpers now provided by common library)
+
 ## [0.7.1] - 2026-02-06
 
 ### Fixed

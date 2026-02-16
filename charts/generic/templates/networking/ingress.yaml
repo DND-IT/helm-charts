@@ -1,19 +1,19 @@
 {{- if .Values.ingress.enabled -}}
-{{- $fullName := include "generic.fullname" . -}}
-{{- $namespace := include "generic.namespace" . -}}
-{{- $svcPortName := include "generic.servicePortName" . -}}
+{{- $fullName := include "common.fullname" . -}}
+{{- $namespace := include "common.namespace" . -}}
+{{- $svcPortName := include "common.servicePortName" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: {{ $fullName }}
   namespace: {{ $namespace }}
   labels:
-    {{- include "generic.labels" (dict "context" . "labels" .Values.ingress.labels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "labels" .Values.ingress.labels) | nindent 4 }}
   {{- if or .Values.ingress.annotations .Values.commonAnnotations }}
   annotations:
     {{- if .Values.ingress.annotations }}
     {{- range $key, $value := .Values.ingress.annotations }}
-    {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+    {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
     {{- end }}
     {{- end }}
     {{- with .Values.commonAnnotations }}
@@ -36,7 +36,7 @@ spec:
   rules:
     {{- range .Values.ingress.hosts }}
     - {{- if .host }}
-      host: {{ include "generic.tplValue" (dict "value" .host "context" $) | quote }}
+      host: {{ include "common.tplValue" (dict "value" .host "context" $) | quote }}
       {{- end }}
       http:
         paths:
@@ -46,7 +46,7 @@ spec:
             backend:
               {{- if .backend }}
               service:
-                name: {{ .backend.service.name | default (include "generic.fullname" $) }}
+                name: {{ .backend.service.name | default (include "common.fullname" $) }}
                 port:
                   {{- if .backend.service.port.number }}
                   number: {{ .backend.service.port.number }}
@@ -69,15 +69,15 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ printf "%s-%s" (include "generic.fullname" $) $name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ printf "%s-%s" (include "common.fullname" $) $name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
-    {{- include "generic.labels" (dict "context" $ "labels" $ingress.labels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $ingress.labels) | nindent 4 }}
   {{- if or $ingress.annotations $.Values.commonAnnotations }}
   annotations:
     {{- if $ingress.annotations }}
     {{- range $key, $value := $ingress.annotations }}
-    {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+    {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
     {{- end }}
     {{- end }}
     {{- with $.Values.commonAnnotations }}
@@ -91,7 +91,7 @@ spec:
   rules:
     {{- range $ingress.hosts }}
     - {{- if .host }}
-      host: {{ include "generic.tplValue" (dict "value" .host "context" $) | quote }}
+      host: {{ include "common.tplValue" (dict "value" .host "context" $) | quote }}
       {{- end }}
       http:
         paths:
@@ -100,7 +100,7 @@ spec:
             pathType: {{ .pathType | default "Prefix" }}
             backend:
               service:
-                name: {{ .backend.service.name | default (include "generic.fullname" $) }}
+                name: {{ .backend.service.name | default (include "common.fullname" $) }}
                 port:
                   {{- if .backend.service.port.number }}
                   number: {{ .backend.service.port.number }}

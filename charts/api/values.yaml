@@ -1,0 +1,302 @@
+# API Chart - Opinionated defaults for internal services
+# Uses the same schema as the generic chart with sensible defaults pre-configured
+# Override only what you need to change
+
+# =============================================================================
+# REQUIRED
+# =============================================================================
+
+image:
+  repository: ""  # REQUIRED: your image repository
+  tag: ""         # REQUIRED: your image tag
+  pullPolicy: IfNotPresent
+  registry: ""
+
+# =============================================================================
+# OPINIONATED DEFAULTS
+# These are pre-configured with sensible values for internal API services
+# =============================================================================
+
+# Deployment enabled by default
+deploymentEnabled: true
+replicas: 1
+revisionHistoryLimit: 2
+
+# Deployment strategy
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 25%
+    maxSurge: 25%
+
+# Default port for API services
+ports:
+  - name: http
+    containerPort: 8080
+    protocol: TCP
+
+# Sensible resource defaults
+resources:
+  # limits:
+  #   memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+# Health probes pre-configured for /health endpoint
+livenessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  httpGet:
+    path: /health
+    port: http
+  initialDelaySeconds: 10
+  periodSeconds: 2
+  timeoutSeconds: 3
+  failureThreshold: 30
+
+# Scheduling - defaults to amd64 with topology spread
+scheduling:
+  nodeSelector:
+    kubernetes.io/arch: amd64
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+
+# Service enabled by default for internal communication
+service:
+  enabled: true
+  type: ClusterIP
+  ports: []  # Uses ports from above if not specified
+
+# Ingress disabled by default for internal services
+ingress:
+  enabled: false
+
+# =============================================================================
+# OPTIONAL FEATURES
+# =============================================================================
+
+# Environment variables
+env: []
+envFrom: []
+extraEnvFrom: []
+commonEnvVars: false
+
+# ConfigMap - automatically injected as envFrom when enabled
+configMap:
+  enabled: false
+  data: {}
+  # ENVIRONMENT: "production"
+  # LOG_LEVEL: "info"
+  binaryData: {}
+  annotations: {}
+  labels: {}
+  envFrom: true  # default: inject as env vars
+  mountPath: ""
+  subPath: ""
+
+# Extra ConfigMaps
+extraConfigMaps: {}
+
+# Secret - for sensitive data
+secret:
+  enabled: false
+  type: Opaque
+  data: {}
+  stringData: {}
+  annotations: {}
+  labels: {}
+  envFrom: false
+  mountPath: ""
+  subPath: ""
+
+# Extra Secrets
+extraSecrets: {}
+
+# External Secrets (AWS Secrets Manager)
+externalSecrets: {}
+# my-secret:
+#   key: team/my-app-credentials
+#   refreshInterval: 1h  # optional, default: 1h
+
+# Init containers
+initContainers: []
+# - name: db-migrate
+#   image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+#   command: ["alembic", "upgrade", "head"]
+
+# Extra containers (sidecars)
+extraContainers: []
+
+# Volumes
+volumes:
+  emptyDir: {}
+  # tmp:
+  #   mountPath: /tmp
+  #   sizeLimit: 100Mi
+  persistent: {}
+  configMap: {}
+  secret: {}
+  projected: {}
+
+# Container command/args
+command: []
+args: []
+
+# Autoscaling
+hpa:
+  enabled: false
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+
+# Pod Disruption Budget
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+
+# =============================================================================
+# ADVANCED
+# =============================================================================
+
+global:
+  image:
+    registry: ""
+
+commonLabels: {}
+commonAnnotations: {}
+workloadLabels: {}
+workloadAnnotations: {}
+
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+
+imagePullSecrets: []
+
+pod:
+  labels: {}
+  annotations: {}
+  securityContext: {}
+  # Pod-level resources (Kubernetes 1.32+ alpha, 1.33+ beta)
+  # Requires PodLevelResources feature gate
+  resources: {}
+  terminationGracePeriodSeconds: 30
+
+securityContext: {}
+
+serviceAccount:
+  enabled: true
+  name: ""
+  annotations: {}
+  automountServiceAccountToken: true
+
+# Security defaults
+security:
+  defaultPodSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+
+  defaultContainerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+# RBAC - Role-Based Access Control
+rbac:
+  enabled: false
+  type: Role  # or ClusterRole
+  rules: []
+  aggregationRule: {}
+  subjects: []
+  roleRef: ""
+  labels: {}
+  annotations: {}
+  extraRoles: {}
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  policyTypes: []
+  ingress: []
+  egress: []
+
+# Jobs
+jobs: {}
+
+# Gateway API
+gateway:
+  httpRoute:
+    enabled: false
+    parentRefs: []
+    hostnames: []
+    rules: []
+    labels: {}
+    annotations: {}
+    extraRoutes: {}
+  tcpRoute:
+    enabled: false
+    parentRefs: []
+    rules: []
+    labels: {}
+    annotations: {}
+    extraRoutes: {}
+  referenceGrant:
+    enabled: false
+    from: []
+    to: []
+    labels: {}
+    annotations: {}
+    extraGrants: {}
+
+# AWS TargetGroupBinding
+targetGroupBinding:
+  enabled: false
+  targetGroupARN: ""
+  serviceRef:
+    name: ""
+    port: "http"
+  targetType: ""
+  ipAddressType: ""
+  networking: {}
+  labels: {}
+  annotations: {}
+
+extraTargetGroupBindings: {}
+
+# Extra arbitrary Kubernetes objects
+extraObjects: []

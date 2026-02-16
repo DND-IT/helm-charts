@@ -8,7 +8,8 @@ tests:
   - it: should prepend global.registry to main deployment image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         repository: nginx
         tag: "1.25"
@@ -20,7 +21,8 @@ tests:
   - it: image.registry should override global.registry
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         registry: ecr.us-east-1.amazonaws.com
         repository: nginx
@@ -33,7 +35,8 @@ tests:
   - it: should not modify image when global.registry is empty
     set:
       global:
-        registry: ""
+        image:
+          registry: ""
       image:
         repository: nginx
         tag: "1.25"
@@ -42,17 +45,32 @@ tests:
           path: spec.template.spec.containers[0].image
           value: nginx:1.25
 
-  - it: should strip existing registry from repository when global.registry is set
+  - it: should NOT override registry already in repository when global.image.registry is set
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         repository: docker.io/library/nginx
         tag: "1.25"
     asserts:
       - equal:
           path: spec.template.spec.containers[0].image
-          value: my-private-registry.io/library/nginx:1.25
+          value: docker.io/library/nginx:1.25
+
+  - it: explicit image.registry SHOULD override registry in repository
+    set:
+      global:
+        image:
+          registry: my-private-registry.io
+      image:
+        registry: ecr.us-east-1.amazonaws.com
+        repository: docker.io/library/nginx
+        tag: "1.25"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ecr.us-east-1.amazonaws.com/library/nginx:1.25
 
   # =============================================
   # Init containers (string images)
@@ -60,7 +78,8 @@ tests:
   - it: should prepend global.registry to init container string image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       initContainers:
         - name: setup
           image: "busybox:1.35"
@@ -72,7 +91,8 @@ tests:
   - it: should not modify init container image that already has a registry
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       initContainers:
         - name: setup
           image: "docker.io/library/busybox:1.35"
@@ -84,7 +104,8 @@ tests:
   - it: should prepend global.registry to init container with path-like image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       initContainers:
         - name: migrate
           image: "migrate/migrate:latest"
@@ -99,7 +120,8 @@ tests:
   - it: should prepend global.registry to init container structured image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       initContainers:
         - name: setup
           image:
@@ -113,7 +135,8 @@ tests:
   - it: per-container registry should override global.registry on structured image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       initContainers:
         - name: setup
           image:
@@ -131,7 +154,8 @@ tests:
   - it: should prepend global.registry to sidecar container string image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       sidecarContainers:
         - name: metrics
           image: "prom/node-exporter:latest"
@@ -143,7 +167,8 @@ tests:
   - it: should prepend global.registry to sidecar container structured image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       sidecarContainers:
         - name: metrics
           image:
@@ -160,7 +185,8 @@ tests:
   - it: image.registry should override global.registry for init containers
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         registry: ecr.us-east-1.amazonaws.com
         repository: nginx
@@ -176,7 +202,8 @@ tests:
   - it: image.registry should override global.registry for structured init containers
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         registry: ecr.us-east-1.amazonaws.com
         repository: nginx
@@ -199,7 +226,8 @@ tests:
   - it: should prepend global.registry to extra deployment image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         repository: nginx
         tag: "1.25"
@@ -218,7 +246,8 @@ tests:
   - it: per-deployment registry should override global.registry
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         repository: nginx
         tag: "1.25"
@@ -235,6 +264,26 @@ tests:
           value: quay.io/worker-app:2.0
         documentIndex: 1
 
+  - it: should NOT override registry in repository when global.image.registry is set
+    set:
+      global:
+        image:
+          registry: my-private-registry.io
+      image:
+        repository: nginx
+        tag: "1.25"
+      extraDeployments:
+        worker:
+          enabled: true
+          image:
+            repository: ghcr.io/myorg/worker-app
+            tag: "2.0"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: ghcr.io/myorg/worker-app:2.0
+        documentIndex: 1
+
 ---
 suite: test global.registry on jobs
 templates:
@@ -243,7 +292,8 @@ tests:
   - it: should prepend global.registry to job image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         repository: nginx
         tag: "1.25"
@@ -261,7 +311,8 @@ tests:
   - it: per-job registry should override global.registry
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         repository: nginx
         tag: "1.25"
@@ -285,7 +336,8 @@ tests:
   - it: should prepend global.registry to cronjob image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         repository: nginx
         tag: "1.25"
@@ -304,7 +356,8 @@ tests:
   - it: per-cronjob registry should override global.registry
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         repository: nginx
         tag: "1.25"
@@ -329,7 +382,8 @@ tests:
   - it: should prepend global.registry to pre-install hook image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       hooks:
         enabled: true
         preInstall:
@@ -344,7 +398,8 @@ tests:
   - it: should not modify hook image that already has a registry
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       hooks:
         enabled: true
         preInstall:
@@ -359,7 +414,8 @@ tests:
   - it: should prepend global.registry to post-upgrade hook image
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       hooks:
         enabled: true
         postUpgrade:
@@ -374,7 +430,8 @@ tests:
   - it: image.registry should override global.registry for hooks
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       image:
         registry: ecr.us-east-1.amazonaws.com
         repository: nginx
@@ -393,7 +450,8 @@ tests:
   - it: should prepend global.registry to simple image name in hook
     set:
       global:
-        registry: my-private-registry.io
+        image:
+          registry: my-private-registry.io
       hooks:
         enabled: true
         preInstall:

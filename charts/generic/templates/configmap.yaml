@@ -2,23 +2,23 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: {{ include "generic.configMapName" . }}
-  namespace: {{ include "generic.namespace" . }}
+  name: {{ include "common.configMapName" . }}
+  namespace: {{ include "common.namespace" . }}
   labels:
-    {{- include "generic.labels" (dict "context" . "labels" .Values.configMap.labels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "labels" .Values.configMap.labels) | nindent 4 }}
   {{- if or .Values.configMap.annotations .Values.commonAnnotations }}
   annotations:
-    {{- include "generic.annotations" (dict "context" . "annotations" .Values.configMap.annotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.configMap.annotations) | nindent 4 }}
   {{- end }}
 {{- if or .Values.configMap.data .Values.configMap.binaryData }}
 {{- with .Values.configMap.data }}
 data:
   {{- range $key, $value := . }}
   {{- if kindIs "string" $value }}
-  {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+  {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
   {{- else }}
   {{ $key }}: |
-    {{- include "generic.tplValue" (dict "value" ($value | toYaml) "context" $) | nindent 4 }}
+    {{- include "common.tplValue" (dict "value" ($value | toYaml) "context" $) | nindent 4 }}
   {{- end }}
   {{- end }}
 {{- end }}
@@ -38,12 +38,12 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: {{ $name }}
-  namespace: {{ include "generic.namespace" $ }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
-    {{- include "generic.labels" (dict "context" $ "labels" $configMap.labels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $configMap.labels) | nindent 4 }}
   {{- if or $configMap.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- include "generic.annotations" (dict "context" $ "annotations" $configMap.annotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $configMap.annotations) | nindent 4 }}
   {{- end }}
 {{- if or $configMap.data $configMap.binaryData $configMap.files }}
 {{- if or $configMap.data $configMap.files }}
@@ -51,10 +51,10 @@ data:
   {{- with $configMap.data }}
   {{- range $key, $value := . }}
   {{- if kindIs "string" $value }}
-  {{ $key }}: {{ include "generic.tplValue" (dict "value" $value "context" $) | quote }}
+  {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
   {{- else }}
   {{ $key }}: |
-    {{- include "generic.tplValue" (dict "value" ($value | toYaml) "context" $) | nindent 4 }}
+    {{- include "common.tplValue" (dict "value" ($value | toYaml) "context" $) | nindent 4 }}
   {{- end }}
   {{- end }}
   {{- end }}

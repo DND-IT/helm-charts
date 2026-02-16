@@ -24,7 +24,34 @@ apis=(--api-versions batch/v1/CronJob)
 
 # validate charts
 for CHART_DIR in ${CHART_DIRS}; do
+  # Skip if chart directory doesn't exist
+  if [ ! -d "charts/${CHART_DIR}" ]; then
+    echo "Skipping ${CHART_DIR} (directory not found)"
+    continue
+  fi
+
+  # Skip library charts (they can't be templated)
+  chart_type=$(grep '^type:' "charts/${CHART_DIR}/Chart.yaml" 2>/dev/null | awk '{print $2}' || echo "application")
+  if [ "$chart_type" = "library" ]; then
+    echo "Skipping library chart ${CHART_DIR}"
+    continue
+  fi
+
   (cd "charts/${CHART_DIR}"; helm dependency build)
+
+  # Check if ci directory exists with yaml files
+  if [ ! -d "charts/${CHART_DIR}/ci" ] || ! ls charts/"${CHART_DIR}"/ci/*.yaml 1> /dev/null 2>&1; then
+    echo "No CI values files for ${CHART_DIR}, using default values"
+    helm template \
+      "${apis[@]}" \
+      charts/"${CHART_DIR}" | kubeconform \
+        -strict \
+        -ignore-missing-schemas \
+        -kubernetes-version "${KUBERNETES_VERSION#v}" \
+        -schema-location "${SCHEMA_LOCATION}"
+    continue
+  fi
+
   for VALUES_FILE in charts/"${CHART_DIR}"/ci/*.yaml; do
     helm template \
       "${apis[@]}" \

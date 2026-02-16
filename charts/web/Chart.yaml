@@ -1,0 +1,29 @@
+apiVersion: v2
+name: web
+description: |
+  A Helm chart for deploying HTTP-facing web applications to Kubernetes.
+  Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
+  Designed for web applications that need external traffic exposure.
+type: application
+version: 1.0.0
+
+keywords:
+  - web
+  - application
+  - ingress
+  - kubernetes
+
+home: https://github.com/dnd-it/helm-charts
+sources:
+  - https://github.com/dnd-it/helm-charts
+
+maintainers:
+  - name: DAI
+    email: abc@abc.com
+
+kubeVersion: '>=1.29.0-0'
+
+dependencies:
+  - name: common
+    version: "1.x.x"
+    repository: "file://../common"

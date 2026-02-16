@@ -54,10 +54,25 @@ jobs:
       - name: Install helm-unittest plugin
         run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v0.7.2  # renovate: datasource=github-releases depName=helm-unittest packageName=helm-unittest/helm-unittest
 
+      - name: Build chart dependencies
+        run: |
+          for chart in charts/*/; do
+            if [ -f "${chart}Chart.yaml" ]; then
+              echo "Building dependencies for ${chart}"
+              helm dependency build "${chart}" || true
+            fi
+          done
+
       - name: Run unit tests
         run: |
           for chart in charts/*/; do
             if [ -d "${chart}tests" ]; then
+              # Skip library charts (they can't be tested directly, tested via consuming charts)
+              chart_type=$(grep '^type:' "${chart}Chart.yaml" 2>/dev/null | awk '{print $2}' || echo "application")
+              if [ "$chart_type" = "library" ]; then
+                echo "Skipping library chart ${chart} (tested via consuming charts)"
+                continue
+              fi
               echo "Running unit tests for ${chart}"
               helm unittest "${chart}"
             fi

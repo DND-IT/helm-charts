@@ -2,19 +2,19 @@
 apiVersion: autoscaling.k8s.io/v1
 kind: VerticalPodAutoscaler
 metadata:
-  name: {{ include "generic.fullname" . }}
-  namespace: {{ include "generic.namespace" . }}
+  name: {{ include "common.fullname" . }}
+  namespace: {{ include "common.namespace" . }}
   labels:
-    {{- include "generic.labels" (dict "context" . "labels" .Values.vpa.labels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "labels" .Values.vpa.labels) | nindent 4 }}
   {{- if or .Values.vpa.annotations .Values.commonAnnotations }}
   annotations:
-    {{- include "generic.annotations" (dict "context" . "annotations" .Values.vpa.annotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.vpa.annotations) | nindent 4 }}
   {{- end }}
 spec:
   targetRef:
     apiVersion: apps/v1
     kind: {{ .Values.workload.type | default "deployment" | title }}
-    name: {{ include "generic.fullname" . }}
+    name: {{ include "common.fullname" . }}
   {{- with .Values.vpa.updatePolicy }}
   updatePolicy:
     {{- if .updateMode }}

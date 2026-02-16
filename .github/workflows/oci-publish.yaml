@@ -1,0 +1,267 @@
+name: Publish Charts to OCI Registry
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'charts/**'
+  pull_request:
+    paths:
+      - 'charts/**'
+  workflow_dispatch:
+    inputs:
+      chart:
+        description: 'Specific chart to publish (leave empty for all)'
+        required: false
+        type: string
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Helm
+        uses: azure/setup-helm@v4
+        with:
+          version: v3.17.2
+
+      - name: Login to GHCR
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | helm registry login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Determine version suffix
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "suffix=-pr.${{ github.event.pull_request.number }}" >> $GITHUB_OUTPUT
+            echo "is_preview=true" >> $GITHUB_OUTPUT
+          else
+            echo "suffix=" >> $GITHUB_OUTPUT
+            echo "is_preview=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Detect changed charts
+        id: changed
+        run: |
+          # Determine base ref for comparison
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE_REF="origin/${{ github.base_ref }}"
+            git fetch origin ${{ github.base_ref }} --depth=1
+          else
+            # For push to main, compare with previous commit
+            BASE_REF="HEAD~1"
+          fi
+
+          # Get list of changed files
+          CHANGED_FILES=$(git diff --name-only $BASE_REF HEAD 2>/dev/null || echo "")
+
+          # Extract unique chart names from changed paths
+          CHANGED_CHARTS=""
+          for file in $CHANGED_FILES; do
+            if [[ "$file" == charts/* ]]; then
+              # Extract chart name (second path component)
+              chart_name=$(echo "$file" | cut -d'/' -f2)
+              if [ -f "charts/${chart_name}/Chart.yaml" ]; then
+                if [[ ! " $CHANGED_CHARTS " =~ " $chart_name " ]]; then
+                  CHANGED_CHARTS="$CHANGED_CHARTS $chart_name"
+                fi
+              fi
+            fi
+          done
+
+          # Trim whitespace
+          CHANGED_CHARTS=$(echo "$CHANGED_CHARTS" | xargs)
+
+          echo "Changed charts: $CHANGED_CHARTS"
+          echo "charts=$CHANGED_CHARTS" >> $GITHUB_OUTPUT
+
+          # Check if common library changed (for informational purposes)
+          if [[ " $CHANGED_CHARTS " =~ " common " ]]; then
+            echo "common_changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "common_changed=false" >> $GITHUB_OUTPUT
+          fi
+
+          # If no charts changed, skip the workflow
+          if [ -z "$CHANGED_CHARTS" ]; then
+            echo "No chart changes detected"
+            echo "skip=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build and push charts
+        id: push
+        run: |
+          SUFFIX="${{ steps.version.outputs.suffix }}"
+          SPECIFIC_CHART="${{ inputs.chart }}"
+          CHANGED_CHARTS="${{ steps.changed.outputs.charts }}"
+          COMMON_CHANGED="${{ steps.changed.outputs.common_changed }}"
+          PUBLISHED_CHARTS=""
+
+          mkdir -p .helm-packages
+
+          # Cache original versions before any modifications
+          COMMON_VERSION=$(grep '^version:' "charts/common/Chart.yaml" 2>/dev/null | awk '{print $2}' || echo "1.0.0")
+
+          # Function to check if a chart should be published
+          should_publish() {
+            local chart_name="$1"
+
+            # Always publish if specific chart requested via workflow_dispatch
+            if [ -n "$SPECIFIC_CHART" ]; then
+              [ "$chart_name" = "$SPECIFIC_CHART" ] && return 0 || return 1
+            fi
+
+            # If no changes detected (e.g., workflow_dispatch without specific chart), publish all
+            if [ -z "$CHANGED_CHARTS" ]; then
+              return 0
+            fi
+
+            # Only publish if chart is in changed list
+            [[ " $CHANGED_CHARTS " =~ " $chart_name " ]] && return 0 || return 1
+          }
+
+          # Function to publish a single chart
+          publish_chart() {
+            local chart_dir="$1"
+            local chart_name=$(basename "$chart_dir")
+
+            # Skip if no Chart.yaml
+            [ -f "${chart_dir}Chart.yaml" ] || return 0
+
+            # Check if this chart should be published
+            if ! should_publish "$chart_name"; then
+              echo "⏭️  Skipping ${chart_name} (no changes)"
+              return 0
+            fi
+
+            # Get current version
+            local version=$(grep '^version:' "${chart_dir}Chart.yaml" | awk '{print $2}')
+            local full_version="${version}${SUFFIX}"
+
+            echo "📦 Processing ${chart_name} v${full_version}..."
+
+            # Update version in Chart.yaml for preview builds
+            if [ -n "$SUFFIX" ]; then
+              sed -i "s/^version: .*/version: ${full_version}/" "${chart_dir}Chart.yaml"
+            fi
+
+            # Update dependency versions for preview builds (common library)
+            if [ -n "$SUFFIX" ] && [ -f "${chart_dir}Chart.yaml" ]; then
+              # Update common dependency to use preview version from OCI
+              if grep -q "name: common" "${chart_dir}Chart.yaml"; then
+                sed -i "s|repository: file://../common|repository: oci://ghcr.io/dnd-it/helm-charts|" "${chart_dir}Chart.yaml"
+                # Update version constraint to exact preview version (use cached COMMON_VERSION)
+                sed -i "/name: common/,/version:/s/version: .*/version: ${COMMON_VERSION}${SUFFIX}/" "${chart_dir}Chart.yaml"
+                # Remove stale lock file since we changed the repository
+                rm -f "${chart_dir}Chart.lock"
+              fi
+            fi
+
+            # Build dependencies (for charts with common dependency, pull from OCI)
+            helm dependency build "$chart_dir"
+
+            # Package chart
+            helm package "$chart_dir" --destination .helm-packages/
+
+            # Push to GHCR
+            helm push ".helm-packages/${chart_name}-${full_version}.tgz" oci://ghcr.io/dnd-it/helm-charts
+
+            echo "✅ Published: oci://ghcr.io/dnd-it/helm-charts/${chart_name}:${full_version}"
+            PUBLISHED_CHARTS="${PUBLISHED_CHARTS}${chart_name}:${full_version}\n"
+          }
+
+          # Phase 1: Publish library charts first (common)
+          echo "=== Phase 1: Publishing library charts ==="
+          for chart_dir in charts/*/; do
+            chart_type=$(grep '^type:' "${chart_dir}Chart.yaml" 2>/dev/null | awk '{print $2}' || echo "application")
+            if [ "$chart_type" = "library" ]; then
+              publish_chart "$chart_dir"
+            fi
+          done
+
+          # Phase 2: Publish application charts (depend on library)
+          echo "=== Phase 2: Publishing application charts ==="
+          for chart_dir in charts/*/; do
+            chart_type=$(grep '^type:' "${chart_dir}Chart.yaml" 2>/dev/null | awk '{print $2}' || echo "application")
+            if [ "$chart_type" != "library" ]; then
+              publish_chart "$chart_dir"
+            fi
+          done
+
+          # Save published charts for PR comment
+          echo -e "$PUBLISHED_CHARTS" > published-charts.txt
+          echo "published=true" >> $GITHUB_OUTPUT
+
+      - name: Comment on PR with usage instructions
+        if: github.event_name == 'pull_request' && steps.push.outputs.published == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const prNumber = context.issue.number;
+
+            // Read published charts
+            const charts = fs.readFileSync('published-charts.txt', 'utf8')
+              .split('\n')
+              .filter(line => line.trim());
+
+            let body = '## 📦 Preview Charts Published to OCI Registry\n\n';
+            body += '### Installation\n\n';
+            body += '```bash\n';
+            body += '# Add OCI support (Helm 3.8+)\n';
+            for (const chart of charts) {
+              const [name, version] = chart.split(':');
+              body += `helm install my-${name} oci://ghcr.io/dnd-it/helm-charts/${name} --version ${version}\n`;
+            }
+            body += '```\n\n';
+
+            body += '### As dependency in Chart.yaml\n\n';
+            body += '```yaml\n';
+            body += 'dependencies:\n';
+            for (const chart of charts) {
+              const [name, version] = chart.split(':');
+              body += `  - name: ${name}\n`;
+              body += `    version: "${version}"\n`;
+              body += `    repository: "oci://ghcr.io/dnd-it/helm-charts"\n`;
+            }
+            body += '```\n\n';
+
+            body += '> **Note:** These preview versions will be available until the PR is closed.\n';
+
+            // Check for existing comment to update
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: prNumber,
+            });
+
+            const botComment = comments.find(comment =>
+              comment.user.type === 'Bot' &&
+              comment.body.includes('Preview Charts Published')
+            );
+
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: prNumber,
+                body: body
+              });
+            }

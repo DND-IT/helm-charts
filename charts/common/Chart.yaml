@@ -1,0 +1,24 @@
+apiVersion: v2
+name: common
+description: |
+  A Helm library chart containing shared templates and helpers for Kubernetes workloads.
+  Provides common functionality for naming, labels, security contexts, containers, pods, and volumes.
+  Designed to be used as a dependency by application charts (web, api, worker, cronjob).
+type: library
+version: 1.0.0
+
+keywords:
+  - library
+  - common
+  - helpers
+  - kubernetes
+
+home: https://github.com/dnd-it/helm-charts
+sources:
+  - https://github.com/dnd-it/helm-charts
+
+maintainers:
+  - name: DAI
+    email: abc@abc.com
+
+kubeVersion: '>=1.29.0-0'

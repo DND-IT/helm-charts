@@ -1,14 +1,14 @@
 {{/*
-Volumes template for generic workloads
+Volumes template for workloads
 */}}
-{{- define "generic.volumes" -}}
+{{- define "common.volumes" -}}
 {{- $root := . -}}
 {{- $volumes := list -}}
 
 {{/* ConfigMap volumes */}}
 {{- if .Values.configMap.enabled -}}
   {{- if .Values.configMap.mountPath -}}
-    {{- $volume := dict "name" "config" "configMap" (dict "name" (include "generic.configMapName" .)) -}}
+    {{- $volume := dict "name" "config" "configMap" (dict "name" (include "common.configMapName" .)) -}}
     {{- $volumes = append $volumes $volume -}}
   {{- end -}}
 {{- end -}}
@@ -16,7 +16,7 @@ Volumes template for generic workloads
 {{/* Secret volumes */}}
 {{- if .Values.secret.enabled -}}
   {{- if .Values.secret.mountPath -}}
-    {{- $volume := dict "name" "secret" "secret" (dict "secretName" (include "generic.secretName" .) "defaultMode" 420) -}}
+    {{- $volume := dict "name" "secret" "secret" (dict "secretName" (include "common.secretName" .) "defaultMode" 420) -}}
     {{- $volumes = append $volumes $volume -}}
   {{- end -}}
 {{- end -}}
@@ -52,7 +52,7 @@ Volumes template for generic workloads
 {{/* Persistent volumes */}}
 {{- range $name, $pvc := .Values.volumes.persistent -}}
   {{- if $pvc.enabled | default true -}}
-    {{- $volume := dict "name" $name "persistentVolumeClaim" (dict "claimName" (printf "%s-%s" (include "generic.fullname" $root) $name)) -}}
+    {{- $volume := dict "name" $name "persistentVolumeClaim" (dict "claimName" (printf "%s-%s" (include "common.fullname" $root) $name)) -}}
     {{- $volumes = append $volumes $volume -}}
   {{- end -}}
 {{- end -}}
@@ -93,7 +93,7 @@ volumes:
 {{/*
 Volume mounts template
 */}}
-{{- define "generic.volumeMounts" -}}
+{{- define "common.volumeMounts" -}}
 {{- $container := .container -}}
 {{- $root := .root -}}
 {{- $mounts := list -}}
