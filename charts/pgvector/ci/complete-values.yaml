@@ -1,0 +1,62 @@
+auth:
+  postgresPassword: "supersecret"
+  database: "myapp"
+  username: "myuser"
+  password: "userpass"
+
+pgvector:
+  createExtension: true
+
+initdbScripts:
+  01-schema.sql: |
+    CREATE TABLE IF NOT EXISTS items (
+      id bigserial PRIMARY KEY,
+      embedding vector(1536)
+    );
+
+persistence:
+  enabled: true
+  size: 16Gi
+
+service:
+  type: ClusterIP
+  port: 5432
+
+serviceAccount:
+  create: true
+  annotations:
+    eks.amazonaws.com/role-arn: "arn:aws:iam::123456789012:role/my-role"
+
+podSecurityContext:
+  runAsUser: 999
+  runAsGroup: 999
+  fsGroup: 999
+  runAsNonRoot: true
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    memory: 1Gi
+
+metrics:
+  enabled: true
+
+podDisruptionBudget:
+  enabled: true
+
+networkPolicy:
+  enabled: true
+
+commonLabels:
+  team: platform
+commonAnnotations:
+  owner: platform-team
+
+nodeSelector: {}
+
+tolerations: []
+
+podAnnotations:
+  prometheus.io/scrape: "true"

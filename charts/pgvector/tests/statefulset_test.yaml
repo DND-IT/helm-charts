@@ -1,0 +1,124 @@
+suite: statefulset
+templates:
+  - statefulset.yaml
+tests:
+  - it: should render a StatefulSet
+    set:
+      auth:
+        postgresPassword: "test"
+    asserts:
+      - isKind:
+          of: StatefulSet
+      - equal:
+          path: spec.replicas
+          value: 1
+      - equal:
+          path: spec.template.spec.containers[0].name
+          value: postgresql
+
+  - it: should use the correct image
+    set:
+      auth:
+        postgresPassword: "test"
+      image:
+        repository: pgvector/pgvector
+        tag: "0.8.0-pg17"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: "pgvector/pgvector:0.8.0-pg17"
+
+  - it: should set POSTGRES_DB env var
+    set:
+      auth:
+        postgresPassword: "test"
+        database: "mydb"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: POSTGRES_DB
+            value: "mydb"
+
+  - it: should create VolumeClaimTemplate when persistence is enabled
+    set:
+      auth:
+        postgresPassword: "test"
+      persistence:
+        enabled: true
+        size: 10Gi
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 10Gi
+
+  - it: should use emptyDir when persistence is disabled
+    set:
+      auth:
+        postgresPassword: "test"
+      persistence:
+        enabled: false
+    asserts:
+      - isNull:
+          path: spec.volumeClaimTemplates
+
+  - it: should mount initdb scripts
+    set:
+      auth:
+        postgresPassword: "test"
+      pgvector:
+        createExtension: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: initdb
+            mountPath: /docker-entrypoint-initdb.d
+
+  - it: should add metrics sidecar when enabled
+    set:
+      auth:
+        postgresPassword: "test"
+      metrics:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[1].name
+          value: metrics
+
+  - it: should not add metrics sidecar when disabled
+    set:
+      auth:
+        postgresPassword: "test"
+      metrics:
+        enabled: false
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.containers
+          count: 1
+
+  - it: should set resources when specified
+    set:
+      auth:
+        postgresPassword: "test"
+      resources:
+        requests:
+          cpu: 250m
+          memory: 256Mi
+        limits:
+          memory: 1Gi
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: 250m
+
+  - it: should set node selector
+    set:
+      auth:
+        postgresPassword: "test"
+      nodeSelector:
+        workload: database
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector.workload
+          value: database
