@@ -68,6 +68,25 @@ spec:
           args:
             {{- .Values.initContainer.args | toYaml | nindent 12 }}
           {{- end }}
+          {{- if .Values.initContainer.env }}
+          env:
+            {{- range $key, $val := .Values.initContainer.env }}
+            - name: {{ $key }}
+              value: {{ $val | quote }}
+            {{- end }}
+          {{- end }}
+          {{- if or .Values.externalSecrets.secretNames .Values.initContainer.extraEnvFrom }}
+          envFrom:
+            {{- with .Values.externalSecrets.secretNames }}
+              {{- range . }}
+            - secretRef:
+                name: {{ . | lower | replace "/" "-" }}
+              {{- end }}
+            {{- end }}
+            {{- with .Values.initContainer.extraEnvFrom }}
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end}}
       {{- end }}
       containers:
         - name: {{ include "webapp.name" . }}

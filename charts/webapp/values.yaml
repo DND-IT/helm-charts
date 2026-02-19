@@ -161,3 +161,5 @@ initContainer:
   image_tag: ""
   command: []
   args: []
+  env: {}
+  extraEnvFrom: []
