@@ -19,12 +19,12 @@ Recursively evaluates template strings in dictionary values
 {{- range $key, $val := $value }}
 {{- if kindIs "string" $val }}
 {{- if contains "{{" $val }}
-{{ $key }}: {{ tpl $val $context }}
+{{ $key }}: {{ tpl $val $context | toYaml }}
 {{- else }}
-{{ $key }}: {{ $val }}
+{{ $key }}: {{ $val | toYaml }}
 {{- end }}
 {{- else }}
-{{ $key }}: {{ $val }}
+{{ $key }}: {{ $val | toYaml }}
 {{- end }}
 {{- end }}
 {{- end }}

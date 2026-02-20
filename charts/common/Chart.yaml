@@ -5,7 +5,7 @@ description: |
   Provides common functionality for naming, labels, security contexts, containers, pods, and volumes.
   Designed to be used as a dependency by application charts (web, api, worker, cronjob).
 type: library
-version: 1.0.0
+version: 1.0.1
 
 keywords:
   - library
