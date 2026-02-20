@@ -43,10 +43,10 @@ resources:
     cpu: 100m
     memory: 128Mi
 
-# Health probes pre-configured for /health endpoint
+# Health probes
 livenessProbe:
   httpGet:
-    path: /health
+    path: /
     port: http
   initialDelaySeconds: 30
   periodSeconds: 10
@@ -55,7 +55,7 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /health
+    path: /
     port: http
   initialDelaySeconds: 5
   periodSeconds: 5
@@ -64,7 +64,7 @@ readinessProbe:
 
 startupProbe:
   httpGet:
-    path: /health
+    path: /
     port: http
   initialDelaySeconds: 10
   periodSeconds: 2
@@ -100,7 +100,7 @@ ingress:
     alb.ingress.kubernetes.io/scheme: internet-facing
     alb.ingress.kubernetes.io/target-type: ip
     alb.ingress.kubernetes.io/group.name: default
-    alb.ingress.kubernetes.io/healthcheck-path: /health
+    alb.ingress.kubernetes.io/healthcheck-path: /
     alb.ingress.kubernetes.io/healthcheck-port: "8080"
     alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
     alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
