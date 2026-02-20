@@ -1,13 +1,13 @@
 {{/*
 Environment variables template
 */}}
-{{- define "generic.envVars" -}}
+{{- define "common.envVars" -}}
 {{- $envVars := .envVars -}}
 {{- $root := .root -}}
 {{- range $envVar := $envVars }}
 {{- if and $envVar.name $envVar.value }}
 - name: {{ $envVar.name }}
-  value: {{ include "generic.tplValue" (dict "value" $envVar.value "context" $root) | quote }}
+  value: {{ include "common.tplValue" (dict "value" $envVar.value "context" $root) | quote }}
 {{- else if and $envVar.name $envVar.valueFrom }}
 - name: {{ $envVar.name }}
   valueFrom:
@@ -48,7 +48,7 @@ Environment variables template
 {{/*
 Common environment variables
 */}}
-{{- define "generic.commonEnvVars" -}}
+{{- define "common.commonEnvVars" -}}
 {{- $root := . -}}
 {{- $commonEnv := list -}}
 {{/* Add POD_NAME */}}
@@ -61,22 +61,22 @@ Common environment variables
 {{- $commonEnv = append $commonEnv (dict "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName"))) -}}
 {{/* Add SERVICE_ACCOUNT */}}
 {{- $commonEnv = append $commonEnv (dict "name" "SERVICE_ACCOUNT" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.serviceAccountName"))) -}}
-{{- include "generic.envVars" (dict "envVars" $commonEnv "root" $root) -}}
+{{- include "common.envVars" (dict "envVars" $commonEnv "root" $root) -}}
 {{- end -}}
 
 {{/*
 Environment from sources (ConfigMaps and Secrets)
 */}}
-{{- define "generic.envFrom" -}}
+{{- define "common.envFrom" -}}
 {{- $root := . -}}
 {{- $envFromSources := list -}}
 {{/* Main ConfigMap */}}
 {{- if and .Values.configMap.enabled .Values.configMap.envFrom -}}
-  {{- $envFromSources = append $envFromSources (dict "configMapRef" (dict "name" (include "generic.configMapName" .))) -}}
+  {{- $envFromSources = append $envFromSources (dict "configMapRef" (dict "name" (include "common.configMapName" .))) -}}
 {{- end -}}
 {{/* Main Secret */}}
 {{- if and .Values.secret.enabled .Values.secret.envFrom -}}
-  {{- $envFromSources = append $envFromSources (dict "secretRef" (dict "name" (include "generic.secretName" .))) -}}
+  {{- $envFromSources = append $envFromSources (dict "secretRef" (dict "name" (include "common.secretName" .))) -}}
 {{- end -}}
 {{/* Extra ConfigMaps */}}
 {{- range $name, $config := .Values.extraConfigMaps -}}

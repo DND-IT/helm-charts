@@ -4,14 +4,14 @@
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: {{ include "generic.fullname" $ }}-{{ $name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ include "common.fullname" $ }}-{{ $name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
     {{- $extraLabels := merge (dict "app.kubernetes.io/component" $name) ($cronjob.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   {{- if or $cronjob.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- include "generic.annotations" (dict "context" $ "annotations" $cronjob.annotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $cronjob.annotations) | nindent 4 }}
   {{- end }}
 spec:
   schedule: {{ $cronjob.schedule | quote }}
@@ -37,10 +37,10 @@ spec:
     metadata:
       labels:
         {{- $extraJobLabels := merge (dict "app.kubernetes.io/component" $name) ($cronjob.jobLabels | default dict) }}
-        {{- include "generic.labels" (dict "context" $ "labels" $extraJobLabels) | nindent 8 }}
+        {{- include "common.labels" (dict "context" $ "labels" $extraJobLabels) | nindent 8 }}
       {{- if or $cronjob.jobAnnotations $.Values.commonAnnotations }}
       annotations:
-        {{- include "generic.annotations" (dict "context" $ "annotations" $cronjob.jobAnnotations) | nindent 8 }}
+        {{- include "common.annotations" (dict "context" $ "annotations" $cronjob.jobAnnotations) | nindent 8 }}
       {{- end }}
     spec:
       {{- with $cronjob.backoffLimit }}
@@ -69,10 +69,10 @@ spec:
         metadata:
           labels:
             {{- $extraPodLabels := merge (dict "app.kubernetes.io/component" $name) ($cronjob.podLabels | default dict) }}
-            {{- include "generic.labels" (dict "context" $ "labels" $extraPodLabels) | nindent 12 }}
+            {{- include "common.labels" (dict "context" $ "labels" $extraPodLabels) | nindent 12 }}
           {{- if or $cronjob.podAnnotations $.Values.commonAnnotations }}
           annotations:
-            {{- include "generic.annotations" (dict "context" $ "annotations" $cronjob.podAnnotations) | nindent 12 }}
+            {{- include "common.annotations" (dict "context" $ "annotations" $cronjob.podAnnotations) | nindent 12 }}
           {{- end }}
         spec:
           {{- if $cronjob.imagePullSecrets }}
@@ -85,7 +85,7 @@ spec:
           {{- if $cronjob.serviceAccountName }}
           serviceAccountName: {{ $cronjob.serviceAccountName }}
           {{- else if $.Values.serviceAccount.enabled }}
-          serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+          serviceAccountName: {{ include "common.serviceAccountName" $ }}
           {{- end }}
           restartPolicy: {{ $cronjob.restartPolicy | default "OnFailure" }}
           {{- if $cronjob.podSecurityContext }}
@@ -123,8 +123,14 @@ spec:
           containers:
             - name: {{ $name }}
               {{- $cronjobImageConfig := $cronjob.image | default dict }}
-              {{- $cronjobImage := dict "registry" ($cronjobImageConfig.registry | default $.Values.image.registry | default ($.Values.global).registry) "repository" ($cronjobImageConfig.repository | default $.Values.image.repository) "tag" ($cronjobImageConfig.tag | default $.Values.image.tag) }}
-              image: {{ include "generic.image" (dict "image" $cronjobImage "context" $) }}
+              {{/* Only set registry if explicitly specified on cronjob or root image */}}
+              {{- $cronjobImage := dict "repository" ($cronjobImageConfig.repository | default $.Values.image.repository) "tag" ($cronjobImageConfig.tag | default $.Values.image.tag) }}
+              {{- if $cronjobImageConfig.registry }}
+                {{- $cronjobImage = merge (dict "registry" $cronjobImageConfig.registry) $cronjobImage }}
+              {{- else if $.Values.image.registry }}
+                {{- $cronjobImage = merge (dict "registry" $.Values.image.registry) $cronjobImage }}
+              {{- end }}
+              image: {{ include "common.image" (dict "image" $cronjobImage "context" $) }}
               imagePullPolicy: {{ $cronjobImageConfig.pullPolicy | default $.Values.image.pullPolicy }}
               {{- with $cronjob.command }}
               command:

@@ -446,3 +446,37 @@ tests:
             - --queue=high
             - --concurrency=5
         documentIndex: 1
+
+  - it: should set pod-level resources when specified
+    set:
+      configMap.enabled: false
+      secret.enabled: false
+      pod:
+        resources:
+          requests:
+            cpu: "1"
+            memory: "1Gi"
+          limits:
+            cpu: "2"
+            memory: "2Gi"
+    asserts:
+      - equal:
+          path: spec.template.spec.resources.requests.cpu
+          value: "1"
+      - equal:
+          path: spec.template.spec.resources.requests.memory
+          value: "1Gi"
+      - equal:
+          path: spec.template.spec.resources.limits.cpu
+          value: "2"
+      - equal:
+          path: spec.template.spec.resources.limits.memory
+          value: "2Gi"
+
+  - it: should not set pod-level resources when not specified
+    set:
+      configMap.enabled: false
+      secret.enabled: false
+    asserts:
+      - notExists:
+          path: spec.template.spec.resources

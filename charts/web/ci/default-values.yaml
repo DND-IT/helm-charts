@@ -1,0 +1,79 @@
+# CI test values for web chart
+# Uses nginx-unprivileged which runs as non-root (UID 101) and listens on 8080
+
+image:
+  repository: nginxinc/nginx-unprivileged
+  tag: "1.27-alpine"
+
+replicas: 1
+
+ports:
+  - name: http
+    containerPort: 8080
+
+service:
+  enabled: true
+  type: ClusterIP
+
+# Override probes for nginx which doesn't have /livez or /readyz
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+startupProbe:
+  httpGet:
+    path: /
+    port: http
+  failureThreshold: 15
+
+ingress:
+  enabled: true
+  ingressClassName: alb
+  hosts:
+    - host: test.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+          backend:
+            service:
+              port:
+                number: 80
+
+security:
+  defaultPodSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    runAsGroup: 101
+    fsGroup: 101
+  defaultContainerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 101
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+volumes:
+  emptyDir:
+    tmp:
+      mountPath: /tmp
+    nginx-cache:
+      mountPath: /var/cache/nginx
+    nginx-run:
+      mountPath: /var/run
+
+hpa:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

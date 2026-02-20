@@ -5,7 +5,7 @@ Parameters:
 - config: Optional deployment/workload configuration
 - componentName: Optional component name for extra deployments
 */}}
-{{- define "generic.podTemplate" -}}
+{{- define "common.podTemplate" -}}
 {{- $root := .root | default . -}}
 {{- $config := .config | default dict -}}
 {{- $componentName := .componentName | default "main" -}}
@@ -14,10 +14,10 @@ metadata:
   labels:
     {{- $podLabels := $config.podLabels | default ($config.pod).labels | default $deployment.pod.labels -}}
     {{- $podLabels = merge (dict "app.kubernetes.io/component" $componentName) $podLabels -}}
-    {{- include "generic.labels" (dict "context" $root "labels" $podLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $root "labels" $podLabels) | nindent 4 }}
   annotations:
     {{- $podAnnotations := $config.podAnnotations | default ($config.pod).annotations | default $deployment.pod.annotations -}}
-    {{- include "generic.podAnnotations" (dict "root" $root "annotations" $podAnnotations) | nindent 4 }}
+    {{- include "common.podAnnotations" (dict "root" $root "annotations" $podAnnotations) | nindent 4 }}
 spec:
   {{- $imagePullSecrets := $config.imagePullSecrets | default $deployment.imagePullSecrets -}}
   {{- with $imagePullSecrets }}
@@ -27,7 +27,7 @@ spec:
   {{- if $config.serviceAccountName }}
   serviceAccountName: {{ $config.serviceAccountName }}
   {{- else if $root.Values.serviceAccount.enabled }}
-  serviceAccountName: {{ include "generic.serviceAccountName" $root }}
+  serviceAccountName: {{ include "common.serviceAccountName" $root }}
   {{- else if $root.Values.serviceAccount.name }}
   serviceAccountName: {{ $root.Values.serviceAccount.name }}
   {{- end }}
@@ -88,11 +88,17 @@ spec:
   {{- $topologySpreadConstraints := $config.topologySpreadConstraints | default ($config.scheduling).topologySpreadConstraints | default $deployment.scheduling.topologySpreadConstraints -}}
   {{- if $topologySpreadConstraints }}
   topologySpreadConstraints:
-    {{- include "generic.topologySpreadConstraints" (dict "context" $root "componentName" $componentName "Values" (dict "topologySpreadConstraints" $topologySpreadConstraints)) | nindent 4 }}
+    {{- include "common.topologySpreadConstraints" (dict "context" $root "componentName" $componentName "Values" (dict "topologySpreadConstraints" $topologySpreadConstraints)) | nindent 4 }}
   {{- end }}
   securityContext:
     {{- $podSecurityContext := $config.podSecurityContext | default ($config.pod).securityContext | default $deployment.pod.securityContext | default $root.Values.security.defaultPodSecurityContext -}}
-    {{- include "generic.podSecurityContext" (dict "securityContext" $podSecurityContext "defaults" $root.Values.security.defaultPodSecurityContext) | nindent 4 }}
+    {{- include "common.podSecurityContext" (dict "securityContext" $podSecurityContext "defaults" $root.Values.security.defaultPodSecurityContext) | nindent 4 }}
+  {{- /* Pod-level resources (Kubernetes 1.32+) */ -}}
+  {{- $podResources := $config.podResources | default ($config.pod).resources | default $deployment.pod.resources -}}
+  {{- with $podResources }}
+  resources:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
   {{- /* For extraDeployments, only inherit root initContainers/sidecarContainers if inheritInitContainers is true */ -}}
   {{- $inheritInit := $config.inheritInitContainers | default false -}}
   {{- $initContainers := $config.initContainers | default (ternary $deployment.initContainers list (or (empty $config) $inheritInit)) -}}
@@ -100,19 +106,25 @@ spec:
   {{- if or $initContainers $sidecarContainers }}
   initContainers:
     {{- range $container := $initContainers }}
-    {{- include "generic.container" (dict "container" $container "root" $root) | nindent 4 }}
+    {{- include "common.container" (dict "container" $container "root" $root) | nindent 4 }}
     {{- end }}
     {{/* Native Kubernetes sidecar containers as init containers with restartPolicy: Always */}}
     {{- range $container := $sidecarContainers }}
-    {{- include "generic.sidecarContainer" (dict "container" $container "root" $root) | nindent 4 }}
+    {{- include "common.sidecarContainer" (dict "container" $container "root" $root) | nindent 4 }}
     {{- end }}
   {{- end }}
   containers:
     {{- if $config }}
     {{/* Handle extra deployments */}}
     - name: {{ $componentName | default "main" }}
-      {{- $extraImage := dict "registry" ($config.image.registry | default $root.Values.image.registry | default ($root.Values.global).registry) "repository" ($config.image.repository | default $root.Values.image.repository) "tag" ($config.image.tag | default $root.Values.image.tag) }}
-      image: {{ include "generic.image" (dict "image" $extraImage "context" $root) }}
+      {{/* Only set registry if explicitly specified on extraDeployment or root image */}}
+      {{- $extraImage := dict "repository" ($config.image.repository | default $root.Values.image.repository) "tag" ($config.image.tag | default $root.Values.image.tag) }}
+      {{- if $config.image.registry }}
+        {{- $extraImage = merge (dict "registry" $config.image.registry) $extraImage }}
+      {{- else if $root.Values.image.registry }}
+        {{- $extraImage = merge (dict "registry" $root.Values.image.registry) $extraImage }}
+      {{- end }}
+      image: {{ include "common.image" (dict "image" $extraImage "context" $root) }}
       imagePullPolicy: {{ $config.image.pullPolicy | default $root.Values.image.pullPolicy }}
       {{- with $config.command }}
       command:
@@ -124,7 +136,7 @@ spec:
       {{- end }}
       {{- with $config.env }}
       env:
-        {{- include "generic.envVars" (dict "envVars" . "root" $root) | nindent 8 }}
+        {{- include "common.envVars" (dict "envVars" . "root" $root) | nindent 8 }}
       {{- end }}
       {{- with $config.envFrom }}
       envFrom:
@@ -159,17 +171,17 @@ spec:
         {{- if $containerSecurityContext }}
         {{- toYaml $containerSecurityContext | nindent 8 }}
         {{- else }}
-        {{- include "generic.containerSecurityContext" (dict "securityContext" nil "root" $root) | nindent 8 }}
+        {{- include "common.containerSecurityContext" (dict "securityContext" nil "root" $root) | nindent 8 }}
         {{- end }}
     {{- else if $deployment.extraContainers }}
     {{- range $container := $deployment.extraContainers }}
-    {{- include "generic.container" (dict "container" $container "root" $root) | nindent 4 }}
+    {{- include "common.container" (dict "container" $container "root" $root) | nindent 4 }}
     {{- end }}
     {{- else }}
     {{/* Default single container configuration */}}
     {{- $imageConfig := $config.image | default $deployment.image -}}
     - name: main
-      image: {{ include "generic.image" (dict "image" $imageConfig "context" $root) }}
+      image: {{ include "common.image" (dict "image" $imageConfig "context" $root) }}
       imagePullPolicy: {{ $imageConfig.pullPolicy }}
       {{- with $deployment.command }}
       command:
@@ -182,16 +194,16 @@ spec:
       {{- if or $deployment.env $deployment.commonEnvVars }}
       {{- if $deployment.commonEnvVars }}
       env:
-        {{- include "generic.commonEnvVars" $root | nindent 8 }}
+        {{- include "common.commonEnvVars" $root | nindent 8 }}
         {{- with $deployment.env }}
-        {{- include "generic.envVars" (dict "envVars" . "root" $root) | nindent 8 }}
+        {{- include "common.envVars" (dict "envVars" . "root" $root) | nindent 8 }}
         {{- end }}
       {{- else if $deployment.env }}
       env:
-        {{- include "generic.envVars" (dict "envVars" $deployment.env "root" $root) | nindent 8 }}
+        {{- include "common.envVars" (dict "envVars" $deployment.env "root" $root) | nindent 8 }}
       {{- end }}
       {{- end }}
-      {{- include "generic.envFrom" $root | nindent 6 }}
+      {{- include "common.envFrom" $root | nindent 6 }}
       {{- if $deployment.ports }}
       ports:
         {{- range $deployment.ports }}
@@ -221,19 +233,19 @@ spec:
       resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- include "generic.volumeMounts" (dict "container" $deployment "root" $root) | nindent 6 }}
+      {{- include "common.volumeMounts" (dict "container" $deployment "root" $root) | nindent 6 }}
       {{- with $deployment.lifecycle }}
       lifecycle:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
-        {{- include "generic.containerSecurityContext" (dict "securityContext" $deployment.securityContext "root" $root) | nindent 8 }}
+        {{- include "common.containerSecurityContext" (dict "securityContext" $deployment.securityContext "root" $root) | nindent 8 }}
     {{- end }}
   {{- with $config.volumes }}
   volumes:
     {{- toYaml . | nindent 4 }}
   {{- else }}
-  {{- include "generic.volumes" $root | nindent 2 }}
+  {{- include "common.volumes" $root | nindent 2 }}
   {{- end }}
   {{- with $config.restartPolicy | default ($config.pod).restartPolicy | default $deployment.pod.restartPolicy }}
   restartPolicy: {{ . }}
@@ -243,7 +255,7 @@ spec:
 {{/*
 Pod annotations including checksums
 */}}
-{{- define "generic.podAnnotations" -}}
+{{- define "common.podAnnotations" -}}
 {{- $root := .root | default . -}}
 {{- $extraAnnotations := .annotations | default dict -}}
 {{- $annotations := dict -}}
@@ -253,7 +265,7 @@ Pod annotations including checksums
 {{- if $root.Values.secret.enabled -}}
   {{- $_ := set $annotations "checksum/secret" (include (print $root.Template.BasePath "/secret.yaml") $root | sha256sum) -}}
 {{- end -}}
-{{- $securityAnnotations := include "generic.securityAnnotations" $root -}}
+{{- $securityAnnotations := include "common.securityAnnotations" $root -}}
 {{- if $securityAnnotations -}}
   {{- $securityAnnotationsDict := $securityAnnotations | fromYaml -}}
   {{- $annotations = merge $annotations $securityAnnotationsDict -}}
@@ -271,34 +283,94 @@ Pod annotations including checksums
 {{- end -}}
 
 {{/*
-Topology spread constraints with label selector
+Process topology spread constraints to add labelSelector if not specified
+Usage:
+  {{- include "common.topologySpreadConstraints" . }}
+Or with component name:
+  {{- include "common.topologySpreadConstraints" (dict "context" . "componentName" "worker") }}
 */}}
-{{- define "generic.topologySpreadConstraints" -}}
-{{- $context := .context -}}
+{{- define "common.topologySpreadConstraints" -}}
+{{- $context := .context | default . -}}
 {{- $componentName := .componentName | default "" -}}
-{{- range .Values.topologySpreadConstraints }}
-- maxSkew: {{ .maxSkew | default 1 }}
-  topologyKey: {{ .topologyKey | default "kubernetes.io/hostname" }}
-  whenUnsatisfiable: {{ .whenUnsatisfiable | default "ScheduleAnyway" }}
-  {{- if .labelSelector }}
+{{- $constraints := .Values.topologySpreadConstraints | default $context.Values.topologySpreadConstraints -}}
+{{- $selectorLabels := include "common.selectorLabels" $context | fromYaml -}}
+{{- if $componentName -}}
+  {{- $selectorLabels = merge $selectorLabels (dict "app.kubernetes.io/component" $componentName) -}}
+{{- end -}}
+{{- range $constraint := $constraints }}
+- maxSkew: {{ $constraint.maxSkew }}
+  topologyKey: {{ $constraint.topologyKey }}
+  whenUnsatisfiable: {{ $constraint.whenUnsatisfiable }}
+  {{- if $constraint.labelSelector }}
   labelSelector:
-    {{- toYaml .labelSelector | nindent 4 }}
+    {{- toYaml $constraint.labelSelector | nindent 4 }}
   {{- else }}
   labelSelector:
     matchLabels:
-      {{- include "generic.selectorLabels" $context | nindent 6 }}
-      {{- if $componentName }}
-      app.kubernetes.io/component: {{ $componentName }}
-      {{- end }}
+      {{- toYaml $selectorLabels | nindent 6 }}
   {{- end }}
-  {{- with .minDomains }}
-  minDomains: {{ . }}
+  {{- if $constraint.minDomains }}
+  minDomains: {{ $constraint.minDomains }}
   {{- end }}
-  {{- with .nodeAffinityPolicy }}
-  nodeAffinityPolicy: {{ . }}
+  {{- if $constraint.nodeAffinityPolicy }}
+  nodeAffinityPolicy: {{ $constraint.nodeAffinityPolicy }}
   {{- end }}
-  {{- with .nodeTaintsPolicy }}
-  nodeTaintsPolicy: {{ . }}
+  {{- if $constraint.nodeTaintsPolicy }}
+  nodeTaintsPolicy: {{ $constraint.nodeTaintsPolicy }}
   {{- end }}
-{{- end }}
+  {{- if $constraint.matchLabelKeys }}
+  matchLabelKeys:
+    {{- toYaml $constraint.matchLabelKeys | nindent 4 }}
+  {{- end }}
 {{- end -}}
+{{- end }}
+
+{{/*
+Get the service port
+*/}}
+{{- define "common.servicePort" -}}
+{{- if .Values.service.ports }}
+{{- (index .Values.service.ports 0).port }}
+{{- else if .Values.ports }}
+{{- (index .Values.ports 0).port | default (index .Values.ports 0).containerPort }}
+{{- else }}
+{{- 80 }}
+{{- end }}
+{{- end }}
+
+{{/*
+Get the service target port
+*/}}
+{{- define "common.serviceTargetPort" -}}
+{{- if .Values.service.ports }}
+{{- (index .Values.service.ports 0).targetPort }}
+{{- else if .Values.ports }}
+{{- (index .Values.ports 0).containerPort }}
+{{- else }}
+{{- 80 }}
+{{- end }}
+{{- end }}
+
+{{/*
+Get the service port name
+*/}}
+{{- define "common.servicePortName" -}}
+{{- if .Values.service.ports }}
+{{- (index .Values.service.ports 0).name | default "http" }}
+{{- else if .Values.ports }}
+{{- (index .Values.ports 0).name | default "http" }}
+{{- else }}
+{{- "http" }}
+{{- end }}
+{{- end }}
+
+{{/*
+Validate required values
+*/}}
+{{- define "common.validateValues" -}}
+{{- if .Values.deploymentEnabled }}
+{{- if not .Values.image.repository }}
+{{- fail "image.repository is required when deployment is enabled" }}
+{{- end }}
+{{- end }}
+{{- end }}

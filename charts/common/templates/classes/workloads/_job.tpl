@@ -1,0 +1,146 @@
+{{/*
+Job resource template.
+Usage: {{- include "common.jobs" . }}
+*/}}
+{{- define "common.jobs" -}}
+{{- range $name, $job := .Values.jobs }}
+{{- if $job.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "common.fullname" $ }}-{{ $name }}
+  namespace: {{ include "common.namespace" $ }}
+  labels:
+    {{- $extraLabels := merge (dict "app.kubernetes.io/component" $name) ($job.labels | default dict) }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+  {{- if or $job.annotations $.Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" $ "annotations" $job.annotations) | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $job.completions }}
+  completions: {{ . }}
+  {{- end }}
+  {{- with $job.parallelism }}
+  parallelism: {{ . }}
+  {{- end }}
+  {{- with $job.backoffLimit }}
+  backoffLimit: {{ . }}
+  {{- end }}
+  {{- with $job.activeDeadlineSeconds }}
+  activeDeadlineSeconds: {{ . }}
+  {{- end }}
+  {{- with $job.ttlSecondsAfterFinished }}
+  ttlSecondsAfterFinished: {{ . }}
+  {{- end }}
+  {{- with $job.completionMode }}
+  completionMode: {{ . }}
+  {{- end }}
+  {{- with $job.suspend }}
+  suspend: {{ . }}
+  {{- end }}
+  {{- with $job.podFailurePolicy }}
+  podFailurePolicy:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  template:
+    metadata:
+      labels:
+        {{- $extraPodLabels := merge (dict "app.kubernetes.io/component" $name) ($job.podLabels | default dict) }}
+        {{- include "common.labels" (dict "context" $ "labels" $extraPodLabels) | nindent 8 }}
+      {{- if or $job.podAnnotations $.Values.commonAnnotations }}
+      annotations:
+        {{- include "common.annotations" (dict "context" $ "annotations" $job.podAnnotations) | nindent 8 }}
+      {{- end }}
+    spec:
+      {{- if $job.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml $job.imagePullSecrets | nindent 8 }}
+      {{- else if $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml $.Values.imagePullSecrets | nindent 8 }}
+      {{- end }}
+      {{- if $job.serviceAccountName }}
+      serviceAccountName: {{ $job.serviceAccountName }}
+      {{- else if $.Values.serviceAccount.enabled }}
+      serviceAccountName: {{ include "common.serviceAccountName" $ }}
+      {{- end }}
+      restartPolicy: {{ $job.restartPolicy | default "OnFailure" }}
+      {{- if $job.podSecurityContext }}
+      securityContext:
+        {{- toYaml $job.podSecurityContext | nindent 8 }}
+      {{- else if $.Values.security.defaultPodSecurityContext }}
+      securityContext:
+        {{- toYaml $.Values.security.defaultPodSecurityContext | nindent 8 }}
+      {{- end }}
+      {{- if $job.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $job.nodeSelector | nindent 8 }}
+      {{- else if $.Values.scheduling.nodeSelector }}
+      nodeSelector:
+        {{- toYaml $.Values.scheduling.nodeSelector | nindent 8 }}
+      {{- end }}
+      {{- if $job.affinity }}
+      affinity:
+        {{- toYaml $job.affinity | nindent 8 }}
+      {{- else if $.Values.scheduling.affinity }}
+      affinity:
+        {{- toYaml $.Values.scheduling.affinity | nindent 8 }}
+      {{- end }}
+      {{- if $job.tolerations }}
+      tolerations:
+        {{- toYaml $job.tolerations | nindent 8 }}
+      {{- else if $.Values.scheduling.tolerations }}
+      tolerations:
+        {{- toYaml $.Values.scheduling.tolerations | nindent 8 }}
+      {{- end }}
+      {{- with $job.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: {{ $name }}
+          {{/* Only set registry if explicitly specified on job or root image */}}
+          {{- $jobImage := dict "repository" ($job.image.repository | default $.Values.image.repository) "tag" ($job.image.tag | default $.Values.image.tag) }}
+          {{- if $job.image.registry }}
+            {{- $jobImage = merge (dict "registry" $job.image.registry) $jobImage }}
+          {{- else if $.Values.image.registry }}
+            {{- $jobImage = merge (dict "registry" $.Values.image.registry) $jobImage }}
+          {{- end }}
+          image: {{ include "common.image" (dict "image" $jobImage "context" $) }}
+          imagePullPolicy: {{ $job.image.pullPolicy | default $.Values.image.pullPolicy }}
+          {{- with $job.command }}
+          command:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.envFrom }}
+          envFrom:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.resources }}
+          resources:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with $job.volumeMounts }}
+          volumeMounts:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if $job.securityContext }}
+          securityContext:
+            {{- toYaml $job.securityContext | nindent 12 }}
+          {{- else if $.Values.security.defaultContainerSecurityContext }}
+          securityContext:
+            {{- toYaml $.Values.security.defaultContainerSecurityContext | nindent 12 }}
+          {{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}

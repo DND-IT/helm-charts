@@ -3,7 +3,7 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: {{ include "generic.namespace" . }}
+  name: {{ include "common.namespace" . }}
   labels:
     {{- $extraLabels := dict "pod-security.kubernetes.io/enforce" .Values.security.podSecurityStandards.enforce }}
     {{- if .Values.security.podSecurityStandards.audit }}
@@ -13,10 +13,10 @@ metadata:
     {{- $_ := set $extraLabels "pod-security.kubernetes.io/warn" .Values.security.podSecurityStandards.warn }}
     {{- end }}
     {{- $allLabels := merge $extraLabels (.Values.security.podSecurityStandards.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" . "labels" $allLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "labels" $allLabels) | nindent 4 }}
   {{- if or .Values.security.podSecurityStandards.annotations .Values.commonAnnotations }}
   annotations:
-    {{- include "generic.annotations" (dict "context" . "annotations" .Values.security.podSecurityStandards.annotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.security.podSecurityStandards.annotations) | nindent 4 }}
   {{- end }}
 {{- end }}
 {{- end }}

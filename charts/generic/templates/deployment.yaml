@@ -1,15 +1,15 @@
-{{- include "generic.validateValues" . -}}
+{{- include "common.validateValues" . -}}
 {{- if .Values.deploymentEnabled }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "generic.fullname" . }}
-  namespace: {{ include "generic.namespace" . }}
+  name: {{ include "common.fullname" . }}
+  namespace: {{ include "common.namespace" . }}
   labels:
-    {{- include "generic.labels" (dict "context" . "labels" .Values.workloadLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" . "labels" .Values.workloadLabels) | nindent 4 }}
   {{- if or .Values.workloadAnnotations .Values.commonAnnotations }}
   annotations:
-    {{- include "generic.annotations" (dict "context" . "annotations" .Values.workloadAnnotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.workloadAnnotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- if not .Values.hpa.enabled }}
@@ -26,14 +26,14 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "generic.selectorLabels" . | nindent 6 }}
+      {{- include "common.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: main
   {{- with .Values.strategy }}
   strategy:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   template:
-    {{- include "generic.podTemplate" . | nindent 4 }}
+    {{- include "common.podTemplate" . | nindent 4 }}
 {{- end }}
 {{- range $name, $deployment := .Values.extraDeployments }}
 {{- if ne (toString $deployment.enabled) "false" }}
@@ -41,14 +41,14 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "generic.fullname" $ }}-{{ $name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ include "common.fullname" $ }}-{{ $name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
     {{- $extraLabels := merge (dict "app.kubernetes.io/component" $name) ($deployment.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   {{- if or $deployment.annotations $.Values.commonAnnotations }}
   annotations:
-    {{- include "generic.annotations" (dict "context" $ "annotations" $deployment.annotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $deployment.annotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- if not $deployment.hpa }}
@@ -65,13 +65,13 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "generic.selectorLabels" $ | nindent 6 }}
+      {{- include "common.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/component: {{ $name }}
   {{- with $deployment.strategy }}
   strategy:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   template:
-    {{- include "generic.podTemplate" (dict "root" $ "config" $deployment "componentName" $name) | nindent 4 }}
+    {{- include "common.podTemplate" (dict "root" $ "config" $deployment "componentName" $name) | nindent 4 }}
 {{- end }}
 {{- end }}

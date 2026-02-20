@@ -1,0 +1,76 @@
+{{/*
+Gateway API ReferenceGrant resource template.
+Usage: {{- include "common.referenceGrant" . }}
+*/}}
+{{- define "common.referenceGrant" -}}
+{{- if and .Values.gateway.referenceGrant.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1/ReferenceGrant") }}
+apiVersion: gateway.networking.k8s.io/v1beta1
+kind: ReferenceGrant
+metadata:
+  name: {{ include "common.fullname" . }}
+  namespace: {{ include "common.namespace" . }}
+  labels:
+    {{- include "common.labels" (dict "context" . "labels" .Values.gateway.referenceGrant.labels) | nindent 4 }}
+  {{- if or .Values.gateway.referenceGrant.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.referenceGrant.annotations) | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with .Values.gateway.referenceGrant.from }}
+  from:
+    {{- range $from := . }}
+    - group: {{ $from.group | default "gateway.networking.k8s.io" }}
+      kind: {{ $from.kind }}
+      {{- with $from.namespace }}
+      namespace: {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+  {{- with .Values.gateway.referenceGrant.to }}
+  to:
+    {{- range $to := . }}
+    - group: {{ $to.group | default "" | quote }}
+      kind: {{ $to.kind }}
+      {{- with $to.name }}
+      name: {{ . }}
+      {{- end }}
+    {{- end }}
+  {{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Extra ReferenceGrants resource template.
+Usage: {{- include "common.extraReferenceGrants" . }}
+*/}}
+{{- define "common.extraReferenceGrants" -}}
+{{- if and .Values.gateway.referenceGrant.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1/ReferenceGrant") }}
+{{- if .Values.gateway.referenceGrant.extraGrants }}
+{{- range $name, $grant := .Values.gateway.referenceGrant.extraGrants }}
+{{- if $grant.enabled | default true }}
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: ReferenceGrant
+metadata:
+  name: {{ printf "%s-%s" (include "common.fullname" $) $name }}
+  namespace: {{ include "common.namespace" $ }}
+  labels:
+    {{- include "common.labels" (dict "context" $ "labels" $grant.labels) | nindent 4 }}
+  {{- if or $grant.annotations $.Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" $ "annotations" $grant.annotations) | nindent 4 }}
+  {{- end }}
+spec:
+  {{- with $grant.from }}
+  from:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  {{- with $grant.to }}
+  to:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}

@@ -1,0 +1,38 @@
+# Default values for common library chart
+# This file contains shared default values used by dependent charts
+
+# Global values - passed down from parent charts
+global:
+  # Container registry prepended to all images that don't specify one
+  registry: ""
+
+# Default security contexts (can be overridden per workload)
+security:
+  # Default pod security context applied to all workloads
+  defaultPodSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Default container security context applied to all containers
+  defaultContainerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+      - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+  # Pod Security Standards (PSS) - Kubernetes native
+  podSecurityStandards:
+    enabled: false
+    enforce: ""
+    audit: ""
+    warn: ""

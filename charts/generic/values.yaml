@@ -8,9 +8,11 @@
 
 # Global values - passed down to subcharts following Helm convention
 global:
-  # Container registry prepended to all images that don't specify one
-  # Lowest priority: overridden by image.registry and per-container registry
-  registry: ""
+  image:
+    # Container registry prepended to all images that don't specify one
+    # Only applies to images without a registry already in the repository
+    # Overridden by image.registry and per-container registry settings
+    registry: ""
 
 # Common labels and annotations applied to all resources
 # Supports Helm template syntax for dynamic values
@@ -277,6 +279,17 @@ pod:
   # Pod security context (overrides security.defaultPodSecurityContext)
   securityContext: {}
   # runAsUser: 1001  # Override default user
+
+  # Pod-level resources (Kubernetes 1.32+ alpha, 1.33+ beta)
+  # Requires PodLevelResources feature gate to be enabled
+  # resources:
+  #   requests:
+  #     cpu: "1"
+  #     memory: "1Gi"
+  #   limits:
+  #     cpu: "2"
+  #     memory: "2Gi"
+  resources: {}
 
   # Host settings
   hostNetwork: false

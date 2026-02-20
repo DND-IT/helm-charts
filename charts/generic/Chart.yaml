@@ -6,7 +6,7 @@ description: |
   Designed for maximum flexibility while maintaining security best practices by default.
   Optimized for AWS with ALB ingress controller support.
 type: application
-version: 0.7.1
+version: 0.8.0
 
 keywords:
   - application
@@ -21,4 +21,9 @@ maintainers:
   - name: DAI
     email: abc@abc.com
 
-kubeVersion: '>=1.29.0-0'
+kubeVersion: '>=1.32.0-0'
+
+dependencies:
+  - name: common
+    version: "1.x.x"
+    repository: "file://../common"

@@ -1,0 +1,99 @@
+{{/*
+Full Secret resource template.
+Usage: {{- include "common.secret" . }}
+*/}}
+{{- define "common.secret" -}}
+{{- if .Values.secret.enabled }}
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "common.secretName" . }}
+  namespace: {{ include "common.namespace" . }}
+  labels:
+    {{- include "common.labels" (dict "context" . "labels" .Values.secret.labels) | nindent 4 }}
+  {{- if or .Values.secret.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.secret.annotations) | nindent 4 }}
+  {{- end }}
+type: {{ .Values.secret.type | default "Opaque" }}
+{{- if .Values.secret.data }}
+data:
+  {{- range $key, $value := .Values.secret.data }}
+  {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | b64enc | quote }}
+  {{- end }}
+{{- end }}
+{{- if .Values.secret.stringData }}
+stringData:
+  {{- range $key, $value := .Values.secret.stringData }}
+  {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Extra Secrets resource template.
+Usage: {{- include "common.extraSecrets" . }}
+*/}}
+{{- define "common.extraSecrets" -}}
+{{- if .Values.extraSecrets }}
+{{- range $name, $secret := .Values.extraSecrets }}
+{{- if $secret.enabled | default true }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ $name }}
+  namespace: {{ include "common.namespace" $ }}
+  labels:
+    {{- include "common.labels" (dict "context" $ "labels" $secret.labels) | nindent 4 }}
+  {{- if or $secret.annotations $.Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" $ "annotations" $secret.annotations) | nindent 4 }}
+  {{- end }}
+type: {{ $secret.type | default "Opaque" }}
+{{- if or $secret.data $secret.files }}
+data:
+  {{- with $secret.data }}
+  {{- range $key, $value := . }}
+  {{- if kindIs "string" $value }}
+  {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | b64enc | quote }}
+  {{- else }}
+  {{ $key }}: {{ include "common.tplValue" (dict "value" ($value | toYaml) "context" $) | b64enc | quote }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- with $secret.files }}
+  {{- $files := . }}
+  {{- if kindIs "slice" $files }}
+  {{- range $files }}
+  {{- if .name }}
+  {{ .name }}: {{ .content | b64enc | quote }}
+  {{- else }}
+  {{- range $path := .paths }}
+  {{ base $path }}: {{ $.Files.Get $path | b64enc | quote }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- else }}
+  {{- range $fileName, $filePath := $files }}
+  {{ $fileName }}: {{ $.Files.Get $filePath | b64enc | quote }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- if $secret.stringData }}
+stringData:
+  {{- range $key, $value := $secret.stringData }}
+  {{- if kindIs "string" $value }}
+  {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
+  {{- else }}
+  {{ $key }}: |
+    {{- include "common.tplValue" (dict "value" ($value | toYaml) "context" $) | nindent 4 }}
+  {{- end }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}

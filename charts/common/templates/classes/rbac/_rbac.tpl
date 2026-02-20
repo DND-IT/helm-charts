@@ -1,0 +1,122 @@
+{{/*
+RBAC resources template (Role/ClusterRole and RoleBinding/ClusterRoleBinding).
+Usage: {{- include "common.rbac" . }}
+*/}}
+{{- define "common.rbac" -}}
+{{- if and .Values.rbac.enabled .Values.serviceAccount.enabled }}
+{{- if or .Values.rbac.rules .Values.rbac.aggregationRule }}
+{{- $rbacType := .Values.rbac.type | default "Role" -}}
+{{- $isClusterRole := eq $rbacType "ClusterRole" -}}
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ $rbacType }}
+metadata:
+  name: {{ include "common.fullname" . }}
+  {{- if not $isClusterRole }}
+  namespace: {{ include "common.namespace" . }}
+  {{- end }}
+  labels:
+    {{- include "common.labels" (dict "context" . "labels" .Values.rbac.labels) | nindent 4 }}
+  {{- if or .Values.rbac.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.rbac.annotations) | nindent 4 }}
+  {{- end }}
+{{- if .Values.rbac.aggregationRule }}
+aggregationRule:
+  {{- toYaml .Values.rbac.aggregationRule | nindent 2 }}
+{{- else if .Values.rbac.rules }}
+rules:
+  {{- toYaml .Values.rbac.rules | nindent 2 }}
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ if $isClusterRole }}ClusterRoleBinding{{ else }}RoleBinding{{ end }}
+metadata:
+  name: {{ include "common.fullname" . }}
+  {{- if not $isClusterRole }}
+  namespace: {{ include "common.namespace" . }}
+  {{- end }}
+  labels:
+    {{- include "common.labels" (dict "context" . "labels" .Values.rbac.labels) | nindent 4 }}
+  {{- if or .Values.rbac.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.rbac.annotations) | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: {{ $rbacType }}
+  name: {{ .Values.rbac.roleRef | default (include "common.fullname" .) }}
+subjects:
+  {{- if .Values.rbac.subjects }}
+  {{- toYaml .Values.rbac.subjects | nindent 2 }}
+  {{- else }}
+  - kind: ServiceAccount
+    name: {{ include "common.serviceAccountName" . }}
+    namespace: {{ include "common.namespace" . }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Extra RBAC resources template.
+Usage: {{- include "common.extraRbac" . }}
+*/}}
+{{- define "common.extraRbac" -}}
+{{- if and .Values.rbac.enabled .Values.serviceAccount.enabled }}
+{{- if .Values.rbac.extraRoles }}
+{{- range $name, $role := .Values.rbac.extraRoles }}
+{{- if $role.enabled | default true }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ $role.type | default "Role" }}
+metadata:
+  name: {{ printf "%s-%s" (include "common.fullname" $) $name }}
+  {{- if ne ($role.type | default "Role") "ClusterRole" }}
+  namespace: {{ include "common.namespace" $ }}
+  {{- end }}
+  labels:
+    {{- include "common.labels" (dict "context" $ "labels" $role.labels) | nindent 4 }}
+  {{- if or $role.annotations $.Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" $ "annotations" $role.annotations) | nindent 4 }}
+  {{- end }}
+{{- if $role.aggregationRule }}
+aggregationRule:
+  {{- toYaml $role.aggregationRule | nindent 2 }}
+{{- else if $role.rules }}
+rules:
+  {{- toYaml $role.rules | nindent 2 }}
+{{- end }}
+{{- if $role.createBinding | default true }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: {{ if eq ($role.type | default "Role") "ClusterRole" }}ClusterRoleBinding{{ else }}RoleBinding{{ end }}
+metadata:
+  name: {{ printf "%s-%s" (include "common.fullname" $) $name }}
+  {{- if ne ($role.type | default "Role") "ClusterRole" }}
+  namespace: {{ include "common.namespace" $ }}
+  {{- end }}
+  labels:
+    {{- include "common.labels" (dict "context" $ "labels" $role.labels) | nindent 4 }}
+  {{- if or $role.annotations $.Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" $ "annotations" $role.annotations) | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: {{ $role.type | default "Role" }}
+  name: {{ $role.roleRef | default (printf "%s-%s" (include "common.fullname" $) $name) }}
+subjects:
+  {{- if $role.subjects }}
+  {{- toYaml $role.subjects | nindent 2 }}
+  {{- else }}
+  - kind: ServiceAccount
+    name: {{ include "common.serviceAccountName" $ }}
+    namespace: {{ include "common.namespace" $ }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}

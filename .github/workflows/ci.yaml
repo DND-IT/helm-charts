@@ -54,10 +54,25 @@ jobs:
       - name: Install helm-unittest plugin
         run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v0.7.2  # renovate: datasource=github-releases depName=helm-unittest packageName=helm-unittest/helm-unittest
 
+      - name: Build chart dependencies
+        run: |
+          for chart in charts/*/; do
+            if [ -f "${chart}Chart.yaml" ]; then
+              echo "Building dependencies for ${chart}"
+              helm dependency build "${chart}" || true
+            fi
+          done
+
       - name: Run unit tests
         run: |
           for chart in charts/*/; do
             if [ -d "${chart}tests" ]; then
+              # Skip library charts (they can't be tested directly, tested via consuming charts)
+              chart_type=$(grep '^type:' "${chart}Chart.yaml" 2>/dev/null | awk '{print $2}' || echo "application")
+              if [ "$chart_type" = "library" ]; then
+                echo "Skipping library chart ${chart} (tested via consuming charts)"
+                continue
+              fi
               echo "Running unit tests for ${chart}"
               helm unittest "${chart}"
             fi
@@ -82,10 +97,10 @@ jobs:
       matrix:
         k8s:
           # from https://github.com/yannh/kubernetes-json-schema
-          - v1.29.7
-          - v1.30.3
-          - v1.31.4
-          - v1.32.0
+          - v1.32.12
+          - v1.33.8
+          - v1.34.4
+          - v1.35.1
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -109,10 +124,10 @@ jobs:
       matrix:
         k8s:
           # from https://hub.docker.com/r/kindest/node/tags
-          - v1.29.14 # renovate: kindest
-          - v1.30.10 # renovate: kindest
-          - v1.31.6 # renovate: kindest
-          - v1.32.3 # renovate: kindest
+          - v1.32.11 # renovate: kindest
+          - v1.33.7 # renovate: kindest
+          - v1.34.3 # renovate: kindest
+          - v1.35.0 # renovate: kindest
 
     steps:
       - name: Checkout
@@ -124,7 +139,7 @@ jobs:
         uses: helm/kind-action@92086f6be054225fa813e0a4b13787fc9088faab # v1.13.0
         with:
           node_image: kindest/node:${{ matrix.k8s }}
-          version: v0.22.0 # renovate: datasource=github-releases depName=kind packageName=kubernetes-sigs/kind
+          version: v0.31.0 # renovate: datasource=github-releases depName=kind packageName=kubernetes-sigs/kind
 
       - name: Install CRDs
         run: .github/install-crds.sh
@@ -135,7 +150,7 @@ jobs:
           version: v3.10.1 # renovate: datasource=github-releases depName=chart-testing packageName=helm/chart-testing
 
       - name: Run chart install
-        run: ct install --config ct.yaml
+        run: ct install --config ct.yaml --excluded-charts common
 
   # Catch-all required check for test matrix
   test-success:

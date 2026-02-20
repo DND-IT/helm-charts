@@ -6,15 +6,15 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-pre-install-%s" (include "generic.fullname" $) $hook.name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ printf "%s-pre-install-%s" (include "common.fullname" $) $hook.name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
     {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "pre-install") ($hook.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
     {{- $helmAnnotations := dict "helm.sh/hook" "pre-install" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "before-hook-creation") }}
     {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
-    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -25,11 +25,11 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "generic.selectorLabels" $ | nindent 8 }}
+        {{- include "common.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: hook
         app.kubernetes.io/hook-type: pre-install
       annotations:
-        {{- include "generic.podAnnotations" $ | nindent 8 }}
+        {{- include "common.podAnnotations" $ | nindent 8 }}
     spec:
       restartPolicy: {{ $hook.restartPolicy | default "Never" }}
       {{- with $hook.imagePullSecrets | default $.Values.imagePullSecrets }}
@@ -37,15 +37,15 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if $.Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+      serviceAccountName: {{ include "common.serviceAccountName" $ }}
       {{- else if $.Values.serviceAccount.name }}
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
+        {{- include "common.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
-        image: {{ include "generic.resolveStringImage" (dict "image" $hook.image "root" $) }}
+        image: {{ include "common.resolveStringImage" (dict "image" $hook.image "root" $) }}
         imagePullPolicy: {{ $hook.imagePullPolicy | default $.Values.image.pullPolicy | default "IfNotPresent" }}
         {{- with $hook.command }}
         command:
@@ -57,7 +57,7 @@ spec:
         {{- end }}
         {{- with $hook.env }}
         env:
-          {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 10 }}
+          {{- include "common.envVars" (dict "envVars" . "root" $) | nindent 10 }}
         {{- end }}
         {{- with $hook.envFrom }}
         envFrom:
@@ -72,7 +72,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         securityContext:
-          {{- include "generic.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
+          {{- include "common.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
       {{- with $hook.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
@@ -85,15 +85,15 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-post-install-%s" (include "generic.fullname" $) $hook.name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ printf "%s-post-install-%s" (include "common.fullname" $) $hook.name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
     {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "post-install") ($hook.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
     {{- $helmAnnotations := dict "helm.sh/hook" "post-install" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "hook-succeeded") }}
     {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
-    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -104,11 +104,11 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "generic.selectorLabels" $ | nindent 8 }}
+        {{- include "common.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: hook
         app.kubernetes.io/hook-type: post-install
       annotations:
-        {{- include "generic.podAnnotations" $ | nindent 8 }}
+        {{- include "common.podAnnotations" $ | nindent 8 }}
     spec:
       restartPolicy: {{ $hook.restartPolicy | default "Never" }}
       {{- with $hook.imagePullSecrets | default $.Values.imagePullSecrets }}
@@ -116,15 +116,15 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if $.Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+      serviceAccountName: {{ include "common.serviceAccountName" $ }}
       {{- else if $.Values.serviceAccount.name }}
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
+        {{- include "common.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
-        image: {{ include "generic.resolveStringImage" (dict "image" $hook.image "root" $) }}
+        image: {{ include "common.resolveStringImage" (dict "image" $hook.image "root" $) }}
         imagePullPolicy: {{ $hook.imagePullPolicy | default $.Values.image.pullPolicy | default "IfNotPresent" }}
         {{- with $hook.command }}
         command:
@@ -136,7 +136,7 @@ spec:
         {{- end }}
         {{- with $hook.env }}
         env:
-          {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 10 }}
+          {{- include "common.envVars" (dict "envVars" . "root" $) | nindent 10 }}
         {{- end }}
         {{- with $hook.envFrom }}
         envFrom:
@@ -151,7 +151,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         securityContext:
-          {{- include "generic.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
+          {{- include "common.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
       {{- with $hook.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
@@ -164,15 +164,15 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-pre-upgrade-%s" (include "generic.fullname" $) $hook.name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ printf "%s-pre-upgrade-%s" (include "common.fullname" $) $hook.name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
     {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "pre-upgrade") ($hook.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
     {{- $helmAnnotations := dict "helm.sh/hook" "pre-upgrade" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "before-hook-creation") }}
     {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
-    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -183,11 +183,11 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "generic.selectorLabels" $ | nindent 8 }}
+        {{- include "common.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: hook
         app.kubernetes.io/hook-type: pre-upgrade
       annotations:
-        {{- include "generic.podAnnotations" $ | nindent 8 }}
+        {{- include "common.podAnnotations" $ | nindent 8 }}
     spec:
       restartPolicy: {{ $hook.restartPolicy | default "Never" }}
       {{- with $hook.imagePullSecrets | default $.Values.imagePullSecrets }}
@@ -195,15 +195,15 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if $.Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+      serviceAccountName: {{ include "common.serviceAccountName" $ }}
       {{- else if $.Values.serviceAccount.name }}
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
+        {{- include "common.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
-        image: {{ include "generic.resolveStringImage" (dict "image" $hook.image "root" $) }}
+        image: {{ include "common.resolveStringImage" (dict "image" $hook.image "root" $) }}
         imagePullPolicy: {{ $hook.imagePullPolicy | default $.Values.image.pullPolicy | default "IfNotPresent" }}
         {{- with $hook.command }}
         command:
@@ -215,7 +215,7 @@ spec:
         {{- end }}
         {{- with $hook.env }}
         env:
-          {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 10 }}
+          {{- include "common.envVars" (dict "envVars" . "root" $) | nindent 10 }}
         {{- end }}
         {{- with $hook.envFrom }}
         envFrom:
@@ -230,7 +230,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         securityContext:
-          {{- include "generic.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
+          {{- include "common.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
       {{- with $hook.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
@@ -243,15 +243,15 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-post-upgrade-%s" (include "generic.fullname" $) $hook.name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ printf "%s-post-upgrade-%s" (include "common.fullname" $) $hook.name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
     {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "post-upgrade") ($hook.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
     {{- $helmAnnotations := dict "helm.sh/hook" "post-upgrade" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "hook-succeeded") }}
     {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
-    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -262,11 +262,11 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "generic.selectorLabels" $ | nindent 8 }}
+        {{- include "common.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: hook
         app.kubernetes.io/hook-type: post-upgrade
       annotations:
-        {{- include "generic.podAnnotations" $ | nindent 8 }}
+        {{- include "common.podAnnotations" $ | nindent 8 }}
     spec:
       restartPolicy: {{ $hook.restartPolicy | default "Never" }}
       {{- with $hook.imagePullSecrets | default $.Values.imagePullSecrets }}
@@ -274,15 +274,15 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if $.Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+      serviceAccountName: {{ include "common.serviceAccountName" $ }}
       {{- else if $.Values.serviceAccount.name }}
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
+        {{- include "common.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
-        image: {{ include "generic.resolveStringImage" (dict "image" $hook.image "root" $) }}
+        image: {{ include "common.resolveStringImage" (dict "image" $hook.image "root" $) }}
         imagePullPolicy: {{ $hook.imagePullPolicy | default $.Values.image.pullPolicy | default "IfNotPresent" }}
         {{- with $hook.command }}
         command:
@@ -294,7 +294,7 @@ spec:
         {{- end }}
         {{- with $hook.env }}
         env:
-          {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 10 }}
+          {{- include "common.envVars" (dict "envVars" . "root" $) | nindent 10 }}
         {{- end }}
         {{- with $hook.envFrom }}
         envFrom:
@@ -309,7 +309,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         securityContext:
-          {{- include "generic.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
+          {{- include "common.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
       {{- with $hook.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
@@ -322,15 +322,15 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-pre-delete-%s" (include "generic.fullname" $) $hook.name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ printf "%s-pre-delete-%s" (include "common.fullname" $) $hook.name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
     {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "pre-delete") ($hook.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
     {{- $helmAnnotations := dict "helm.sh/hook" "pre-delete" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "hook-succeeded") }}
     {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
-    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -341,11 +341,11 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "generic.selectorLabels" $ | nindent 8 }}
+        {{- include "common.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: hook
         app.kubernetes.io/hook-type: pre-delete
       annotations:
-        {{- include "generic.podAnnotations" $ | nindent 8 }}
+        {{- include "common.podAnnotations" $ | nindent 8 }}
     spec:
       restartPolicy: {{ $hook.restartPolicy | default "Never" }}
       {{- with $hook.imagePullSecrets | default $.Values.imagePullSecrets }}
@@ -353,15 +353,15 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if $.Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+      serviceAccountName: {{ include "common.serviceAccountName" $ }}
       {{- else if $.Values.serviceAccount.name }}
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
+        {{- include "common.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
-        image: {{ include "generic.resolveStringImage" (dict "image" $hook.image "root" $) }}
+        image: {{ include "common.resolveStringImage" (dict "image" $hook.image "root" $) }}
         imagePullPolicy: {{ $hook.imagePullPolicy | default $.Values.image.pullPolicy | default "IfNotPresent" }}
         {{- with $hook.command }}
         command:
@@ -373,7 +373,7 @@ spec:
         {{- end }}
         {{- with $hook.env }}
         env:
-          {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 10 }}
+          {{- include "common.envVars" (dict "envVars" . "root" $) | nindent 10 }}
         {{- end }}
         {{- with $hook.envFrom }}
         envFrom:
@@ -388,7 +388,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         securityContext:
-          {{- include "generic.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
+          {{- include "common.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
       {{- with $hook.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
@@ -401,15 +401,15 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ printf "%s-post-delete-%s" (include "generic.fullname" $) $hook.name }}
-  namespace: {{ include "generic.namespace" $ }}
+  name: {{ printf "%s-post-delete-%s" (include "common.fullname" $) $hook.name }}
+  namespace: {{ include "common.namespace" $ }}
   labels:
     {{- $extraLabels := merge (dict "app.kubernetes.io/component" "hook" "app.kubernetes.io/hook-type" "post-delete") ($hook.labels | default dict) }}
-    {{- include "generic.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $ "labels" $extraLabels) | nindent 4 }}
   annotations:
     {{- $helmAnnotations := dict "helm.sh/hook" "post-delete" "helm.sh/hook-weight" ($hook.weight | default 1 | toString) "helm.sh/hook-delete-policy" ($hook.deletePolicy | default "hook-succeeded") }}
     {{- $allAnnotations := merge $helmAnnotations ($hook.annotations | default dict) }}
-    {{- include "generic.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" $ "annotations" $allAnnotations) | nindent 4 }}
 spec:
   {{- with $hook.ttlSecondsAfterFinished }}
   ttlSecondsAfterFinished: {{ . }}
@@ -420,11 +420,11 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "generic.selectorLabels" $ | nindent 8 }}
+        {{- include "common.selectorLabels" $ | nindent 8 }}
         app.kubernetes.io/component: hook
         app.kubernetes.io/hook-type: post-delete
       annotations:
-        {{- include "generic.podAnnotations" $ | nindent 8 }}
+        {{- include "common.podAnnotations" $ | nindent 8 }}
     spec:
       restartPolicy: {{ $hook.restartPolicy | default "Never" }}
       {{- with $hook.imagePullSecrets | default $.Values.imagePullSecrets }}
@@ -432,15 +432,15 @@ spec:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- if $.Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "generic.serviceAccountName" $ }}
+      serviceAccountName: {{ include "common.serviceAccountName" $ }}
       {{- else if $.Values.serviceAccount.name }}
       serviceAccountName: {{ $.Values.serviceAccount.name }}
       {{- end }}
       securityContext:
-        {{- include "generic.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
+        {{- include "common.podSecurityContext" (dict "securityContext" $.Values.security.defaultPodSecurityContext "defaults" $.Values.security.defaultPodSecurityContext) | nindent 8 }}
       containers:
       - name: {{ $hook.name }}
-        image: {{ include "generic.resolveStringImage" (dict "image" $hook.image "root" $) }}
+        image: {{ include "common.resolveStringImage" (dict "image" $hook.image "root" $) }}
         imagePullPolicy: {{ $hook.imagePullPolicy | default $.Values.image.pullPolicy | default "IfNotPresent" }}
         {{- with $hook.command }}
         command:
@@ -452,7 +452,7 @@ spec:
         {{- end }}
         {{- with $hook.env }}
         env:
-          {{- include "generic.envVars" (dict "envVars" . "root" $) | nindent 10 }}
+          {{- include "common.envVars" (dict "envVars" . "root" $) | nindent 10 }}
         {{- end }}
         {{- with $hook.envFrom }}
         envFrom:
@@ -467,7 +467,7 @@ spec:
           {{- toYaml . | nindent 10 }}
         {{- end }}
         securityContext:
-          {{- include "generic.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
+          {{- include "common.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $) | nindent 10 }}
       {{- with $hook.volumes }}
       volumes:
         {{- toYaml . | nindent 8 }}
