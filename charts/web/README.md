@@ -250,7 +250,7 @@ Kubernetes: `>=1.32.0-0`
 | imagePullSecrets | list | `[]` |  |
 | ingress.annotations."alb.ingress.kubernetes.io/group.name" | string | `"default"` |  |
 | ingress.annotations."alb.ingress.kubernetes.io/healthcheck-interval-seconds" | string | `"15"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-path" | string | `"/"` |  |
+| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-path" | string | `"/readyz"` |  |
 | ingress.annotations."alb.ingress.kubernetes.io/healthcheck-port" | string | `"8080"` |  |
 | ingress.annotations."alb.ingress.kubernetes.io/healthcheck-protocol" | string | `"HTTP"` |  |
 | ingress.annotations."alb.ingress.kubernetes.io/healthcheck-timeout-seconds" | string | `"5"` |  |
@@ -265,7 +265,7 @@ Kubernetes: `>=1.32.0-0`
 | initContainers | list | `[]` |  |
 | jobs | object | `{}` |  |
 | livenessProbe.failureThreshold | int | `3` |  |
-| livenessProbe.httpGet.path | string | `"/"` |  |
+| livenessProbe.httpGet.path | string | `"/livez"` |  |
 | livenessProbe.httpGet.port | string | `"http"` |  |
 | livenessProbe.initialDelaySeconds | int | `30` |  |
 | livenessProbe.periodSeconds | int | `10` |  |
@@ -296,7 +296,7 @@ Kubernetes: `>=1.32.0-0`
 | rbac.subjects | list | `[]` |  |
 | rbac.type | string | `"Role"` |  |
 | readinessProbe.failureThreshold | int | `3` |  |
-| readinessProbe.httpGet.path | string | `"/"` |  |
+| readinessProbe.httpGet.path | string | `"/readyz"` |  |
 | readinessProbe.httpGet.port | string | `"http"` |  |
 | readinessProbe.initialDelaySeconds | int | `5` |  |
 | readinessProbe.periodSeconds | int | `5` |  |
@@ -345,7 +345,7 @@ Kubernetes: `>=1.32.0-0`
 | serviceAccount.labels | object | `{}` |  |
 | serviceAccount.name | string | `""` |  |
 | startupProbe.failureThreshold | int | `30` |  |
-| startupProbe.httpGet.path | string | `"/"` |  |
+| startupProbe.httpGet.path | string | `"/readyz"` |  |
 | startupProbe.httpGet.port | string | `"http"` |  |
 | startupProbe.initialDelaySeconds | int | `10` |  |
 | startupProbe.periodSeconds | int | `2` |  |

@@ -15,6 +15,23 @@ service:
   enabled: true
   type: ClusterIP
 
+# Override probes for nginx which doesn't have /livez or /readyz
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+startupProbe:
+  httpGet:
+    path: /
+    port: http
+  failureThreshold: 15
+
 ingress:
   enabled: true
   ingressClassName: alb
