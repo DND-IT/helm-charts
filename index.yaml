@@ -49,6 +49,31 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/app-0.1.0/app-0.1.0.tgz
     version: 0.1.0
+  common:
+  - apiVersion: v2
+    created: "2026-02-20T18:02:44.8084746Z"
+    description: 'A Helm library chart containing shared templates and helpers for
+      Kubernetes workloads. Provides common functionality for naming, labels, security
+      contexts, containers, pods, and volumes. Designed to be used as a dependency
+      by application charts (web, api, worker, cronjob). '
+    digest: 5f1148c916ece6a3437b70a25a729f8275f37627d676e4c21e2d1cccb575067d
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - library
+    - common
+    - helpers
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: common
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: library
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/common-1.0.1/common-1.0.1.tgz
+    version: 1.0.1
   cronjob:
   - apiVersion: v2
     created: "2026-01-21T14:04:26.554034074Z"
@@ -331,6 +356,33 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/datadog-resources-0.1.0/datadog-resources-0.1.0.tgz
     version: 0.1.0
   generic:
+  - apiVersion: v2
+    created: "2026-02-20T18:02:45.062066109Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
+      workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
+      options. Designed for maximum flexibility while maintaining security best practices
+      by default. Optimized for AWS with ALB ingress controller support. '
+    digest: ca268587638431c571f15c3833391880dc797c7aea0af58b984ed608c6de2109
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - application
+    - kubernetes
+    - generic
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: generic
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/generic-0.8.0/generic-0.8.0.tgz
+    version: 0.8.0
   - apiVersion: v2
     created: "2026-02-06T11:36:56.583160784Z"
     description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
@@ -852,6 +904,34 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/karpenter-resources-0.1.0/karpenter-resources-0.1.0.tgz
     version: 0.1.0
+  web:
+  - apiVersion: v2
+    created: "2026-02-20T18:02:45.288284982Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying HTTP-facing web applications to Kubernetes.
+      Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
+      Designed for web applications that need external traffic exposure. '
+    digest: ee727185a08269c935f92fda6c2f128e6c4a8010a51c7a9a135edd37a3f2f88b
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - web
+    - application
+    - ingress
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: web
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/web-1.0.0/web-1.0.0.tgz
+    version: 1.0.0
   webapp:
   - apiVersion: v2
     created: "2026-02-03T08:48:11.951276119Z"
@@ -1069,4 +1149,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/webapp-0.2.0/webapp-0.2.0.tgz
     version: 0.2.0
-generated: "2026-02-06T11:36:56.583391366Z"
+generated: "2026-02-20T18:02:45.288503931Z"
