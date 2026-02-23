@@ -1,0 +1,315 @@
+# Default values for worker chart
+# A simplified chart for background processing workloads
+
+# Global values - passed down to subcharts
+global:
+  image:
+    # Container registry prepended to all images
+    registry: ""
+
+# Common labels and annotations applied to all resources
+commonLabels: {}
+commonAnnotations: {}
+workloadLabels: {}
+workloadAnnotations: {}
+
+# Metadata overrides
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+
+# =============================================================================
+# IMAGE CONFIGURATION
+# =============================================================================
+
+image:
+  registry: ""
+  repository: busybox
+  tag: "1.36"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# =============================================================================
+# DEPLOYMENT CONFIGURATION
+# =============================================================================
+
+deploymentEnabled: true
+replicas: 1
+revisionHistoryLimit: 2
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 25%  # @schema type:[string, integer]
+    maxSurge: 25%  # @schema type:[string, integer]
+
+# Container configuration
+command: []
+args: []
+
+# Container ports (optional - workers typically don't expose ports)
+ports: []
+
+# Resources
+resources:
+  limits:
+    memory: "256Mi"
+  requests:
+    cpu: "100m"
+    memory: "128Mi"
+
+# Health checks (optional for workers)
+livenessProbe: {}
+readinessProbe: {}
+startupProbe: {}
+
+# Lifecycle hooks
+lifecycle: {}
+
+# =============================================================================
+# ENVIRONMENT CONFIGURATION
+# =============================================================================
+
+env: []
+envFrom: []
+extraEnvFrom: []
+commonEnvVars: false
+
+# =============================================================================
+# POD CONFIGURATION
+# =============================================================================
+
+pod:
+  labels: {}
+  annotations: {}
+  securityContext: {}
+  # Pod-level resources (Kubernetes 1.32+ alpha, 1.33+ beta)
+  # Requires PodLevelResources feature gate
+  resources: {}
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  hostname: ""
+  dnsPolicy: ""
+  dnsConfig: {}
+  priorityClassName: ""
+  priority: ""
+  runtimeClassName: ""
+  schedulerName: ""
+  terminationGracePeriodSeconds: 30
+  activeDeadlineSeconds: ""
+  restartPolicy: ""
+  hostAliases: []
+
+# Security context for container (overrides defaults)
+securityContext: {}
+
+# =============================================================================
+# SCHEDULING CONFIGURATION
+# =============================================================================
+
+scheduling:
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints:
+    - maxSkew: 1
+      topologyKey: kubernetes.io/hostname
+      whenUnsatisfiable: ScheduleAnyway
+    - maxSkew: 1
+      topologyKey: topology.kubernetes.io/zone
+      whenUnsatisfiable: ScheduleAnyway
+
+# =============================================================================
+# INIT AND SIDECAR CONTAINERS
+# =============================================================================
+
+initContainers: []
+sidecarContainers: []
+
+# =============================================================================
+# SERVICE CONFIGURATION (disabled by default for workers)
+# =============================================================================
+
+service:
+  enabled: false
+  type: ClusterIP
+  ports: []
+  annotations: {}
+  labels: {}
+
+# =============================================================================
+# AUTOSCALING
+# =============================================================================
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+  behavior: {}
+
+# =============================================================================
+# POD DISRUPTION BUDGET
+# =============================================================================
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  unhealthyPodEvictionPolicy: ""
+
+# =============================================================================
+# SERVICE ACCOUNT
+# =============================================================================
+
+serviceAccount:
+  enabled: true
+  name: ""
+  annotations: {}
+  labels: {}
+  automountServiceAccountToken: true
+
+# =============================================================================
+# CONFIG AND SECRETS
+# =============================================================================
+
+configMap:
+  enabled: false
+  data: {}
+  binaryData: {}
+  annotations: {}
+  labels: {}
+  envFrom: false
+  mountPath: ""
+  subPath: ""
+
+secret:
+  enabled: false
+  type: Opaque
+  data: {}
+  stringData: {}
+  annotations: {}
+  labels: {}
+  envFrom: false
+  mountPath: ""
+  subPath: ""
+
+extraConfigMaps: {}
+extraSecrets: {}
+
+# =============================================================================
+# VOLUMES
+# =============================================================================
+
+volumes:
+  persistent: {}
+  emptyDir: {}
+  hostPath: {}
+  extra: []
+  extraMounts: []
+
+# =============================================================================
+# SECURITY CONFIGURATION
+# =============================================================================
+
+security:
+  defaultPodSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    runAsGroup: 1000
+    fsGroup: 1000
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+
+  defaultContainerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 1000
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: true
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+  podSecurityStandards:
+    enabled: false
+    enforce: ""
+    audit: ""
+    warn: ""
+
+# RBAC - Role-Based Access Control
+rbac:
+  enabled: false
+  type: Role
+  rules: []
+  aggregationRule: {}
+  subjects: []
+  roleRef: ""
+  labels: {}
+  annotations: {}
+  extraRoles: {}
+
+# Network Policy
+networkPolicy:
+  enabled: false
+  policyTypes: []
+  ingress: []
+  egress: []
+
+# Jobs
+jobs: {}
+
+# External Secrets
+externalSecrets: {}
+
+# Gateway API
+gateway:
+  httpRoute:
+    enabled: false
+    parentRefs: []
+    hostnames: []
+    rules: []
+    labels: {}
+    annotations: {}
+    extraRoutes: {}
+  tcpRoute:
+    enabled: false
+    parentRefs: []
+    rules: []
+    labels: {}
+    annotations: {}
+    extraRoutes: {}
+  referenceGrant:
+    enabled: false
+    from: []
+    to: []
+    labels: {}
+    annotations: {}
+    extraGrants: {}
+
+# AWS TargetGroupBinding
+targetGroupBinding:
+  enabled: false
+  targetGroupARN: ""
+  serviceRef:
+    name: ""
+    port: "http"
+  targetType: ""
+  ipAddressType: ""
+  networking: {}
+  labels: {}
+  annotations: {}
+
+extraTargetGroupBindings: {}
+
+# Extra arbitrary Kubernetes objects
+extraObjects: []

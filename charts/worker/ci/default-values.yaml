@@ -1,0 +1,31 @@
+# CI test values for worker chart
+
+image:
+  repository: busybox
+  tag: "1.36"
+
+replicas: 1
+
+command:
+  - /bin/sh
+  - -c
+args:
+  - "while true; do echo 'Working...'; sleep 60; done"
+
+resources:
+  limits:
+    memory: "128Mi"
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+
+# No service for workers
+service:
+  enabled: false
+
+hpa:
+  enabled: false
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1
