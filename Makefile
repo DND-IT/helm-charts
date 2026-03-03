@@ -26,6 +26,9 @@ VALUES ?= values.yaml
 EXAMPLE_VALUES ?= values-example.yaml
 CHART_DIR = charts
 
+# Deprecated charts to skip during schema generation
+SCHEMA_SKIP_CHARTS := webapp cronjob
+
 # Auto-detect charts if CHART is not provided
 CHARTS_AVAILABLE := $(shell find $(CHART_DIR) -maxdepth 1 -type d -not -path $(CHART_DIR) -exec basename {} \; 2>/dev/null || find . -maxdepth 1 -name "Chart.yaml" -exec dirname {} \; | sed 's|^\./||' | head -1)
 
@@ -231,6 +234,10 @@ docs-all: ## Generate documentation for all charts
 
 # Schema generation
 schema: validate-chart ## Generate JSON schema for specified chart
+	@if echo "$(SCHEMA_SKIP_CHARTS)" | grep -qw "$(CHART)"; then \
+		echo "Skipping schema generation for deprecated chart $(CHART)"; \
+		exit 0; \
+	fi
 	@echo "Generating JSON schema for $(CHART)..."
 	@if helm plugin list | grep -q schema; then \
 		cd $(CHART_PATH) && helm schema; \
