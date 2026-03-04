@@ -277,7 +277,7 @@ Kubernetes: `>=1.32.0-0`
 | networkPolicy.ingress | list | `[]` |  |
 | networkPolicy.policyTypes | list | `[]` |  |
 | pod.annotations | object | `{}` |  |
-| pod.labels | object | `{}` |  |
+| pod.labels."admission.datadoghq.com/enabled" | string | `"true"` |  |
 | pod.resources | object | `{}` |  |
 | pod.securityContext | object | `{}` |  |
 | pod.terminationGracePeriodSeconds | int | `30` |  |

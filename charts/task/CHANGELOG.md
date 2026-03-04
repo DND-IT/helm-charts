@@ -18,3 +18,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - No HPA, PDB, service, or ingress (not applicable for scheduled tasks)
 - Secure defaults for pod and container security contexts
 - Default restartPolicy set to OnFailure for jobs
+- Datadog Admission Controller pod label enabled by default

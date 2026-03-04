@@ -17,3 +17,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Secure defaults for pod and container security contexts
 - Support for topology spread constraints
 - Health checks with liveness and readiness probes
+- Datadog Admission Controller pod label enabled by default

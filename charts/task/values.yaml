@@ -107,7 +107,8 @@ commonEnvVars: false
 # =============================================================================
 
 pod:
-  labels: {}
+  labels:
+    admission.datadoghq.com/enabled: "true"
   annotations: {}
   securityContext: {}
   # Pod-level resources (Kubernetes 1.32+ alpha, 1.33+ beta)

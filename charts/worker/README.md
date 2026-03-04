@@ -278,7 +278,7 @@ Kubernetes: `>=1.32.0-0`
 | pod.hostNetwork | bool | `false` |  |
 | pod.hostPID | bool | `false` |  |
 | pod.hostname | string | `""` |  |
-| pod.labels | object | `{}` |  |
+| pod.labels."admission.datadoghq.com/enabled" | string | `"true"` |  |
 | pod.priority | string | `""` |  |
 | pod.priorityClassName | string | `""` |  |
 | pod.resources | object | `{}` |  |
