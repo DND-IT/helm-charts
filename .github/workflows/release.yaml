@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'charts/**'
+      - 'README.md'
   workflow_dispatch:
 
 jobs:
@@ -42,3 +43,12 @@ jobs:
           CR_TOKEN: '${{ secrets.GITHUB_TOKEN }}'
           CR_GENERATE_RELEASE_NOTES: true
           CR_SKIP_EXISTING: true
+
+      - name: Update GitHub Pages README
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+          git checkout main -- README.md
+          git add README.md
+          git diff --cached --quiet || git commit -m "docs: sync README from main"
+          git push origin gh-pages
