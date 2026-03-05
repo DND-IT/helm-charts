@@ -7,13 +7,41 @@ Welcome to the DND-IT Helm Charts repository! This repository contains a collect
 
 ## Available Charts
 
+### Opinionated Charts (Thin Wrappers)
+
+These charts are thin wrappers around the [common](./charts/common) library chart. They provide **opinionated defaults** for specific workload types so teams can deploy with minimal configuration — just set your image and go.
+
+Each chart includes sensible defaults for security contexts, health probes, scheduling, and Datadog integration, while still allowing full customization via values overrides.
+
+| Chart | Description | Documentation |
+|-------|-------------|---------------|
+| [web](./charts/web) | External-facing web applications. Ingress enabled by default with ALB. | [README](./charts/web/README.md) |
+| [api](./charts/api) | Internal API services. Service enabled, ingress disabled by default. | [README](./charts/api/README.md) |
+| [worker](./charts/worker) | Background worker processes. No service or ingress. | [README](./charts/worker/README.md) |
+| [task](./charts/task) | Scheduled CronJob workloads. No service, ingress, or HPA. | [README](./charts/task/README.md) |
+
+**Why thin wrappers?** The `generic` chart is powerful but requires teams to configure everything from scratch. The thin wrappers solve this by:
+
+- **Reducing boilerplate** — no need to repeatedly set the same defaults across services
+- **Enforcing conventions** — consistent security contexts, probe paths (`/livez`, `/readyz`), and scheduling across all deployments
+- **Simplifying onboarding** — new services only need `image.repository` and `image.tag` to get a production-ready deployment
+- **Staying flexible** — since they use the common library, any value can still be overridden
+
+### Other Charts
+
 | Chart | Description | Documentation |
 |-------|-------------|---------------|
 | [generic](./charts/generic) | A highly flexible and unopinionated Helm chart for deploying any Kubernetes workload. | [README](./charts/generic/README.md) |
-| [webapp](./charts/webapp) | [DEPRECATED] Web application deployment chart | [README](./charts/webapp/README.md) |
-| [cronjob](./charts/cronjob) | [DEPRECATED] Helm chart for deploying Kubernetes CronJobs | [README](./charts/cronjob/README.md) |
+| [common](./charts/common) | Shared library chart with common templates and helpers. Used as a dependency by the thin wrapper charts. | [README](./charts/common/README.md) |
 | [custom-resources](./charts/custom-resources) | Deploy arbitrary Kubernetes resources | [README](./charts/custom-resources/README.md) |
 | [karpenter-resources](./charts/karpenter-resources) | Karpenter provisioner and node pool configurations | [README](./charts/karpenter-resources/README.md) |
+
+### Deprecated Charts
+
+| Chart | Description | Documentation |
+|-------|-------------|---------------|
+| [webapp](./charts/webapp) | [DEPRECATED] Use `web` instead | [README](./charts/webapp/README.md) |
+| [cronjob](./charts/cronjob) | [DEPRECATED] Use `task` instead | [README](./charts/cronjob/README.md) |
 
 ## Kubernetes Version Support
 
@@ -183,12 +211,17 @@ helm lint ./charts/<chart-name>
 ```
 helm-charts/
 ├── charts/
-│   ├── generic/          # Flexible multi-purpose chart
-│   ├── webapp/          # [DEPRECATED] Web application chart
-│   ├── cronjob/         # [DEPRECATED] CronJob specific chart
-│   ├── custom-resources/# Custom resources chart
-│   └── karpenter-resources/ # Karpenter configurations
-└── README.md            # This file
+│   ├── common/              # Shared library chart (templates & helpers)
+│   ├── web/                 # Opinionated: external web applications
+│   ├── api/                 # Opinionated: internal API services
+│   ├── worker/              # Opinionated: background worker processes
+│   ├── task/                # Opinionated: scheduled CronJob workloads
+│   ├── generic/             # Flexible multi-purpose chart
+│   ├── custom-resources/    # Custom resources chart
+│   ├── karpenter-resources/ # Karpenter configurations
+│   ├── webapp/              # [DEPRECATED] Use web instead
+│   └── cronjob/             # [DEPRECATED] Use task instead
+└── README.md                # This file
 ```
 
 ## Support

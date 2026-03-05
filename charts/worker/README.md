@@ -1,32 +1,33 @@
-# web
+# worker
 
-![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-A Helm chart for deploying HTTP-facing web applications to Kubernetes.
-Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
-Designed for web applications that need external traffic exposure.
+A Helm chart for deploying background worker processes to Kubernetes.
+Includes Deployment, HPA, PDB, and ServiceAccount.
+Designed for background processing workloads that don't expose HTTP endpoints.
+No service or ingress by default.
 
 ## Overview
 
-The **web** chart is an opinionated Helm chart for deploying external-facing web applications. It uses the same schema as the `generic` chart but comes with sensible defaults pre-configured for public web workloads, including ALB ingress.
+The **worker** chart is an opinionated Helm chart for deploying background processing workloads. It uses the same schema as the `generic` chart but comes with sensible defaults for non-HTTP workers that don't need service exposure.
 
 ## Use Cases
 
-- **Public websites** - Frontend applications accessible from the internet
-- **Web APIs** - External-facing REST APIs
-- **Single Page Applications** - React, Vue, Angular apps served via nginx/CDN
-- **Customer portals** - User-facing web interfaces
+- **Message queue consumers** - Workers processing messages from SQS, RabbitMQ, Kafka
+- **Background job processors** - Celery workers, Sidekiq, Bull queues
+- **Data pipeline workers** - ETL processors, stream consumers
+- **Async task handlers** - Long-running background tasks
 
 ## Key Defaults
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `service.enabled` | `true` | ClusterIP service |
-| `ingress.enabled` | `true` | ALB ingress enabled |
-| `ingress.className` | `alb` | AWS ALB Ingress Controller |
-| `ports[0]` | `8080/http` | Standard HTTP port |
-| `livenessProbe` | `/health` | Pre-configured health endpoint |
-| `readinessProbe` | `/health` | Pre-configured health endpoint |
+| `service.enabled` | `false` | No service (workers don't serve HTTP) |
+| `ingress.enabled` | `false` | No ingress |
+| `ports` | `[]` | No ports exposed |
+| `livenessProbe` | `{}` | No HTTP probes (configure if needed) |
+| `readinessProbe` | `{}` | No HTTP probes (configure if needed) |
+| `resources.requests` | `100m/128Mi` | Conservative defaults |
 
 ## Quick Start
 
@@ -34,142 +35,149 @@ The **web** chart is an opinionated Helm chart for deploying external-facing web
 helm repo add dnd-it https://dnd-it.github.io/helm-charts
 helm repo update
 
-helm install my-web dnd-it/web \
-  --set image.repository=myorg/frontend \
-  --set image.tag=v1.0.0 \
-  --set ingress.hosts[0].host=myapp.example.com
+helm install my-worker dnd-it/worker \
+  --set image.repository=myorg/queue-worker \
+  --set image.tag=v1.0.0
 ```
 
 ## Examples
 
-### Basic Web Application
+### Basic Queue Worker
 
 ```yaml
 image:
-  repository: myorg/frontend
-  tag: "v2.0.0"
-
-replicas: 2
-
-ingress:
-  hosts:
-    - host: app.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-```
-
-### Web App with SSL
-
-```yaml
-image:
-  repository: myorg/webapp
-  tag: "v1.5.0"
-
-ingress:
-  annotations:
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789:certificate/abc123
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
-  hosts:
-    - host: secure.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-```
-
-### Web App with Custom ALB Group
-
-```yaml
-image:
-  repository: myorg/portal
-  tag: "v3.0.0"
+  repository: myorg/sqs-consumer
+  tag: "v1.2.0"
 
 replicas: 3
 
-ingress:
-  annotations:
-    alb.ingress.kubernetes.io/group.name: public-apps
-    alb.ingress.kubernetes.io/group.order: "10"
-    alb.ingress.kubernetes.io/healthcheck-path: /api/health
-  hosts:
-    - host: portal.example.com
-      paths:
-        - path: /
-          pathType: Prefix
+command: ["python"]
+args: ["worker.py"]
 
-hpa:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 20
-  targetCPUUtilizationPercentage: 60
+env:
+  - name: QUEUE_URL
+    value: "https://sqs.us-east-1.amazonaws.com/123456789/my-queue"
+  - name: CONCURRENCY
+    value: "10"
 ```
 
-### Static Site with nginx
+### Celery Worker
 
 ```yaml
 image:
-  repository: myorg/static-site
-  tag: "v1.0.0"
+  repository: myorg/celery-app
+  tag: "v2.0.0"
 
-ports:
-  - name: http
-    containerPort: 80
+replicas: 5
 
-livenessProbe:
-  httpGet:
-    path: /
-    port: http
+command: ["celery"]
+args: ["-A", "tasks", "worker", "--loglevel=info", "--concurrency=4"]
 
-readinessProbe:
-  httpGet:
-    path: /
-    port: http
+env:
+  - name: CELERY_BROKER_URL
+    valueFrom:
+      secretKeyRef:
+        name: celery-secrets
+        key: broker-url
 
-ingress:
-  annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /
-    alb.ingress.kubernetes.io/healthcheck-port: "80"
-  hosts:
-    - host: docs.example.com
-      paths:
-        - path: /
-          pathType: Prefix
+resources:
+  limits:
+    memory: 1Gi
+  requests:
+    cpu: 500m
+    memory: 512Mi
 ```
 
-## ALB Annotations Reference
-
-Common ALB annotations pre-configured or frequently used:
+### Kafka Consumer
 
 ```yaml
-ingress:
-  annotations:
-    # Scheme
-    alb.ingress.kubernetes.io/scheme: internet-facing  # or internal
-    alb.ingress.kubernetes.io/target-type: ip
+image:
+  repository: myorg/kafka-consumer
+  tag: "v1.0.0"
 
-    # SSL
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:...
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
+replicas: 3
 
-    # Health checks
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-    alb.ingress.kubernetes.io/healthcheck-port: "8080"
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+env:
+  - name: KAFKA_BROKERS
+    value: "kafka-0:9092,kafka-1:9092,kafka-2:9092"
+  - name: CONSUMER_GROUP
+    value: "my-consumer-group"
+  - name: TOPICS
+    value: "events,notifications"
 
-    # Grouping
-    alb.ingress.kubernetes.io/group.name: shared-alb
-    alb.ingress.kubernetes.io/group.order: "100"
+# Scale based on consumer lag (requires KEDA or custom metrics)
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
 ```
 
-## Comparison with API Chart
+### Worker with Exec Probe
 
-| Feature | web | api |
-|---------|-----|-----|
-| Service | Enabled | Enabled |
-| Ingress | **Enabled** | Disabled |
-| ALB Annotations | Pre-configured | None |
-| Health Probes | Pre-configured | Pre-configured |
+```yaml
+image:
+  repository: myorg/batch-processor
+  tag: "v1.5.0"
+
+replicas: 2
+
+command: ["python", "processor.py"]
+
+# Use exec probe for non-HTTP workers
+livenessProbe:
+  exec:
+    command:
+      - cat
+      - /tmp/healthy
+  initialDelaySeconds: 30
+  periodSeconds: 10
+
+readinessProbe:
+  exec:
+    command:
+      - cat
+      - /tmp/ready
+  initialDelaySeconds: 5
+  periodSeconds: 5
+```
+
+### Worker with Metrics Sidecar
+
+```yaml
+image:
+  repository: myorg/worker
+  tag: "v1.0.0"
+
+replicas: 3
+
+# Enable service only for metrics scraping
+service:
+  enabled: true
+  ports:
+    - name: metrics
+      port: 9090
+      targetPort: 9090
+
+ports:
+  - name: metrics
+    containerPort: 9090
+
+# Add prometheus annotations
+pod:
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "9090"
+    prometheus.io/path: "/metrics"
+```
+
+## Comparison with Other Charts
+
+| Feature | worker | api | web |
+|---------|--------|-----|-----|
+| Service | **Disabled** | Enabled | Enabled |
+| Ingress | Disabled | Disabled | Enabled |
+| Ports | **None** | 8080 | 8080 |
+| Health Probes | **Empty** | Configured | Configured |
 
 **Homepage:** <https://github.com/dnd-it/helm-charts>
 
@@ -204,7 +212,7 @@ Kubernetes: `>=1.32.0-0`
 | configMap.binaryData | object | `{}` |  |
 | configMap.data | object | `{}` |  |
 | configMap.enabled | bool | `false` |  |
-| configMap.envFrom | bool | `true` |  |
+| configMap.envFrom | bool | `false` |  |
 | configMap.labels | object | `{}` |  |
 | configMap.mountPath | string | `""` |  |
 | configMap.subPath | string | `""` |  |
@@ -213,7 +221,6 @@ Kubernetes: `>=1.32.0-0`
 | envFrom | list | `[]` |  |
 | externalSecrets | object | `{}` |  |
 | extraConfigMaps | object | `{}` |  |
-| extraContainers | list | `[]` |  |
 | extraEnvFrom | list | `[]` |  |
 | extraObjects | list | `[]` |  |
 | extraSecrets | object | `{}` |  |
@@ -239,53 +246,51 @@ Kubernetes: `>=1.32.0-0`
 | gateway.tcpRoute.parentRefs | list | `[]` |  |
 | gateway.tcpRoute.rules | list | `[]` |  |
 | global.image.registry | string | `""` |  |
+| hpa.behavior | object | `{}` |  |
 | hpa.enabled | bool | `false` |  |
 | hpa.maxReplicas | int | `10` |  |
-| hpa.minReplicas | int | `2` |  |
-| hpa.targetCPUUtilizationPercentage | int | `80` |  |
+| hpa.metrics[0].resource.name | string | `"cpu"` |  |
+| hpa.metrics[0].resource.target.averageUtilization | int | `80` |  |
+| hpa.metrics[0].resource.target.type | string | `"Utilization"` |  |
+| hpa.metrics[0].type | string | `"Resource"` |  |
+| hpa.minReplicas | int | `1` |  |
 | image.pullPolicy | string | `"IfNotPresent"` |  |
 | image.registry | string | `""` |  |
-| image.repository | string | `""` |  |
-| image.tag | string | `""` |  |
+| image.repository | string | `"busybox"` |  |
+| image.tag | string | `"1.36"` |  |
 | imagePullSecrets | list | `[]` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/group.name" | string | `"default"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-interval-seconds" | string | `"15"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-path" | string | `"/readyz"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-port" | string | `"8080"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-protocol" | string | `"HTTP"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-timeout-seconds" | string | `"5"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthy-threshold-count" | string | `"2"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/scheme" | string | `"internet-facing"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/target-type" | string | `"ip"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/unhealthy-threshold-count" | string | `"3"` |  |
-| ingress.className | string | `"alb"` |  |
-| ingress.enabled | bool | `true` |  |
-| ingress.hosts | list | `[]` |  |
-| ingress.tls | list | `[]` |  |
 | initContainers | list | `[]` |  |
 | jobs | object | `{}` |  |
-| livenessProbe.failureThreshold | int | `3` |  |
-| livenessProbe.httpGet.path | string | `"/livez"` |  |
-| livenessProbe.httpGet.port | string | `"http"` |  |
-| livenessProbe.initialDelaySeconds | int | `30` |  |
-| livenessProbe.periodSeconds | int | `10` |  |
-| livenessProbe.timeoutSeconds | int | `5` |  |
+| lifecycle | object | `{}` |  |
+| livenessProbe | object | `{}` |  |
 | nameOverride | string | `""` |  |
 | namespaceOverride | string | `""` |  |
 | networkPolicy.egress | list | `[]` |  |
 | networkPolicy.enabled | bool | `false` |  |
 | networkPolicy.ingress | list | `[]` |  |
 | networkPolicy.policyTypes | list | `[]` |  |
+| pod.activeDeadlineSeconds | string | `""` |  |
 | pod.annotations | object | `{}` |  |
+| pod.dnsConfig | object | `{}` |  |
+| pod.dnsPolicy | string | `""` |  |
+| pod.hostAliases | list | `[]` |  |
+| pod.hostIPC | bool | `false` |  |
+| pod.hostNetwork | bool | `false` |  |
+| pod.hostPID | bool | `false` |  |
+| pod.hostname | string | `""` |  |
 | pod.labels."admission.datadoghq.com/enabled" | string | `"true"` |  |
+| pod.priority | string | `""` |  |
+| pod.priorityClassName | string | `""` |  |
 | pod.resources | object | `{}` |  |
+| pod.restartPolicy | string | `""` |  |
+| pod.runtimeClassName | string | `""` |  |
+| pod.schedulerName | string | `""` |  |
 | pod.securityContext | object | `{}` |  |
 | pod.terminationGracePeriodSeconds | int | `30` |  |
 | podDisruptionBudget.enabled | bool | `false` |  |
 | podDisruptionBudget.minAvailable | int | `1` |  |
-| ports[0].containerPort | int | `8080` |  |
-| ports[0].name | string | `"http"` |  |
-| ports[0].protocol | string | `"TCP"` |  |
+| podDisruptionBudget.unhealthyPodEvictionPolicy | string | `""` |  |
+| ports | list | `[]` |  |
 | rbac.aggregationRule | object | `{}` |  |
 | rbac.annotations | object | `{}` |  |
 | rbac.enabled | bool | `false` |  |
@@ -295,18 +300,14 @@ Kubernetes: `>=1.32.0-0`
 | rbac.rules | list | `[]` |  |
 | rbac.subjects | list | `[]` |  |
 | rbac.type | string | `"Role"` |  |
-| readinessProbe.failureThreshold | int | `3` |  |
-| readinessProbe.httpGet.path | string | `"/readyz"` |  |
-| readinessProbe.httpGet.port | string | `"http"` |  |
-| readinessProbe.initialDelaySeconds | int | `5` |  |
-| readinessProbe.periodSeconds | int | `5` |  |
-| readinessProbe.timeoutSeconds | int | `3` |  |
+| readinessProbe | object | `{}` |  |
 | replicas | int | `1` |  |
+| resources.limits.memory | string | `"256Mi"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"128Mi"` |  |
 | revisionHistoryLimit | int | `2` |  |
 | scheduling.affinity | object | `{}` |  |
-| scheduling.nodeSelector."kubernetes.io/arch" | string | `"amd64"` |  |
+| scheduling.nodeSelector | object | `{}` |  |
 | scheduling.tolerations | list | `[]` |  |
 | scheduling.topologySpreadConstraints[0].maxSkew | int | `1` |  |
 | scheduling.topologySpreadConstraints[0].topologyKey | string | `"kubernetes.io/hostname"` |  |
@@ -335,8 +336,14 @@ Kubernetes: `>=1.32.0-0`
 | security.defaultPodSecurityContext.runAsNonRoot | bool | `true` |  |
 | security.defaultPodSecurityContext.runAsUser | int | `1000` |  |
 | security.defaultPodSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
+| security.podSecurityStandards.audit | string | `""` |  |
+| security.podSecurityStandards.enabled | bool | `false` |  |
+| security.podSecurityStandards.enforce | string | `""` |  |
+| security.podSecurityStandards.warn | string | `""` |  |
 | securityContext | object | `{}` |  |
-| service.enabled | bool | `true` |  |
+| service.annotations | object | `{}` |  |
+| service.enabled | bool | `false` |  |
+| service.labels | object | `{}` |  |
 | service.ports | list | `[]` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccount.annotations | object | `{}` |  |
@@ -344,12 +351,8 @@ Kubernetes: `>=1.32.0-0`
 | serviceAccount.enabled | bool | `true` |  |
 | serviceAccount.labels | object | `{}` |  |
 | serviceAccount.name | string | `""` |  |
-| startupProbe.failureThreshold | int | `30` |  |
-| startupProbe.httpGet.path | string | `"/readyz"` |  |
-| startupProbe.httpGet.port | string | `"http"` |  |
-| startupProbe.initialDelaySeconds | int | `10` |  |
-| startupProbe.periodSeconds | int | `2` |  |
-| startupProbe.timeoutSeconds | int | `3` |  |
+| sidecarContainers | list | `[]` |  |
+| startupProbe | object | `{}` |  |
 | strategy.rollingUpdate.maxSurge | string | `"25%"` |  |
 | strategy.rollingUpdate.maxUnavailable | string | `"25%"` |  |
 | strategy.type | string | `"RollingUpdate"` |  |
@@ -362,13 +365,13 @@ Kubernetes: `>=1.32.0-0`
 | targetGroupBinding.serviceRef.port | string | `"http"` |  |
 | targetGroupBinding.targetGroupARN | string | `""` |  |
 | targetGroupBinding.targetType | string | `""` |  |
-| volumes.configMap | object | `{}` |  |
 | volumes.emptyDir | object | `{}` |  |
+| volumes.extra | list | `[]` |  |
+| volumes.extraMounts | list | `[]` |  |
+| volumes.hostPath | object | `{}` |  |
 | volumes.persistent | object | `{}` |  |
-| volumes.projected | object | `{}` |  |
-| volumes.secret | object | `{}` |  |
 | workloadAnnotations | object | `{}` |  |
 | workloadLabels | object | `{}` |  |
 
 ----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.1.0](https://github.com/norwoodj/helm-docs/releases/v1.1.0)
+Autogenerated from chart metadata using [helm-docs v1.0.0](https://github.com/norwoodj/helm-docs/releases/v1.0.0)

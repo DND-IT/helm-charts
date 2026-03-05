@@ -1,4 +1,4 @@
-# Web Chart - Opinionated defaults for external-facing web applications
+# API Chart - Opinionated defaults for internal services
 # Uses the same schema as the generic chart with sensible defaults pre-configured
 # Override only what you need to change
 
@@ -14,7 +14,7 @@ image:
 
 # =============================================================================
 # OPINIONATED DEFAULTS
-# These are pre-configured with sensible values for web applications
+# These are pre-configured with sensible values for internal API services
 # =============================================================================
 
 # Deployment enabled by default
@@ -29,7 +29,7 @@ strategy:
     maxUnavailable: 25%
     maxSurge: 25%
 
-# Default port for web applications
+# Default port for API services
 ports:
   - name: http
     containerPort: 8080
@@ -85,34 +85,15 @@ scheduling:
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: ScheduleAnyway
 
-# Service enabled by default
+# Service enabled by default for internal communication
 service:
   enabled: true
   type: ClusterIP
   ports: []  # Uses ports from above if not specified
 
-# Ingress ENABLED by default for web apps (key difference from api chart)
+# Ingress disabled by default for internal services
 ingress:
-  enabled: true
-  className: alb
-  annotations:
-    # AWS ALB defaults
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/group.name: default
-    alb.ingress.kubernetes.io/healthcheck-path: /readyz
-    alb.ingress.kubernetes.io/healthcheck-port: "8080"
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
-    alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
-    alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
-    alb.ingress.kubernetes.io/healthy-threshold-count: "2"
-    alb.ingress.kubernetes.io/unhealthy-threshold-count: "3"
-  hosts: []
-  # - host: myapp.example.com
-  #   paths:
-  #     - path: /
-  #       pathType: Prefix
-  tls: []
+  enabled: false
 
 # =============================================================================
 # OPTIONAL FEATURES
@@ -128,10 +109,12 @@ commonEnvVars: false
 configMap:
   enabled: false
   data: {}
+  # ENVIRONMENT: "production"
+  # LOG_LEVEL: "info"
   binaryData: {}
   annotations: {}
   labels: {}
-  envFrom: true
+  envFrom: true  # default: inject as env vars
   mountPath: ""
   subPath: ""
 
@@ -230,7 +213,6 @@ serviceAccount:
   enabled: true
   name: ""
   annotations: {}
-  labels: {}
   automountServiceAccountToken: true
 
 # Security defaults
@@ -258,7 +240,7 @@ security:
 # RBAC - Role-Based Access Control
 rbac:
   enabled: false
-  type: Role
+  type: Role  # or ClusterRole
   rules: []
   aggregationRule: {}
   subjects: []

@@ -1,32 +1,32 @@
-# web
+# api
 
-![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
-A Helm chart for deploying HTTP-facing web applications to Kubernetes.
-Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
-Designed for web applications that need external traffic exposure.
+A Helm chart for deploying internal API services to Kubernetes.
+Includes Deployment, Service (enabled by default), HPA, PDB, and ServiceAccount.
+Designed for internal services that communicate with other services within the cluster.
+Ingress is disabled by default for internal-only services.
 
 ## Overview
 
-The **web** chart is an opinionated Helm chart for deploying external-facing web applications. It uses the same schema as the `generic` chart but comes with sensible defaults pre-configured for public web workloads, including ALB ingress.
+The **api** chart is an opinionated Helm chart for deploying internal API services. It uses the same schema as the `generic` chart but comes with sensible defaults pre-configured for backend API workloads.
 
 ## Use Cases
 
-- **Public websites** - Frontend applications accessible from the internet
-- **Web APIs** - External-facing REST APIs
-- **Single Page Applications** - React, Vue, Angular apps served via nginx/CDN
-- **Customer portals** - User-facing web interfaces
+- **Internal microservices** - Backend APIs that communicate with other services
+- **REST/gRPC APIs** - Services exposing HTTP or gRPC endpoints internally
+- **Backend workers with endpoints** - Services that need to be reachable but not exposed externally
 
 ## Key Defaults
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `service.enabled` | `true` | ClusterIP service |
-| `ingress.enabled` | `true` | ALB ingress enabled |
-| `ingress.className` | `alb` | AWS ALB Ingress Controller |
+| `service.enabled` | `true` | ClusterIP service for internal communication |
+| `ingress.enabled` | `false` | No external exposure by default |
 | `ports[0]` | `8080/http` | Standard HTTP port |
 | `livenessProbe` | `/health` | Pre-configured health endpoint |
 | `readinessProbe` | `/health` | Pre-configured health endpoint |
+| `resources.requests` | `100m/128Mi` | Conservative resource requests |
 
 ## Quick Start
 
@@ -34,142 +34,104 @@ The **web** chart is an opinionated Helm chart for deploying external-facing web
 helm repo add dnd-it https://dnd-it.github.io/helm-charts
 helm repo update
 
-helm install my-web dnd-it/web \
-  --set image.repository=myorg/frontend \
-  --set image.tag=v1.0.0 \
-  --set ingress.hosts[0].host=myapp.example.com
+helm install my-api dnd-it/api \
+  --set image.repository=myorg/my-api \
+  --set image.tag=v1.0.0
 ```
 
 ## Examples
 
-### Basic Web Application
+### Basic Internal API
 
 ```yaml
 image:
-  repository: myorg/frontend
-  tag: "v2.0.0"
+  repository: myorg/user-service
+  tag: "v2.1.0"
 
 replicas: 2
 
-ingress:
-  hosts:
-    - host: app.example.com
-      paths:
-        - path: /
-          pathType: Prefix
+env:
+  - name: DATABASE_URL
+    valueFrom:
+      secretKeyRef:
+        name: db-credentials
+        key: url
 ```
 
-### Web App with SSL
+### API with Custom Health Endpoint
 
 ```yaml
 image:
-  repository: myorg/webapp
+  repository: myorg/order-service
   tag: "v1.5.0"
-
-ingress:
-  annotations:
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:123456789:certificate/abc123
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
-  hosts:
-    - host: secure.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-```
-
-### Web App with Custom ALB Group
-
-```yaml
-image:
-  repository: myorg/portal
-  tag: "v3.0.0"
-
-replicas: 3
-
-ingress:
-  annotations:
-    alb.ingress.kubernetes.io/group.name: public-apps
-    alb.ingress.kubernetes.io/group.order: "10"
-    alb.ingress.kubernetes.io/healthcheck-path: /api/health
-  hosts:
-    - host: portal.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-
-hpa:
-  enabled: true
-  minReplicas: 3
-  maxReplicas: 20
-  targetCPUUtilizationPercentage: 60
-```
-
-### Static Site with nginx
-
-```yaml
-image:
-  repository: myorg/static-site
-  tag: "v1.0.0"
 
 ports:
   - name: http
-    containerPort: 80
+    containerPort: 3000
 
 livenessProbe:
   httpGet:
-    path: /
+    path: /api/health
     port: http
+  initialDelaySeconds: 15
 
 readinessProbe:
   httpGet:
-    path: /
+    path: /api/ready
     port: http
-
-ingress:
-  annotations:
-    alb.ingress.kubernetes.io/healthcheck-path: /
-    alb.ingress.kubernetes.io/healthcheck-port: "80"
-  hosts:
-    - host: docs.example.com
-      paths:
-        - path: /
-          pathType: Prefix
 ```
 
-## ALB Annotations Reference
-
-Common ALB annotations pre-configured or frequently used:
+### API with HPA
 
 ```yaml
-ingress:
-  annotations:
-    # Scheme
-    alb.ingress.kubernetes.io/scheme: internet-facing  # or internal
-    alb.ingress.kubernetes.io/target-type: ip
+image:
+  repository: myorg/catalog-service
+  tag: "v3.0.0"
 
-    # SSL
-    alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:...
-    alb.ingress.kubernetes.io/ssl-redirect: "443"
+replicas: 2
 
-    # Health checks
-    alb.ingress.kubernetes.io/healthcheck-path: /health
-    alb.ingress.kubernetes.io/healthcheck-port: "8080"
-    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+hpa:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 70
 
-    # Grouping
-    alb.ingress.kubernetes.io/group.name: shared-alb
-    alb.ingress.kubernetes.io/group.order: "100"
+resources:
+  limits:
+    memory: 1Gi
+  requests:
+    cpu: 200m
+    memory: 256Mi
 ```
 
-## Comparison with API Chart
+### API with External Secrets
 
-| Feature | web | api |
-|---------|-----|-----|
-| Service | Enabled | Enabled |
-| Ingress | **Enabled** | Disabled |
-| ALB Annotations | Pre-configured | None |
-| Health Probes | Pre-configured | Pre-configured |
+```yaml
+image:
+  repository: myorg/payment-service
+  tag: "v1.0.0"
+
+externalSecrets:
+  payment-credentials:
+    enabled: true
+    secretStoreRef:
+      name: aws-secretsmanager
+      kind: ClusterSecretStore
+    data:
+      - secretKey: API_KEY
+        remoteRef:
+          key: prod/payment/api-key
+```
+
+## Comparison with Generic Chart
+
+| Feature | api | generic |
+|---------|-----|---------|
+| Service | Enabled | Disabled |
+| Ingress | Disabled | Disabled |
+| Health Probes | Pre-configured | Empty |
+| Resource Defaults | Set | Empty |
+| Topology Spread | Configured | Empty |
 
 **Homepage:** <https://github.com/dnd-it/helm-charts>
 
@@ -248,20 +210,7 @@ Kubernetes: `>=1.32.0-0`
 | image.repository | string | `""` |  |
 | image.tag | string | `""` |  |
 | imagePullSecrets | list | `[]` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/group.name" | string | `"default"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-interval-seconds" | string | `"15"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-path" | string | `"/readyz"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-port" | string | `"8080"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-protocol" | string | `"HTTP"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthcheck-timeout-seconds" | string | `"5"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/healthy-threshold-count" | string | `"2"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/scheme" | string | `"internet-facing"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/target-type" | string | `"ip"` |  |
-| ingress.annotations."alb.ingress.kubernetes.io/unhealthy-threshold-count" | string | `"3"` |  |
-| ingress.className | string | `"alb"` |  |
-| ingress.enabled | bool | `true` |  |
-| ingress.hosts | list | `[]` |  |
-| ingress.tls | list | `[]` |  |
+| ingress.enabled | bool | `false` |  |
 | initContainers | list | `[]` |  |
 | jobs | object | `{}` |  |
 | livenessProbe.failureThreshold | int | `3` |  |
@@ -342,7 +291,6 @@ Kubernetes: `>=1.32.0-0`
 | serviceAccount.annotations | object | `{}` |  |
 | serviceAccount.automountServiceAccountToken | bool | `true` |  |
 | serviceAccount.enabled | bool | `true` |  |
-| serviceAccount.labels | object | `{}` |  |
 | serviceAccount.name | string | `""` |  |
 | startupProbe.failureThreshold | int | `30` |  |
 | startupProbe.httpGet.path | string | `"/readyz"` |  |
@@ -371,4 +319,4 @@ Kubernetes: `>=1.32.0-0`
 | workloadLabels | object | `{}` |  |
 
 ----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.1.0](https://github.com/norwoodj/helm-docs/releases/v1.1.0)
+Autogenerated from chart metadata using [helm-docs v1.0.0](https://github.com/norwoodj/helm-docs/releases/v1.0.0)

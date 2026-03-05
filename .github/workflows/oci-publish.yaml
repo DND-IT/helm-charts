@@ -157,11 +157,15 @@ jobs:
 
             # Update dependency versions for preview builds (common library)
             if [ -n "$SUFFIX" ] && [ -f "${chart_dir}Chart.yaml" ]; then
-              # Update common dependency to use preview version from OCI
+              # Update common dependency to use OCI registry
               if grep -q "name: common" "${chart_dir}Chart.yaml"; then
                 sed -i "s|repository: file://../common|repository: oci://ghcr.io/dnd-it/helm-charts|" "${chart_dir}Chart.yaml"
-                # Update version constraint to exact preview version (use cached COMMON_VERSION)
-                sed -i "/name: common/,/version:/s/version: .*/version: ${COMMON_VERSION}${SUFFIX}/" "${chart_dir}Chart.yaml"
+                # Use preview version if common changed, otherwise use released version
+                if [ "$COMMON_CHANGED" = "true" ]; then
+                  sed -i "/name: common/,/version:/s/version: .*/version: ${COMMON_VERSION}${SUFFIX}/" "${chart_dir}Chart.yaml"
+                else
+                  sed -i "/name: common/,/version:/s/version: .*/version: ${COMMON_VERSION}/" "${chart_dir}Chart.yaml"
+                fi
                 # Remove stale lock file since we changed the repository
                 rm -f "${chart_dir}Chart.lock"
               fi

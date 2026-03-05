@@ -1,16 +1,17 @@
 apiVersion: v2
-name: web
+name: worker
 description: |
-  A Helm chart for deploying HTTP-facing web applications to Kubernetes.
-  Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
-  Designed for web applications that need external traffic exposure.
+  A Helm chart for deploying background worker processes to Kubernetes.
+  Includes Deployment, HPA, PDB, and ServiceAccount.
+  Designed for background processing workloads that don't expose HTTP endpoints.
+  No service or ingress by default.
 type: application
-version: 1.1.0
+version: 1.0.0
 
 keywords:
-  - web
-  - application
-  - ingress
+  - worker
+  - background
+  - processing
   - kubernetes
 
 home: https://github.com/dnd-it/helm-charts
