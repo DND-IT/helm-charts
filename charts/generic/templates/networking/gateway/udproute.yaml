@@ -1,0 +1,2 @@
+{{- include "common.udpRoute" . }}
+{{- include "common.extraUdpRoutes" . }}

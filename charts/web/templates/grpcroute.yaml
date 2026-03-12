@@ -1,0 +1,2 @@
+{{- include "common.grpcRoute" . }}
+{{- include "common.extraGrpcRoutes" . }}

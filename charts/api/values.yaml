@@ -283,6 +283,59 @@ gateway:
     labels: {}
     annotations: {}
     extraGrants: {}
+  grpcRoute:
+    enabled: false
+    parentRefs: []
+    hostnames: []
+    rules: []
+    labels: {}
+    annotations: {}
+    extraRoutes: {}
+  tlsRoute:
+    enabled: false
+    parentRefs: []
+    hostnames: []
+    rules: []
+    labels: {}
+    annotations: {}
+    extraRoutes: {}
+  udpRoute:
+    enabled: false
+    parentRefs: []
+    rules: []
+    labels: {}
+    annotations: {}
+    extraRoutes: {}
+  targetGroupConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    targetReference: {}
+    defaultConfiguration: {}
+    routeConfigurations: []
+  loadBalancerConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    loadBalancerName: ""
+    scheme: ""
+    ipAddressType: ""
+    loadBalancerSubnets: []
+    securityGroups: []
+    sourceRanges: []
+    listenerConfigurations: []
+    loadBalancerAttributes: []
+    tags: {}
+    wafV2: {}
+    shieldConfiguration: {}
+  listenerRuleConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    targetRef: {}
+    conditions: []
+    actions: []
+    tags: {}
 
 # AWS TargetGroupBinding
 targetGroupBinding:

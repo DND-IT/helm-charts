@@ -967,6 +967,160 @@ gateway:
     #   - group: ""
     #     kind: Secret
 
+  # GRPCRoute configuration
+  grpcRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    # Parent Gateway references
+    parentRefs: []
+    # - name: example-gateway
+    #   namespace: gateway-system
+    #   sectionName: grpc
+
+    # Hostnames for routing
+    hostnames: []
+    # - "grpc.example.com"
+
+    # GRPC routing rules
+    rules: []
+    # - matches:
+    #   - method:
+    #       type: Exact
+    #       service: com.example.UserService
+    #       method: GetUser
+    #   backendRefs:
+    #   - name: grpc-service
+    #     port: 50051
+
+    # Extra GRPCRoutes
+    extraRoutes: {}
+
+  # TLSRoute configuration
+  tlsRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    # Parent Gateway references
+    parentRefs: []
+    # - name: tls-gateway
+    #   namespace: gateway-system
+    #   sectionName: tls
+
+    # Hostnames for SNI-based routing
+    hostnames: []
+    # - "secure.example.com"
+
+    # TLS routing rules
+    rules: []
+    # - backendRefs:
+    #   - name: tls-service
+    #     port: 443
+    #     weight: 100
+
+    # Extra TLSRoutes
+    extraRoutes: {}
+
+  # UDPRoute configuration
+  udpRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    # Parent Gateway references
+    parentRefs: []
+    # - name: udp-gateway
+    #   namespace: gateway-system
+    #   sectionName: udp
+
+    # UDP routing rules
+    rules: []
+    # - backendRefs:
+    #   - name: udp-service
+    #     port: 53
+    #     weight: 100
+
+    # Extra UDPRoutes
+    extraRoutes: {}
+
+  # AWS Load Balancer Controller v3 - TargetGroupConfiguration
+  targetGroupConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    # Target reference (defaults to the release service)
+    targetReference: {}
+    # name: my-service
+    # kind: Service
+    # Default target group configuration
+    defaultConfiguration: {}
+    # protocol: HTTP
+    # protocolVersion: HTTP1
+    # targetType: ip
+    # healthCheckConfig:
+    #   healthCheckPath: /healthz
+    #   healthCheckPort: "8080"
+    #   healthCheckProtocol: HTTP
+    #   healthCheckInterval: "15"
+    # targetGroupAttributes:
+    #   - key: deregistration_delay.timeout_seconds
+    #     value: "30"
+    # Route-specific overrides
+    routeConfigurations: []
+
+  # AWS Load Balancer Controller v3 - LoadBalancerConfiguration
+  loadBalancerConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    # Custom load balancer name (1-32 chars)
+    loadBalancerName: ""
+    # Scheme: internal or internet-facing
+    scheme: ""
+    # IP address type: ipv4, dualstack, dualstack-without-public-ipv4
+    ipAddressType: ""
+    # Subnet configuration
+    loadBalancerSubnets: []
+    # Security groups
+    securityGroups: []
+    # Source CIDR ranges
+    sourceRanges: []
+    # Listener configurations
+    listenerConfigurations: []
+    # Load balancer attributes
+    loadBalancerAttributes: []
+    # AWS resource tags
+    tags: {}
+    # WAF v2 configuration
+    wafV2: {}
+    # Shield Advanced configuration
+    shieldConfiguration: {}
+
+  # AWS Load Balancer Controller v3 - ListenerRuleConfiguration
+  listenerRuleConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    # Reference to the HTTPRoute/GRPCRoute
+    targetRef: {}
+    # name: my-httproute
+    # group: gateway.networking.k8s.io
+    # kind: HTTPRoute
+    # Rule conditions
+    conditions: []
+    # - field: source-ip
+    #   sourceIPConfig:
+    #     values:
+    #     - "10.0.0.0/8"
+    # Rule actions
+    actions: []
+    # - type: fixed-response
+    #   fixedResponseConfig:
+    #     statusCode: "200"
+    #     contentType: text/plain
+    #     messageBody: "OK"
+    # AWS resource tags
+    tags: {}
+
 # Helm hooks for lifecycle management
 hooks:
   enabled: false

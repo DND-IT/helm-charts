@@ -1,0 +1,2 @@
+{{- include "common.tlsRoute" . }}
+{{- include "common.extraTlsRoutes" . }}

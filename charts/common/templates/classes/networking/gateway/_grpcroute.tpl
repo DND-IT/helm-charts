@@ -1,26 +1,30 @@
 {{/*
-Gateway API HTTPRoute resource template.
-Usage: {{- include "common.httpRoute" . }}
+Gateway API GRPCRoute resource template.
+Usage: {{- include "common.grpcRoute" . }}
 */}}
-{{- define "common.httpRoute" -}}
-{{- if and .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
+{{- define "common.grpcRoute" -}}
+{{- if and .Values.gateway.grpcRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/GRPCRoute") }}
 apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+kind: GRPCRoute
 metadata:
   name: {{ include "common.fullname" . }}
   namespace: {{ include "common.namespace" . }}
   labels:
-    {{- include "common.labels" (dict "context" . "labels" .Values.gateway.httpRoute.labels) | nindent 4 }}
-  {{- if or .Values.gateway.httpRoute.annotations .Values.commonAnnotations }}
+    {{- include "common.labels" (dict "context" . "labels" .Values.gateway.grpcRoute.labels) | nindent 4 }}
+  {{- if or .Values.gateway.grpcRoute.annotations .Values.commonAnnotations }}
   annotations:
-    {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.httpRoute.annotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.grpcRoute.annotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.gateway.httpRoute.parentRefs }}
+  {{- if .Values.gateway.grpcRoute.parentRefs }}
   parentRefs:
-    {{- range $parentRef := .Values.gateway.httpRoute.parentRefs }}
-    - group: {{ $parentRef.group | default "gateway.networking.k8s.io" }}
-      kind: {{ $parentRef.kind | default "Gateway" }}
+    {{- range $parentRef := .Values.gateway.grpcRoute.parentRefs }}
+    - {{- if $parentRef.group }}
+      group: {{ $parentRef.group }}
+      {{- end }}
+      {{- if $parentRef.kind }}
+      kind: {{ $parentRef.kind }}
+      {{- end }}
       {{- if $parentRef.namespace }}
       namespace: {{ $parentRef.namespace }}
       {{- end }}
@@ -33,20 +37,27 @@ spec:
       {{- end }}
     {{- end }}
   {{- end }}
-  {{- with .Values.gateway.httpRoute.hostnames }}
+  {{- with .Values.gateway.grpcRoute.hostnames }}
   hostnames:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   rules:
-    {{- if .Values.gateway.httpRoute.rules }}
-    {{- range $rule := .Values.gateway.httpRoute.rules }}
-    - matches:
-        {{- if $rule.matches }}
-        {{- range $match := $rule.matches }}
-        - {{- with $match.path }}
-          path:
-            type: {{ .type | default "PathPrefix" }}
-            value: {{ .value | default "/" }}
+    {{- if .Values.gateway.grpcRoute.rules }}
+    {{- range $rule := .Values.gateway.grpcRoute.rules }}
+    - {{- with $rule.matches }}
+      matches:
+        {{- range $match := . }}
+        - {{- with $match.method }}
+          method:
+            {{- if .type }}
+            type: {{ .type }}
+            {{- end }}
+            {{- if .service }}
+            service: {{ .service }}
+            {{- end }}
+            {{- if .method }}
+            method: {{ .method }}
+            {{- end }}
           {{- end }}
           {{- with $match.headers }}
           headers:
@@ -60,27 +71,8 @@ spec:
               {{- end }}
             {{- end }}
           {{- end }}
-          {{- with $match.queryParams }}
-          queryParams:
-            {{- range $param := . }}
-            - {{- if $param.type }}
-              type: {{ $param.type }}
-              {{- end }}
-              name: {{ $param.name }}
-              {{- if $param.value }}
-              value: {{ $param.value }}
-              {{- end }}
-            {{- end }}
-          {{- end }}
-          {{- with $match.method }}
-          method: {{ . }}
-          {{- end }}
         {{- end }}
-        {{- else }}
-        - path:
-            type: PathPrefix
-            value: /
-        {{- end }}
+      {{- end }}
       {{- with $rule.filters }}
       filters:
         {{- range $filter := . }}
@@ -212,8 +204,12 @@ spec:
       backendRefs:
         {{- if $rule.backendRefs }}
         {{- range $backendRef := $rule.backendRefs }}
-        - group: {{ $backendRef.group | default "" | quote }}
-          kind: {{ $backendRef.kind | default "Service" }}
+        - {{- if $backendRef.group }}
+          group: {{ $backendRef.group }}
+          {{- end }}
+          {{- if $backendRef.kind }}
+          kind: {{ $backendRef.kind }}
+          {{- end }}
           {{- if $backendRef.namespace }}
           namespace: {{ $backendRef.namespace }}
           {{- end }}
@@ -221,48 +217,40 @@ spec:
           {{- with $backendRef.port }}
           port: {{ . }}
           {{- end }}
-          weight: {{ $backendRef.weight | default 1 }}
+          {{- with $backendRef.weight }}
+          weight: {{ . }}
+          {{- end }}
           {{- with $backendRef.filters }}
           filters:
             {{- toYaml . | nindent 12 }}
           {{- end }}
         {{- end }}
         {{- else }}
-        - group: ""
-          kind: Service
-          name: {{ include "common.fullname" $ }}
+        - name: {{ include "common.fullname" $ }}
           port: {{ (index $.Values.service.ports 0).port | default 80 }}
-          weight: 1
         {{- end }}
     {{- end }}
     {{- else }}
     # Default rule
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-      backendRefs:
-        - group: ""
-          kind: Service
-          name: {{ include "common.fullname" . }}
+    - backendRefs:
+        - name: {{ include "common.fullname" . }}
           port: {{ (index .Values.service.ports 0).port | default 80 }}
-          weight: 1
     {{- end }}
 {{- end }}
 {{- end -}}
 
 {{/*
-Extra HTTPRoutes resource template.
-Usage: {{- include "common.extraHttpRoutes" . }}
+Extra GRPCRoutes resource template.
+Usage: {{- include "common.extraGrpcRoutes" . }}
 */}}
-{{- define "common.extraHttpRoutes" -}}
-{{- if and .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
-{{- if .Values.gateway.httpRoute.extraRoutes }}
-{{- range $name, $route := .Values.gateway.httpRoute.extraRoutes }}
+{{- define "common.extraGrpcRoutes" -}}
+{{- if and .Values.gateway.grpcRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/GRPCRoute") }}
+{{- if .Values.gateway.grpcRoute.extraRoutes }}
+{{- range $name, $route := .Values.gateway.grpcRoute.extraRoutes }}
 {{- if $route.enabled | default true }}
 ---
 apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+kind: GRPCRoute
 metadata:
   name: {{ printf "%s-%s" (include "common.fullname" $) $name }}
   namespace: {{ include "common.namespace" $ }}
