@@ -3,6 +3,7 @@ Full CronJob resource template.
 Usage: {{- include "common.cronjob" . }}
 */}}
 {{- define "common.cronjob" -}}
+{{- if .Values.schedule }}
 apiVersion: batch/v1
 kind: CronJob
 metadata:
@@ -120,6 +121,10 @@ spec:
           {{- end }}
           securityContext:
             {{- include "common.podSecurityContext" (dict "securityContext" .Values.pod.securityContext "defaults" .Values.security.defaultPodSecurityContext) | nindent 12 }}
+          {{- if and .Values.resources (not (empty .Values.resources)) }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          {{- end }}
           {{- with .Values.initContainers }}
           initContainers:
             {{- range $container := . }}
@@ -151,7 +156,7 @@ spec:
               {{- end }}
               {{- end }}
               {{- include "common.envFrom" . | nindent 14 }}
-              {{- with .Values.resources }}
+              {{- with .Values.container.resources }}
               resources:
                 {{- toYaml . | nindent 16 }}
               {{- end }}
@@ -163,4 +168,5 @@ spec:
               securityContext:
                 {{- include "common.containerSecurityContext" (dict "securityContext" .Values.securityContext "root" .) | nindent 16 }}
           {{- include "common.volumes" . | nindent 10 }}
+{{- end }}
 {{- end -}}

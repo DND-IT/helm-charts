@@ -3,7 +3,7 @@ Gateway API TCPRoute resource template.
 Usage: {{- include "common.tcpRoute" . }}
 */}}
 {{- define "common.tcpRoute" -}}
-{{- if and .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
+{{- if and .Values.gateway.tcpRoute .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
 apiVersion: gateway.networking.k8s.io/v1alpha2
 kind: TCPRoute
 metadata:
@@ -64,7 +64,7 @@ spec:
     # Default rule
     - backendRefs:
         - name: {{ include "common.fullname" . }}
-          port: {{ (index .Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" . }}
     {{- end }}
 {{- end }}
 {{- end -}}
@@ -74,7 +74,7 @@ Extra TCPRoutes resource template.
 Usage: {{- include "common.extraTcpRoutes" . }}
 */}}
 {{- define "common.extraTcpRoutes" -}}
-{{- if and .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
+{{- if and .Values.gateway.tcpRoute .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
 {{- if .Values.gateway.tcpRoute.extraRoutes }}
 {{- range $name, $route := .Values.gateway.tcpRoute.extraRoutes }}
 {{- if $route.enabled | default true }}

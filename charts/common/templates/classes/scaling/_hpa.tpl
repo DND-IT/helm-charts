@@ -3,7 +3,7 @@ Full HorizontalPodAutoscaler resource template.
 Usage: {{- include "common.hpa" . }}
 */}}
 {{- define "common.hpa" -}}
-{{- if .Values.hpa.enabled }}
+{{- if and .Values.hpa .Values.hpa.enabled }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:

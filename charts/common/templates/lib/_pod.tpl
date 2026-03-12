@@ -14,7 +14,7 @@ metadata:
   labels:
     {{- $podLabels := $config.podLabels | default ($config.pod).labels | default $deployment.pod.labels -}}
     {{- $podLabels = merge (dict "app.kubernetes.io/component" $componentName) $podLabels -}}
-    {{- include "common.labels" (dict "context" $root "labels" $podLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $root "labels" $podLabels "pod" true) | nindent 4 }}
   annotations:
     {{- $podAnnotations := $config.podAnnotations | default ($config.pod).annotations | default $deployment.pod.annotations -}}
     {{- include "common.podAnnotations" (dict "root" $root "annotations" $podAnnotations) | nindent 4 }}
@@ -93,11 +93,11 @@ spec:
   securityContext:
     {{- $podSecurityContext := $config.podSecurityContext | default ($config.pod).securityContext | default $deployment.pod.securityContext | default $root.Values.security.defaultPodSecurityContext -}}
     {{- include "common.podSecurityContext" (dict "securityContext" $podSecurityContext "defaults" $root.Values.security.defaultPodSecurityContext) | nindent 4 }}
-  {{- /* Pod-level resources (Kubernetes 1.32+) */ -}}
-  {{- $podResources := $config.podResources | default ($config.pod).resources | default $deployment.pod.resources -}}
-  {{- with $podResources }}
+  {{- /* Pod-level resources (Kubernetes 1.32+) - from top-level resources key */ -}}
+  {{- $podResources := $config.podResources | default $deployment.resources -}}
+  {{- if and $podResources (not (empty $podResources)) }}
   resources:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml $podResources | nindent 4 }}
   {{- end }}
   {{- /* For extraDeployments, only inherit root initContainers/sidecarContainers if inheritInitContainers is true */ -}}
   {{- $inheritInit := $config.inheritInitContainers | default false -}}
@@ -158,7 +158,8 @@ spec:
       startupProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $config.resources }}
+      {{- $extraContainerResources := ($config.container).resources | default $config.resources -}}
+      {{- with $extraContainerResources }}
       resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -229,7 +230,7 @@ spec:
       startupProbe:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      {{- with $deployment.resources }}
+      {{- with $deployment.container.resources }}
       resources:
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -260,10 +261,10 @@ Pod annotations including checksums
 {{- $extraAnnotations := .annotations | default dict -}}
 {{- $annotations := dict -}}
 {{- if $root.Values.configMap.enabled -}}
-  {{- $_ := set $annotations "checksum/config" (include (print $root.Template.BasePath "/configmap.yaml") $root | sha256sum) -}}
+  {{- $_ := set $annotations "checksum/config" (include "common.configmap" $root | sha256sum) -}}
 {{- end -}}
 {{- if $root.Values.secret.enabled -}}
-  {{- $_ := set $annotations "checksum/secret" (include (print $root.Template.BasePath "/secret.yaml") $root | sha256sum) -}}
+  {{- $_ := set $annotations "checksum/secret" (include "common.secret" $root | sha256sum) -}}
 {{- end -}}
 {{- $securityAnnotations := include "common.securityAnnotations" $root -}}
 {{- if $securityAnnotations -}}

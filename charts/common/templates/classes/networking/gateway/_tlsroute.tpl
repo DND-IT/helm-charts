@@ -3,7 +3,7 @@ Gateway API TLSRoute resource template.
 Usage: {{- include "common.tlsRoute" . }}
 */}}
 {{- define "common.tlsRoute" -}}
-{{- if and .Values.gateway.tlsRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TLSRoute") }}
+{{- if and .Values.gateway.tlsRoute .Values.gateway.tlsRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TLSRoute") }}
 apiVersion: gateway.networking.k8s.io/v1alpha2
 kind: TLSRoute
 metadata:
@@ -68,7 +68,7 @@ spec:
     # Default rule
     - backendRefs:
         - name: {{ include "common.fullname" . }}
-          port: {{ (index .Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" . }}
     {{- end }}
 {{- end }}
 {{- end -}}
@@ -78,7 +78,7 @@ Extra TLSRoutes resource template.
 Usage: {{- include "common.extraTlsRoutes" . }}
 */}}
 {{- define "common.extraTlsRoutes" -}}
-{{- if and .Values.gateway.tlsRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TLSRoute") }}
+{{- if and .Values.gateway.tlsRoute .Values.gateway.tlsRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TLSRoute") }}
 {{- if .Values.gateway.tlsRoute.extraRoutes }}
 {{- range $name, $route := .Values.gateway.tlsRoute.extraRoutes }}
 {{- if $route.enabled | default true }}

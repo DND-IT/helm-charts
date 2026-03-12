@@ -3,7 +3,7 @@ AWS Load Balancer Controller v3 ListenerRuleConfiguration resource template.
 Usage: {{- include "common.listenerRuleConfiguration" . }}
 */}}
 {{- define "common.listenerRuleConfiguration" -}}
-{{- if and .Values.gateway.listenerRuleConfiguration.enabled (.Capabilities.APIVersions.Has "gateway.k8s.aws/v1beta1/ListenerRuleConfiguration") }}
+{{- if and .Values.gateway.listenerRuleConfiguration .Values.gateway.listenerRuleConfiguration.enabled (.Capabilities.APIVersions.Has "gateway.k8s.aws/v1beta1/ListenerRuleConfiguration") }}
 apiVersion: gateway.k8s.aws/v1beta1
 kind: ListenerRuleConfiguration
 metadata:

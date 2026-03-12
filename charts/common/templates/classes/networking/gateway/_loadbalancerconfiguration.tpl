@@ -3,7 +3,7 @@ AWS Load Balancer Controller v3 LoadBalancerConfiguration resource template.
 Usage: {{- include "common.loadBalancerConfiguration" . }}
 */}}
 {{- define "common.loadBalancerConfiguration" -}}
-{{- if and .Values.gateway.loadBalancerConfiguration.enabled (.Capabilities.APIVersions.Has "gateway.k8s.aws/v1beta1/LoadBalancerConfiguration") }}
+{{- if and .Values.gateway.loadBalancerConfiguration .Values.gateway.loadBalancerConfiguration.enabled (.Capabilities.APIVersions.Has "gateway.k8s.aws/v1beta1/LoadBalancerConfiguration") }}
 apiVersion: gateway.k8s.aws/v1beta1
 kind: LoadBalancerConfiguration
 metadata:

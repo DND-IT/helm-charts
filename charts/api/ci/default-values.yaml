@@ -15,9 +15,30 @@ service:
   enabled: true
   type: ClusterIP
 
-# Ingress disabled by default for internal services
-ingress:
-  enabled: false
+# Gateway API - internal API routing
+gateway:
+  httpRoute:
+    parentRefs:
+      - name: internal-gateway
+        namespace: gateway-system
+    hostnames:
+      - api.internal.example.com
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /
+        backendRefs:
+          - name: api-test
+            port: 80
+  targetGroupConfiguration:
+    defaultConfiguration:
+      targetType: ip
+      healthCheckConfig:
+        healthCheckPath: /
+        healthCheckPort: "8080"
+  loadBalancerConfiguration:
+    scheme: internet-facing
 
 # Override probes for nginx which doesn't have /livez or /readyz
 livenessProbe:

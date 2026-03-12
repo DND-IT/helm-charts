@@ -3,82 +3,125 @@ Full Ingress resource template.
 Usage: {{- include "common.ingress" . }}
 */}}
 {{- define "common.ingress" -}}
-{{- if .Values.ingress.enabled }}
+{{- if and .Values.ingress .Values.ingress.enabled -}}
+{{- $fullName := include "common.fullname" . -}}
+{{- $namespace := include "common.namespace" . -}}
+{{- $svcPortName := include "common.servicePortName" . -}}
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: {{ include "common.fullname" . }}
-  namespace: {{ include "common.namespace" . }}
+  name: {{ $fullName }}
+  namespace: {{ $namespace }}
   labels:
     {{- include "common.labels" (dict "context" . "labels" .Values.ingress.labels) | nindent 4 }}
   {{- if or .Values.ingress.annotations .Values.commonAnnotations }}
   annotations:
-    {{- include "common.annotations" (dict "context" . "annotations" .Values.ingress.annotations) | nindent 4 }}
+    {{- if .Values.ingress.annotations }}
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
+    {{- end }}
+    {{- end }}
+    {{- with .Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
   {{- end }}
 spec:
-  {{- with .Values.ingress.className }}
-  ingressClassName: {{ . }}
-  {{- end }}
-  {{- with .Values.ingress.defaultBackend }}
+  ingressClassName: {{ .Values.ingress.ingressClassName }}
+  {{- if .Values.ingress.defaultBackend }}
   defaultBackend:
-    {{- toYaml . | nindent 4 }}
+    service:
+      name: {{ .Values.ingress.defaultBackend.service.name | default $fullName }}
+      port:
+        {{- if .Values.ingress.defaultBackend.service.port.number }}
+        number: {{ .Values.ingress.defaultBackend.service.port.number }}
+        {{- else }}
+        name: {{ .Values.ingress.defaultBackend.service.port.name | default "http" }}
+        {{- end }}
   {{- end }}
-  {{- if .Values.ingress.hosts }}
   rules:
     {{- range .Values.ingress.hosts }}
-    - host: {{ include "common.tplValue" (dict "value" .host "context" $) | quote }}
+    - {{- if .host }}
+      host: {{ include "common.tplValue" (dict "value" .host "context" $) | quote }}
+      {{- end }}
       http:
         paths:
-          {{- if .paths }}
           {{- range .paths }}
-          - path: {{ .path | default "/" }}
+          - path: {{ .path }}
+            pathType: {{ .pathType | default "Prefix" }}
+            backend:
+              {{- if .backend }}
+              service:
+                name: {{ .backend.service.name | default (include "common.fullname" $) }}
+                port:
+                  {{- if .backend.service.port.number }}
+                  number: {{ .backend.service.port.number }}
+                  {{- else }}
+                  name: {{ .backend.service.port.name | default "http" }}
+                  {{- end }}
+              {{- else }}
+              service:
+                name: {{ $fullName }}
+                port:
+                  name: {{ $svcPortName }}
+              {{- end }}
+          {{- end }}
+    {{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
+Extra Ingresses resource template.
+Usage: {{- include "common.extraIngresses" . }}
+*/}}
+{{- define "common.extraIngresses" -}}
+{{- if .Values.extraIngresses }}
+{{- range $name, $ingress := .Values.extraIngresses }}
+{{- if $ingress.enabled }}
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ printf "%s-%s" (include "common.fullname" $) $name }}
+  namespace: {{ include "common.namespace" $ }}
+  labels:
+    {{- include "common.labels" (dict "context" $ "labels" $ingress.labels) | nindent 4 }}
+  {{- if or $ingress.annotations $.Values.commonAnnotations }}
+  annotations:
+    {{- if $ingress.annotations }}
+    {{- range $key, $value := $ingress.annotations }}
+    {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
+    {{- end }}
+    {{- end }}
+    {{- with $.Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- with $ingress.ingressClassName }}
+  ingressClassName: {{ . }}
+  {{- end }}
+  rules:
+    {{- range $ingress.hosts }}
+    - {{- if .host }}
+      host: {{ include "common.tplValue" (dict "value" .host "context" $) | quote }}
+      {{- end }}
+      http:
+        paths:
+          {{- range .paths }}
+          - path: {{ .path }}
             pathType: {{ .pathType | default "Prefix" }}
             backend:
               service:
-                {{- if .backend }}
-                {{- if .backend.service }}
                 name: {{ .backend.service.name | default (include "common.fullname" $) }}
                 port:
-                  {{- if .backend.service.port.name }}
-                  name: {{ .backend.service.port.name }}
+                  {{- if .backend.service.port.number }}
+                  number: {{ .backend.service.port.number }}
                   {{- else }}
-                  number: {{ .backend.service.port.number | default 80 }}
+                  name: {{ .backend.service.port.name | default "http" }}
                   {{- end }}
-                {{- else }}
-                name: {{ include "common.fullname" $ }}
-                port:
-                  name: http
-                {{- end }}
-                {{- else }}
-                name: {{ include "common.fullname" $ }}
-                port:
-                  {{- if .port }}
-                  number: {{ .port }}
-                  {{- else }}
-                  name: http
-                  {{- end }}
-                {{- end }}
-          {{- end }}
-          {{- else }}
-          - path: /
-            pathType: Prefix
-            backend:
-              service:
-                name: {{ include "common.fullname" $ }}
-                port:
-                  name: http
           {{- end }}
     {{- end }}
-  {{- end }}
-  {{- if .Values.ingress.tls }}
-  tls:
-    {{- range .Values.ingress.tls }}
-    - hosts:
-        {{- range .hosts }}
-        - {{ include "common.tplValue" (dict "value" . "context" $) | quote }}
-        {{- end }}
-      secretName: {{ .secretName }}
-    {{- end }}
-  {{- end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- end -}}

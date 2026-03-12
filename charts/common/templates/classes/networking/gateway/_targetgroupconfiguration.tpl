@@ -3,7 +3,7 @@ AWS Load Balancer Controller v3 TargetGroupConfiguration resource template.
 Usage: {{- include "common.targetGroupConfiguration" . }}
 */}}
 {{- define "common.targetGroupConfiguration" -}}
-{{- if and .Values.gateway.targetGroupConfiguration.enabled (.Capabilities.APIVersions.Has "gateway.k8s.aws/v1beta1/TargetGroupConfiguration") }}
+{{- if and .Values.gateway.targetGroupConfiguration .Values.gateway.targetGroupConfiguration.enabled (.Capabilities.APIVersions.Has "gateway.k8s.aws/v1beta1/TargetGroupConfiguration") }}
 apiVersion: gateway.k8s.aws/v1beta1
 kind: TargetGroupConfiguration
 metadata:

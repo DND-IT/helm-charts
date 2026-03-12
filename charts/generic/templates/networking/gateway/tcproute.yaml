@@ -1,2 +1,0 @@
-{{- include "common.tcpRoute" . }}
-{{- include "common.extraTcpRoutes" . }}

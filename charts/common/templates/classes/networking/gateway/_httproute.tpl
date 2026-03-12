@@ -3,7 +3,7 @@ Gateway API HTTPRoute resource template.
 Usage: {{- include "common.httpRoute" . }}
 */}}
 {{- define "common.httpRoute" -}}
-{{- if and .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
+{{- if and .Values.gateway.httpRoute .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -231,7 +231,7 @@ spec:
         - group: ""
           kind: Service
           name: {{ include "common.fullname" $ }}
-          port: {{ (index $.Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" $ }}
           weight: 1
         {{- end }}
     {{- end }}
@@ -245,7 +245,7 @@ spec:
         - group: ""
           kind: Service
           name: {{ include "common.fullname" . }}
-          port: {{ (index .Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" . }}
           weight: 1
     {{- end }}
 {{- end }}
@@ -256,7 +256,7 @@ Extra HTTPRoutes resource template.
 Usage: {{- include "common.extraHttpRoutes" . }}
 */}}
 {{- define "common.extraHttpRoutes" -}}
-{{- if and .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
+{{- if and .Values.gateway.httpRoute .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
 {{- if .Values.gateway.httpRoute.extraRoutes }}
 {{- range $name, $route := .Values.gateway.httpRoute.extraRoutes }}
 {{- if $route.enabled | default true }}

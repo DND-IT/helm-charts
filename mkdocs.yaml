@@ -1,0 +1,96 @@
+# Backstage TechDocs compatible configuration
+site_name: Helm Charts
+site_description: Production-ready Helm charts for Kubernetes on Amazon EKS
+docs_dir: docs/
+site_url: https://dnd-it.github.io/helm-charts/docs/
+repo_name: dnd-it/helm-charts
+repo_url: https://github.com/dnd-it/helm-charts
+
+theme:
+  name: material
+  logo: static/logo.svg
+  favicon: static/favicon.svg
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.sections
+    - navigation.expand
+    - navigation.indexes
+    - search.highlight
+    - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.tabbed:
+      alternate_style: true
+  - toc:
+      permalink: true
+
+extra_css:
+  - stylesheets/extra.css
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - getting-started/index.md
+    - Installation: getting-started/installation.md
+    - Quick Start: getting-started/quick-start.md
+  - Charts:
+    - charts/index.md
+    - Generic: charts/generic.md
+    - Web: charts/web.md
+    - API: charts/api.md
+    - Worker: charts/worker.md
+    - Task: charts/task.md
+    - Karpenter Resources: charts/karpenter-resources.md
+    - Datadog Resources: charts/datadog-resources.md
+    - Custom Resources: charts/custom-resources.md
+  - Architecture:
+    - architecture/index.md
+    - Common Library: architecture/common-library.md
+    - Values Deep Merge: architecture/values-deep-merge.md
+  - Guides:
+    - guides/index.md
+    - Gateway API: guides/gateway-api.md
+    - Security Defaults: guides/security.md
+    - Datadog Integration: guides/datadog.md
+    - Pod Resources: guides/pod-resources.md
+    - Migrating from Deprecated Charts: guides/migration.md
+  - Reference:
+    - reference/index.md
+    - Values Reference: reference/values.md
+    - Common Environment Variables: reference/common-env-vars.md
+    - Makefile Commands: reference/makefile.md
+  - Contributing:
+    - contributing/index.md
+    - Testing: contributing/testing.md
+
+dev_addr: "0.0.0.0:8000"

@@ -3,7 +3,7 @@ Gateway API GRPCRoute resource template.
 Usage: {{- include "common.grpcRoute" . }}
 */}}
 {{- define "common.grpcRoute" -}}
-{{- if and .Values.gateway.grpcRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/GRPCRoute") }}
+{{- if and .Values.gateway.grpcRoute .Values.gateway.grpcRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/GRPCRoute") }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: GRPCRoute
 metadata:
@@ -227,14 +227,14 @@ spec:
         {{- end }}
         {{- else }}
         - name: {{ include "common.fullname" $ }}
-          port: {{ (index $.Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" $ }}
         {{- end }}
     {{- end }}
     {{- else }}
     # Default rule
     - backendRefs:
         - name: {{ include "common.fullname" . }}
-          port: {{ (index .Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" . }}
     {{- end }}
 {{- end }}
 {{- end -}}
@@ -244,7 +244,7 @@ Extra GRPCRoutes resource template.
 Usage: {{- include "common.extraGrpcRoutes" . }}
 */}}
 {{- define "common.extraGrpcRoutes" -}}
-{{- if and .Values.gateway.grpcRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/GRPCRoute") }}
+{{- if and .Values.gateway.grpcRoute .Values.gateway.grpcRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/GRPCRoute") }}
 {{- if .Values.gateway.grpcRoute.extraRoutes }}
 {{- range $name, $route := .Values.gateway.grpcRoute.extraRoutes }}
 {{- if $route.enabled | default true }}

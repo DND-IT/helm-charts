@@ -3,7 +3,7 @@ Gateway API UDPRoute resource template.
 Usage: {{- include "common.udpRoute" . }}
 */}}
 {{- define "common.udpRoute" -}}
-{{- if and .Values.gateway.udpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/UDPRoute") }}
+{{- if and .Values.gateway.udpRoute .Values.gateway.udpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/UDPRoute") }}
 apiVersion: gateway.networking.k8s.io/v1alpha2
 kind: UDPRoute
 metadata:
@@ -64,7 +64,7 @@ spec:
     # Default rule
     - backendRefs:
         - name: {{ include "common.fullname" . }}
-          port: {{ (index .Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" . }}
     {{- end }}
 {{- end }}
 {{- end -}}
@@ -74,7 +74,7 @@ Extra UDPRoutes resource template.
 Usage: {{- include "common.extraUdpRoutes" . }}
 */}}
 {{- define "common.extraUdpRoutes" -}}
-{{- if and .Values.gateway.udpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/UDPRoute") }}
+{{- if and .Values.gateway.udpRoute .Values.gateway.udpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/UDPRoute") }}
 {{- if .Values.gateway.udpRoute.extraRoutes }}
 {{- range $name, $route := .Values.gateway.udpRoute.extraRoutes }}
 {{- if $route.enabled | default true }}

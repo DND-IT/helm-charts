@@ -1,70 +1,80 @@
 suite: test deployment
 templates:
-  - deployment.yaml
+  - common.yaml
 tests:
   - it: should create deployment by default
-    set:
-      configMap.enabled: false
-      secret.enabled: false
     asserts:
       - isKind:
           of: Deployment
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: metadata.name
           value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should have component main in selector to distinguish from extraDeployments
-    set:
-      configMap.enabled: false
-      secret.enabled: false
     asserts:
       - equal:
           path: spec.selector.matchLabels["app.kubernetes.io/name"]
           value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.selector.matchLabels["app.kubernetes.io/instance"]
           value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.selector.matchLabels["app.kubernetes.io/component"]
           value: main
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/component"]
           value: main
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should create deployment when enabled
     set:
       deploymentEnabled: true
-      configMap.enabled: false
-      secret.enabled: false
     asserts:
       - isKind:
           of: Deployment
-      - hasDocuments:
-          count: 1
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should not create deployment when disabled
     set:
       deploymentEnabled: false
-      configMap.enabled: false
-      secret.enabled: false
+      service.enabled: false
+      serviceAccount.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
   - it: should set replicas correctly
     set:
-      configMap.enabled: false
-      secret.enabled: false
       replicas: 3
     asserts:
       - equal:
           path: spec.replicas
           value: 3
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should use deployment strategy
     set:
-      configMap.enabled: false
-      secret.enabled: false
       strategy:
         type: RollingUpdate
         rollingUpdate:
@@ -74,32 +84,45 @@ tests:
       - equal:
           path: spec.strategy.type
           value: RollingUpdate
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.strategy.rollingUpdate.maxUnavailable
           value: 1
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.strategy.rollingUpdate.maxSurge
           value: 2
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should include pod template labels
-    set:
-      configMap.enabled: false
-      secret.enabled: false
     asserts:
       - exists:
           path: spec.template.metadata.labels
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/name"]
           value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.metadata.labels["app.kubernetes.io/instance"]
           value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
 
 
   - it: should set pod security context
     set:
-      configMap.enabled: false
-      secret.enabled: false
       pod:
         securityContext:
           runAsUser: 1000
@@ -109,17 +132,24 @@ tests:
       - equal:
           path: spec.template.spec.securityContext.runAsUser
           value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.securityContext.runAsGroup
           value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.securityContext.fsGroup
           value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should add init containers
     set:
-      configMap.enabled: false
-      secret.enabled: false
       initContainers:
         - name: init-db
           image: busybox:latest
@@ -128,14 +158,18 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: init-db
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: busybox:latest
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should create extraDeployment with correct component label
     set:
-      configMap.enabled: false
-      secret.enabled: false
       extraDeployments:
         worker:
           enabled: true
@@ -145,21 +179,21 @@ tests:
             tag: worker-1.0.0
             pullPolicy: IfNotPresent
     asserts:
-      - hasDocuments:
-          count: 2
       - equal:
           path: metadata.name
           value: RELEASE-NAME-worker
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
       - equal:
           path: spec.selector.matchLabels["app.kubernetes.io/component"]
           value: worker
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
 
   - it: should process template values in extraDeployment env
     set:
-      configMap.enabled: false
-      secret.enabled: false
       nameOverride: myapp
       extraDeployments:
         worker:
@@ -180,18 +214,20 @@ tests:
           content:
             name: RELEASE_NAME
             value: RELEASE-NAME
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-myapp-worker
       - contains:
           path: spec.template.spec.containers[0].env
           content:
             name: APP_NAME
             value: myapp
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-myapp-worker
 
   - it: should handle valueFrom in extraDeployment env
     set:
-      configMap.enabled: false
-      secret.enabled: false
       extraDeployments:
         worker:
           enabled: true
@@ -215,12 +251,12 @@ tests:
               secretKeyRef:
                 name: my-secret
                 key: password
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
 
   - it: should handle configMapKeyRef in extraDeployment env
     set:
-      configMap.enabled: false
-      secret.enabled: false
       extraDeployments:
         worker:
           enabled: true
@@ -244,12 +280,12 @@ tests:
               configMapKeyRef:
                 name: my-config
                 key: setting
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
 
   - it: should handle fieldRef in extraDeployment env
     set:
-      configMap.enabled: false
-      secret.enabled: false
       extraDeployments:
         worker:
           enabled: true
@@ -271,12 +307,12 @@ tests:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.name
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
 
   - it: should not create disabled extraDeployment
     set:
-      configMap.enabled: false
-      secret.enabled: false
       extraDeployments:
         worker:
           enabled: false
@@ -286,16 +322,22 @@ tests:
             tag: worker-1.0.0
             pullPolicy: IfNotPresent
     asserts:
-      - hasDocuments:
-          count: 1
+      - isKind:
+          of: Deployment
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: metadata.name
           value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should create multiple extraDeployments
     set:
-      configMap.enabled: false
-      secret.enabled: false
+      service.enabled: false
+      serviceAccount.enabled: false
       extraDeployments:
         worker:
           enabled: true
@@ -312,25 +354,29 @@ tests:
             tag: scheduler-1.0.0
             pullPolicy: IfNotPresent
     asserts:
-      - hasDocuments:
-          count: 3
       - equal:
           path: metadata.name
           value: RELEASE-NAME
-        documentIndex: 0
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME
       - equal:
           path: metadata.name
           value: RELEASE-NAME-scheduler
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-scheduler
       - equal:
           path: metadata.name
           value: RELEASE-NAME-worker
-        documentIndex: 2
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
 
   - it: should use fullnameOverride in extraDeployment names
     set:
-      configMap.enabled: false
-      secret.enabled: false
+      service.enabled: false
+      serviceAccount.enabled: false
       fullnameOverride: my-app
       extraDeployments:
         worker:
@@ -341,25 +387,27 @@ tests:
             tag: worker-1.0.0
             pullPolicy: IfNotPresent
     asserts:
-      - hasDocuments:
-          count: 2
       - equal:
           path: metadata.name
           value: my-app
-        documentIndex: 0
+        documentSelector:
+          path: metadata.name
+          value: my-app
       - equal:
           path: metadata.name
           value: my-app-worker
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: my-app-worker
       - equal:
           path: metadata.labels["app.kubernetes.io/name"]
           value: my-app
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: my-app-worker
 
   - it: should set resources in extraDeployment
     set:
-      configMap.enabled: false
-      secret.enabled: false
       extraDeployments:
         worker:
           enabled: true
@@ -379,16 +427,18 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.limits.cpu
           value: 500m
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
       - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
           value: 512Mi
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
 
   - it: should set probes in extraDeployment
     set:
-      configMap.enabled: false
-      secret.enabled: false
       extraDeployments:
         worker:
           enabled: true
@@ -411,16 +461,18 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].livenessProbe.httpGet.path
           value: /healthz
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
       - equal:
           path: spec.template.spec.containers[0].readinessProbe.httpGet.path
           value: /ready
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
 
   - it: should set command and args in extraDeployment
     set:
-      configMap.enabled: false
-      secret.enabled: false
       extraDeployments:
         worker:
           enabled: true
@@ -439,44 +491,89 @@ tests:
           path: spec.template.spec.containers[0].command
           value:
             - /bin/worker
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
       - equal:
           path: spec.template.spec.containers[0].args
           value:
             - --queue=high
             - --concurrency=5
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-worker
 
-  - it: should set pod-level resources when specified
+  - it: should set pod-level resources from top-level resources key
     set:
-      configMap.enabled: false
-      secret.enabled: false
-      pod:
-        resources:
-          requests:
-            cpu: "1"
-            memory: "1Gi"
-          limits:
-            cpu: "2"
-            memory: "2Gi"
+      resources:
+        requests:
+          cpu: "1"
+          memory: "1Gi"
+        limits:
+          cpu: "2"
+          memory: "2Gi"
     asserts:
       - equal:
           path: spec.template.spec.resources.requests.cpu
           value: "1"
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.resources.requests.memory
           value: "1Gi"
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.resources.limits.cpu
           value: "2"
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.resources.limits.memory
           value: "2Gi"
+        documentSelector:
+          path: kind
+          value: Deployment
 
-  - it: should not set pod-level resources when not specified
+  - it: should not set pod-level resources when resources is null
     set:
-      configMap.enabled: false
-      secret.enabled: false
+      resources: null
     asserts:
       - notExists:
           path: spec.template.spec.resources
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should set container-level resources from container.resources
+    set:
+      resources: null
+      container:
+        resources:
+          requests:
+            cpu: "500m"
+            memory: "256Mi"
+          limits:
+            cpu: "1"
+            memory: "512Mi"
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].resources.requests.cpu
+          value: "500m"
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].resources.limits.memory
+          value: "512Mi"
+        documentSelector:
+          path: kind
+          value: Deployment
+      - notExists:
+          path: spec.template.spec.resources
+        documentSelector:
+          path: kind
+          value: Deployment

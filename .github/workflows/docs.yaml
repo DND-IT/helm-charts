@@ -1,0 +1,48 @@
+name: Deploy Docs
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/**'
+      - 'mkdocs.yaml'
+  workflow_dispatch:
+
+concurrency:
+  group: docs-deploy
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@6b9c6063abd6010835644d4c2e1bef4cf5cd0fca # v6.0.1
+
+      - name: Build docs
+        run: uv run --with mkdocs --with mkdocs-material --with pymdown-extensions mkdocs build --site-dir /tmp/docs-site
+
+      - name: Deploy to gh-pages /docs/ subdirectory
+        run: |
+          git fetch origin gh-pages
+          git checkout gh-pages
+
+          # Remove old docs, preserve chart-releaser files (index.yaml, *.tgz, README.md)
+          rm -rf docs/
+
+          # Copy built site into docs/
+          cp -r /tmp/docs-site docs/
+
+          git add docs/
+          git diff --cached --quiet || {
+            git config user.name "$GITHUB_ACTOR"
+            git config user.email "$GITHUB_ACTOR@users.noreply.github.com"
+            git commit -m "docs: update documentation site"
+            git push origin gh-pages
+          }
