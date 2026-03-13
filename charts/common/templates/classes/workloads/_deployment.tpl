@@ -3,6 +3,7 @@ Full Deployment resource template.
 Usage: {{- include "common.deployment" . }}
 */}}
 {{- define "common.deployment" -}}
+{{- include "common.validateValues" . -}}
 {{- if .Values.deploymentEnabled }}
 apiVersion: apps/v1
 kind: Deployment

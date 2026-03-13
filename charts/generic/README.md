@@ -1,6 +1,6 @@
 # generic
 
-![Version: 0.8.0](https://img.shields.io/badge/Version-0.8.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.9.0](https://img.shields.io/badge/Version-0.9.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A highly flexible and unopinionated Helm chart for deploying Kubernetes workloads.
 Supports Deployments, CronJobs, and Jobs with extensive configuration options.
@@ -257,7 +257,7 @@ Kubernetes: `>=1.32.0-0`
 | args | list | `[]` |  |
 | command | list | `[]` |  |
 | commonAnnotations | object | `{}` |  |
-| commonEnvVars | bool | `false` |  |
+| commonEnvVars | bool | `true` |  |
 | commonLabels | object | `{}` |  |
 | configMap.annotations | object | `{}` |  |
 | configMap.binaryData | object | `{}` |  |
@@ -282,6 +282,13 @@ Kubernetes: `>=1.32.0-0`
 | extraServices | object | `{}` |  |
 | extraTargetGroupBindings | object | `{}` |  |
 | fullnameOverride | string | `""` |  |
+| gateway.grpcRoute.annotations | object | `{}` |  |
+| gateway.grpcRoute.enabled | bool | `false` |  |
+| gateway.grpcRoute.extraRoutes | object | `{}` |  |
+| gateway.grpcRoute.hostnames | list | `[]` |  |
+| gateway.grpcRoute.labels | object | `{}` |  |
+| gateway.grpcRoute.parentRefs | list | `[]` |  |
+| gateway.grpcRoute.rules | list | `[]` |  |
 | gateway.httpRoute.annotations | object | `{}` |  |
 | gateway.httpRoute.enabled | bool | `false` |  |
 | gateway.httpRoute.extraRoutes | object | `{}` |  |
@@ -289,18 +296,58 @@ Kubernetes: `>=1.32.0-0`
 | gateway.httpRoute.labels | object | `{}` |  |
 | gateway.httpRoute.parentRefs | list | `[]` |  |
 | gateway.httpRoute.rules | list | `[]` |  |
+| gateway.listenerRuleConfiguration.actions | list | `[]` |  |
+| gateway.listenerRuleConfiguration.annotations | object | `{}` |  |
+| gateway.listenerRuleConfiguration.conditions | list | `[]` |  |
+| gateway.listenerRuleConfiguration.enabled | bool | `false` |  |
+| gateway.listenerRuleConfiguration.labels | object | `{}` |  |
+| gateway.listenerRuleConfiguration.tags | object | `{}` |  |
+| gateway.listenerRuleConfiguration.targetRef | object | `{}` |  |
+| gateway.loadBalancerConfiguration.annotations | object | `{}` |  |
+| gateway.loadBalancerConfiguration.enabled | bool | `false` |  |
+| gateway.loadBalancerConfiguration.ipAddressType | string | `""` |  |
+| gateway.loadBalancerConfiguration.labels | object | `{}` |  |
+| gateway.loadBalancerConfiguration.listenerConfigurations | list | `[]` |  |
+| gateway.loadBalancerConfiguration.loadBalancerAttributes | list | `[]` |  |
+| gateway.loadBalancerConfiguration.loadBalancerName | string | `""` |  |
+| gateway.loadBalancerConfiguration.loadBalancerSubnets | list | `[]` |  |
+| gateway.loadBalancerConfiguration.scheme | string | `""` |  |
+| gateway.loadBalancerConfiguration.securityGroups | list | `[]` |  |
+| gateway.loadBalancerConfiguration.shieldConfiguration | object | `{}` |  |
+| gateway.loadBalancerConfiguration.sourceRanges | list | `[]` |  |
+| gateway.loadBalancerConfiguration.tags | object | `{}` |  |
+| gateway.loadBalancerConfiguration.wafV2 | object | `{}` |  |
 | gateway.referenceGrant.annotations | object | `{}` |  |
 | gateway.referenceGrant.enabled | bool | `false` |  |
 | gateway.referenceGrant.extraGrants | object | `{}` |  |
 | gateway.referenceGrant.from | list | `[]` |  |
 | gateway.referenceGrant.labels | object | `{}` |  |
 | gateway.referenceGrant.to | list | `[]` |  |
+| gateway.targetGroupConfiguration.annotations | object | `{}` |  |
+| gateway.targetGroupConfiguration.defaultConfiguration | object | `{}` |  |
+| gateway.targetGroupConfiguration.enabled | bool | `false` |  |
+| gateway.targetGroupConfiguration.labels | object | `{}` |  |
+| gateway.targetGroupConfiguration.routeConfigurations | list | `[]` |  |
+| gateway.targetGroupConfiguration.targetReference | object | `{}` |  |
 | gateway.tcpRoute.annotations | object | `{}` |  |
 | gateway.tcpRoute.enabled | bool | `false` |  |
 | gateway.tcpRoute.extraRoutes | object | `{}` |  |
 | gateway.tcpRoute.labels | object | `{}` |  |
 | gateway.tcpRoute.parentRefs | list | `[]` |  |
 | gateway.tcpRoute.rules | list | `[]` |  |
+| gateway.tlsRoute.annotations | object | `{}` |  |
+| gateway.tlsRoute.enabled | bool | `false` |  |
+| gateway.tlsRoute.extraRoutes | object | `{}` |  |
+| gateway.tlsRoute.hostnames | list | `[]` |  |
+| gateway.tlsRoute.labels | object | `{}` |  |
+| gateway.tlsRoute.parentRefs | list | `[]` |  |
+| gateway.tlsRoute.rules | list | `[]` |  |
+| gateway.udpRoute.annotations | object | `{}` |  |
+| gateway.udpRoute.enabled | bool | `false` |  |
+| gateway.udpRoute.extraRoutes | object | `{}` |  |
+| gateway.udpRoute.labels | object | `{}` |  |
+| gateway.udpRoute.parentRefs | list | `[]` |  |
+| gateway.udpRoute.rules | list | `[]` |  |
 | generic.branchName | string | `""` |  |
 | generic.environment | string | `""` |  |
 | global.image.registry | string | `""` |  |
@@ -401,33 +448,20 @@ Kubernetes: `>=1.32.0-0`
 | secret.stringData | object | `{}` |  |
 | secret.subPath | string | `""` |  |
 | secret.type | string | `"Opaque"` |  |
-| security.apparmor.enabled | bool | `false` |  |
-| security.apparmor.profile | string | `"runtime/default"` |  |
-| security.defaultContainerSecurityContext.allowPrivilegeEscalation | bool | `false` |  |
-| security.defaultContainerSecurityContext.capabilities.drop[0] | string | `"ALL"` |  |
-| security.defaultContainerSecurityContext.readOnlyRootFilesystem | bool | `true` |  |
-| security.defaultContainerSecurityContext.runAsNonRoot | bool | `true` |  |
-| security.defaultContainerSecurityContext.runAsUser | int | `1000` |  |
-| security.defaultContainerSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| security.defaultPodSecurityContext.fsGroup | int | `1000` |  |
-| security.defaultPodSecurityContext.fsGroupChangePolicy | string | `"OnRootMismatch"` |  |
-| security.defaultPodSecurityContext.runAsGroup | int | `1000` |  |
-| security.defaultPodSecurityContext.runAsNonRoot | bool | `true` |  |
-| security.defaultPodSecurityContext.runAsUser | int | `1000` |  |
-| security.defaultPodSecurityContext.seccompProfile.type | string | `"RuntimeDefault"` |  |
-| security.podSecurityStandards.annotations | object | `{}` |  |
-| security.podSecurityStandards.audit | string | `""` |  |
-| security.podSecurityStandards.enabled | bool | `false` |  |
-| security.podSecurityStandards.enforce | string | `""` |  |
-| security.podSecurityStandards.labels | object | `{}` |  |
-| security.podSecurityStandards.namespaceEnforcement | bool | `false` |  |
-| security.podSecurityStandards.warn | string | `""` |  |
 | securityContext | object | `{}` |  |
+| service.allocateLoadBalancerNodePorts | bool | `false` |  |
 | service.annotations | object | `{}` |  |
 | service.clusterIP | string | `""` |  |
 | service.enabled | bool | `true` |  |
+| service.externalIPs | list | `[]` |  |
+| service.externalName | string | `""` |  |
 | service.externalTrafficPolicy | string | `""` |  |
+| service.healthCheckNodePort | string | `""` |  |
+| service.internalTrafficPolicy | string | `""` |  |
+| service.ipFamilies | list | `[]` |  |
+| service.ipFamilyPolicy | string | `""` |  |
 | service.labels | object | `{}` |  |
+| service.loadBalancerClass | string | `""` |  |
 | service.loadBalancerIP | string | `""` |  |
 | service.loadBalancerSourceRanges | list | `[]` |  |
 | service.ports | list | `[]` |  |
@@ -469,4 +503,4 @@ Kubernetes: `>=1.32.0-0`
 | vpa.updatePolicy | object | `{}` |  |
 
 ----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v0.8.0](https://github.com/norwoodj/helm-docs/releases/v0.8.0)
+Autogenerated from chart metadata using [helm-docs v0.9.0](https://github.com/norwoodj/helm-docs/releases/v0.9.0)

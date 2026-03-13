@@ -5,6 +5,23 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-13
+
+### Changed
+
+- **Refactored workload templates to use composition hierarchy.** CronJob, Job, and Hook templates now delegate to `common.podTemplate` and `common.container` instead of reimplementing pod/container specs inline. This eliminates ~520 lines of duplicated code and ensures all workload types automatically inherit pod features (hostAliases, dnsPolicy, priorityClassName, topologySpreadConstraints, sidecar containers, etc.) and consistent security context defaults.
+- **Extracted Gateway API shared helpers.** Created `common.gatewayParentRefs`, `common.gatewayBackendRef`, and `common.gatewayFilters` helpers to deduplicate parentRef, backendRef, and filter rendering across all 5 route types (HTTPRoute, GRPCRoute, TCPRoute, TLSRoute, UDPRoute).
+
+### Added
+
+- `common.jobSpec` helper for shared Job spec fields (completions, parallelism, backoffLimit, activeDeadlineSeconds, ttlSecondsAfterFinished, completionMode, suspend, podFailurePolicy)
+- `common.gatewayParentRefs` helper for rendering parentRef list items across all route types
+- `common.gatewayBackendRef` helper for rendering backendRef fields across all route types
+- `common.gatewayFilters` helper for rendering filter lists (HTTPRoute and GRPCRoute)
+- `defaultRestartPolicy` parameter on `common.podTemplate` for caller-specified defaults
+- `mainContainer` parameter on `common.container` for main container behavior (envFrom, volumeMounts, commonEnvVars, service port fallback)
+- `containerName` parameter on `common.container` for explicit container name override
+
 ## [1.0.1] - 2026-02-20
 
 ### Fixed

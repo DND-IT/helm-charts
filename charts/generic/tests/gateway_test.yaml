@@ -1,18 +1,20 @@
 suite: test gateway api
 templates:
-  - networking/gateway/httproute.yaml
-  - networking/gateway/tcproute.yaml
-  - networking/gateway/referencegrant.yaml
+  - common.yaml
 tests:
+  # ==========================================================================
   # HTTPRoute tests
+  # ==========================================================================
   - it: should not render HTTPRoute by default
-    template: networking/gateway/httproute.yaml
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
   - it: should render HTTPRoute when enabled
-    template: networking/gateway/httproute.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1/HTTPRoute
@@ -22,16 +24,70 @@ tests:
         - name: http
           port: 80
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: HTTPRoute
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: metadata.name
           value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should not render HTTPRoute when CRD is missing
+    set:
+      gateway.httpRoute.enabled: true
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render HTTPRoute default rule when no rules specified
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].path.type
+          value: PathPrefix
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].matches[0].path.value
+          value: /
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 80
+        documentSelector:
+          path: kind
+          value: HTTPRoute
 
   - it: should configure parent references
-    template: networking/gateway/httproute.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1/HTTPRoute
@@ -49,18 +105,57 @@ tests:
       - equal:
           path: spec.parentRefs[0].name
           value: custom-gateway
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.parentRefs[0].namespace
           value: gateway-system
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.parentRefs[0].sectionName
           value: https
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.parentRefs[0].port
           value: 443
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure parentRef with group and kind
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.parentRefs:
+        - name: my-gateway
+          group: gateway.networking.k8s.io
+          kind: Gateway
+          namespace: infra
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].group
+          value: gateway.networking.k8s.io
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.parentRefs[0].kind
+          value: Gateway
+        documentSelector:
+          path: kind
+          value: HTTPRoute
 
   - it: should configure hostnames and rules
-    template: networking/gateway/httproute.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1/HTTPRoute
@@ -92,31 +187,489 @@ tests:
       - equal:
           path: spec.hostnames
           value: ["example.com", "*.example.com"]
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.rules[0].matches[0].path.type
           value: PathPrefix
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.rules[0].matches[0].path.value
           value: /api
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.rules[0].matches[0].method
           value: GET
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.rules[0].filters[0].type
           value: RequestHeaderModifier
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestHeaderModifier.set[0].name
+          value: x-forwarded-proto
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.rules[0].backendRefs[0].name
           value: api-service
+        documentSelector:
+          path: kind
+          value: HTTPRoute
       - equal:
           path: spec.rules[0].backendRefs[0].weight
           value: 100
+        documentSelector:
+          path: kind
+          value: HTTPRoute
 
-  - it: should create extra HTTPRoutes
-    template: networking/gateway/httproute.yaml
+  - it: should configure header matching
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1/HTTPRoute
     set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /
+              headers:
+                - type: Exact
+                  name: x-env
+                  value: canary
+          backendRefs:
+            - name: canary-svc
+              port: 80
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].headers[0].type
+          value: Exact
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].matches[0].headers[0].name
+          value: x-env
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].matches[0].headers[0].value
+          value: canary
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure query param matching
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /
+              queryParams:
+                - type: Exact
+                  name: version
+                  value: "2"
+          backendRefs:
+            - name: v2-svc
+              port: 80
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].matches[0].queryParams[0].type
+          value: Exact
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].matches[0].queryParams[0].name
+          value: version
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure ResponseHeaderModifier filter
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /
+          filters:
+            - type: ResponseHeaderModifier
+              responseHeaderModifier:
+                set:
+                  - name: x-frame-options
+                    value: DENY
+                add:
+                  - name: x-request-id
+                    value: abc123
+                remove:
+                  - x-powered-by
+          backendRefs:
+            - name: my-svc
+              port: 80
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: ResponseHeaderModifier
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].responseHeaderModifier.set[0].name
+          value: x-frame-options
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].responseHeaderModifier.add[0].name
+          value: x-request-id
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].responseHeaderModifier.remove[0]
+          value: x-powered-by
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure RequestRedirect filter
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /old
+          filters:
+            - type: RequestRedirect
+              requestRedirect:
+                scheme: https
+                hostname: new.example.com
+                port: 443
+                statusCode: 301
+                path:
+                  type: ReplaceFullPath
+                  replaceFullPath: /new
+          backendRefs:
+            - name: my-svc
+              port: 80
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: RequestRedirect
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.scheme
+          value: https
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.hostname
+          value: new.example.com
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.port
+          value: 443
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.statusCode
+          value: 301
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.path.type
+          value: ReplaceFullPath
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestRedirect.path.replaceFullPath
+          value: /new
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure URLRewrite filter
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /api/v1
+          filters:
+            - type: URLRewrite
+              urlRewrite:
+                hostname: backend.internal
+                path:
+                  type: ReplacePrefixMatch
+                  replacePrefixMatch: /v1
+          backendRefs:
+            - name: my-svc
+              port: 80
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: URLRewrite
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.hostname
+          value: backend.internal
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path.type
+          value: ReplacePrefixMatch
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].urlRewrite.path.replacePrefixMatch
+          value: /v1
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure RequestMirror filter
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /
+          filters:
+            - type: RequestMirror
+              requestMirror:
+                backendRef:
+                  name: mirror-svc
+                  port: 8080
+                  namespace: mirror-ns
+          backendRefs:
+            - name: my-svc
+              port: 80
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: RequestMirror
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestMirror.backendRef.name
+          value: mirror-svc
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestMirror.backendRef.port
+          value: 8080
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestMirror.backendRef.namespace
+          value: mirror-ns
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure ExtensionRef filter
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /
+          filters:
+            - type: ExtensionRef
+              extensionRef:
+                group: custom.example.com
+                kind: RateLimitPolicy
+                name: my-rate-limit
+          backendRefs:
+            - name: my-svc
+              port: 80
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: ExtensionRef
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].extensionRef.group
+          value: custom.example.com
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].extensionRef.kind
+          value: RateLimitPolicy
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].filters[0].extensionRef.name
+          value: my-rate-limit
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure backendRef with kind namespace and weight
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.rules:
+        - matches:
+            - path:
+                type: PathPrefix
+                value: /
+          backendRefs:
+            - name: external-svc
+              kind: Service
+              namespace: other-ns
+              port: 443
+              weight: 50
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].kind
+          value: Service
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].namespace
+          value: other-ns
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: external-svc
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 443
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].weight
+          value: 50
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should configure HTTPRoute labels and annotations
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      gateway.httpRoute.enabled: true
+      gateway.httpRoute.labels:
+        custom-label: my-value
+      gateway.httpRoute.annotations:
+        custom-annotation: my-annotation
+      service.ports:
+        - name: http
+          port: 80
+    asserts:
+      - equal:
+          path: metadata.labels.custom-label
+          value: my-value
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: metadata.annotations.custom-annotation
+          value: my-annotation
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should create extra HTTPRoutes
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
       gateway.httpRoute.enabled: true
       gateway.httpRoute.extraRoutes:
         api:
@@ -135,26 +688,368 @@ tests:
         - name: http
           port: 80
     asserts:
-      - hasDocuments:
-          count: 2
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME
       - equal:
           path: metadata.name
           value: RELEASE-NAME-api
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-api
       - equal:
           path: spec.hostnames[0]
           value: api.example.com
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-api
 
+  # ==========================================================================
+  # GRPCRoute tests
+  # ==========================================================================
+  - it: should not render GRPCRoute by default
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render GRPCRoute when enabled
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/GRPCRoute
+    set:
+      gateway.grpcRoute.enabled: true
+      service.ports:
+        - name: grpc
+          port: 50051
+    asserts:
+      - isKind:
+          of: GRPCRoute
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+
+  - it: should not render GRPCRoute when CRD is missing
+    set:
+      gateway.grpcRoute.enabled: true
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render GRPCRoute default rule when no rules specified
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/GRPCRoute
+    set:
+      gateway.grpcRoute.enabled: true
+      service.ports:
+        - name: grpc
+          port: 50051
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 50051
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+
+  - it: should configure GRPCRoute parentRefs
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/GRPCRoute
+    set:
+      gateway.grpcRoute.enabled: true
+      gateway.grpcRoute.parentRefs:
+        - name: grpc-gateway
+          namespace: gateway-system
+          sectionName: grpc
+          port: 50051
+      service.ports:
+        - name: grpc
+          port: 50051
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: grpc-gateway
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.parentRefs[0].namespace
+          value: gateway-system
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: grpc
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.parentRefs[0].port
+          value: 50051
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+
+  - it: should configure GRPCRoute with method matching
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/GRPCRoute
+    set:
+      gateway.grpcRoute.enabled: true
+      gateway.grpcRoute.hostnames:
+        - grpc.example.com
+      gateway.grpcRoute.rules:
+        - matches:
+            - method:
+                type: Exact
+                service: myservice.v1.MyService
+                method: GetItem
+              headers:
+                - type: Exact
+                  name: x-tenant
+                  value: acme
+          backendRefs:
+            - name: grpc-svc
+              port: 50051
+      service.ports:
+        - name: grpc
+          port: 50051
+    asserts:
+      - equal:
+          path: spec.hostnames[0]
+          value: grpc.example.com
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].matches[0].method.type
+          value: Exact
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].matches[0].method.service
+          value: myservice.v1.MyService
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].matches[0].method.method
+          value: GetItem
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].matches[0].headers[0].name
+          value: x-tenant
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+
+  - it: should configure GRPCRoute filters
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/GRPCRoute
+    set:
+      gateway.grpcRoute.enabled: true
+      gateway.grpcRoute.rules:
+        - filters:
+            - type: RequestHeaderModifier
+              requestHeaderModifier:
+                set:
+                  - name: x-grpc-env
+                    value: staging
+                add:
+                  - name: x-trace
+                    value: enabled
+                remove:
+                  - x-debug
+          backendRefs:
+            - name: grpc-svc
+              port: 50051
+      service.ports:
+        - name: grpc
+          port: 50051
+    asserts:
+      - equal:
+          path: spec.rules[0].filters[0].type
+          value: RequestHeaderModifier
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestHeaderModifier.set[0].name
+          value: x-grpc-env
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestHeaderModifier.add[0].name
+          value: x-trace
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].filters[0].requestHeaderModifier.remove[0]
+          value: x-debug
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+
+  - it: should configure GRPCRoute backendRef with all fields
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/GRPCRoute
+    set:
+      gateway.grpcRoute.enabled: true
+      gateway.grpcRoute.rules:
+        - backendRefs:
+            - name: grpc-svc
+              group: ""
+              kind: Service
+              namespace: backend-ns
+              port: 50051
+              weight: 80
+      service.ports:
+        - name: grpc
+          port: 50051
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: grpc-svc
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].namespace
+          value: backend-ns
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 50051
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].weight
+          value: 80
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+
+  - it: should configure GRPCRoute labels and annotations
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/GRPCRoute
+    set:
+      gateway.grpcRoute.enabled: true
+      gateway.grpcRoute.labels:
+        grpc-label: value
+      gateway.grpcRoute.annotations:
+        grpc-annotation: value
+      service.ports:
+        - name: grpc
+          port: 50051
+    asserts:
+      - equal:
+          path: metadata.labels.grpc-label
+          value: value
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+      - equal:
+          path: metadata.annotations.grpc-annotation
+          value: value
+        documentSelector:
+          path: kind
+          value: GRPCRoute
+
+  - it: should create extra GRPCRoutes
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/GRPCRoute
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+      gateway.grpcRoute.enabled: true
+      gateway.grpcRoute.extraRoutes:
+        internal:
+          enabled: true
+          hostnames:
+            - grpc.internal.example.com
+          rules:
+            - backendRefs:
+                - name: internal-grpc-svc
+                  port: 50051
+      service.ports:
+        - name: grpc
+          port: 50051
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-internal
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-internal
+      - equal:
+          path: spec.hostnames[0]
+          value: grpc.internal.example.com
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-internal
+
+  # ==========================================================================
   # TCPRoute tests
+  # ==========================================================================
   - it: should not render TCPRoute by default
-    template: networking/gateway/tcproute.yaml
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
   - it: should render TCPRoute when enabled
-    template: networking/gateway/tcproute.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1alpha2/TCPRoute
@@ -164,16 +1059,35 @@ tests:
         - name: tcp
           port: 9000
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: TCPRoute
+        documentSelector:
+          path: kind
+          value: TCPRoute
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1alpha2
+        documentSelector:
+          path: kind
+          value: TCPRoute
       - equal:
           path: metadata.name
           value: RELEASE-NAME-tcp
+        documentSelector:
+          path: kind
+          value: TCPRoute
+
+  - it: should not render TCPRoute when CRD is missing
+    set:
+      gateway.tcpRoute.enabled: true
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
 
   - it: should configure default TCP backend
-    template: networking/gateway/tcproute.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1alpha2/TCPRoute
@@ -186,12 +1100,57 @@ tests:
       - equal:
           path: spec.rules[0].backendRefs[0].name
           value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: TCPRoute
       - equal:
           path: spec.rules[0].backendRefs[0].port
           value: 9000
+        documentSelector:
+          path: kind
+          value: TCPRoute
+
+  - it: should configure TCPRoute parentRefs
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TCPRoute
+    set:
+      gateway.tcpRoute.enabled: true
+      gateway.tcpRoute.parentRefs:
+        - name: tcp-gateway
+          namespace: gateway-system
+          sectionName: tcp-listener
+          port: 9000
+      service.ports:
+        - name: tcp
+          port: 9000
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: tcp-gateway
+        documentSelector:
+          path: kind
+          value: TCPRoute
+      - equal:
+          path: spec.parentRefs[0].namespace
+          value: gateway-system
+        documentSelector:
+          path: kind
+          value: TCPRoute
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: tcp-listener
+        documentSelector:
+          path: kind
+          value: TCPRoute
+      - equal:
+          path: spec.parentRefs[0].port
+          value: 9000
+        documentSelector:
+          path: kind
+          value: TCPRoute
 
   - it: should configure custom TCP rules
-    template: networking/gateway/tcproute.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1alpha2/TCPRoute
@@ -212,15 +1171,50 @@ tests:
       - equal:
           path: spec.rules[0].backendRefs[0].name
           value: tcp-service
+        documentSelector:
+          path: kind
+          value: TCPRoute
       - equal:
           path: spec.rules[0].backendRefs[0].weight
           value: 90
+        documentSelector:
+          path: kind
+          value: TCPRoute
       - equal:
           path: spec.rules[0].backendRefs[1].name
           value: tcp-backup
+        documentSelector:
+          path: kind
+          value: TCPRoute
+
+  - it: should configure TCPRoute labels and annotations
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TCPRoute
+    set:
+      gateway.tcpRoute.enabled: true
+      gateway.tcpRoute.labels:
+        tcp-label: value
+      gateway.tcpRoute.annotations:
+        tcp-annotation: value
+      service.ports:
+        - name: tcp
+          port: 9000
+    asserts:
+      - equal:
+          path: metadata.labels.tcp-label
+          value: value
+        documentSelector:
+          path: kind
+          value: TCPRoute
+      - equal:
+          path: metadata.annotations.tcp-annotation
+          value: value
+        documentSelector:
+          path: kind
+          value: TCPRoute
 
   - it: should create extra TCPRoutes
-    template: networking/gateway/tcproute.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1alpha2/TCPRoute
@@ -238,26 +1232,935 @@ tests:
         - name: tcp
           port: 9000
     asserts:
-      - hasDocuments:
-          count: 2
       - equal:
           path: metadata.name
           value: RELEASE-NAME-database-tcp
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-database-tcp
       - equal:
           path: spec.rules[0].backendRefs[0].name
           value: postgres-primary
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-database-tcp
 
+  # ==========================================================================
+  # TLSRoute tests
+  # ==========================================================================
+  - it: should not render TLSRoute by default
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render TLSRoute when enabled
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TLSRoute
+    set:
+      gateway.tlsRoute.enabled: true
+      service.ports:
+        - name: tls
+          port: 443
+    asserts:
+      - isKind:
+          of: TLSRoute
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1alpha2
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-tls
+        documentSelector:
+          path: kind
+          value: TLSRoute
+
+  - it: should not render TLSRoute when CRD is missing
+    set:
+      gateway.tlsRoute.enabled: true
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render TLSRoute default rule when no rules specified
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TLSRoute
+    set:
+      gateway.tlsRoute.enabled: true
+      service.ports:
+        - name: tls
+          port: 443
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 443
+        documentSelector:
+          path: kind
+          value: TLSRoute
+
+  - it: should configure TLSRoute parentRefs
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TLSRoute
+    set:
+      gateway.tlsRoute.enabled: true
+      gateway.tlsRoute.parentRefs:
+        - name: tls-gateway
+          namespace: gateway-system
+          sectionName: tls-listener
+      service.ports:
+        - name: tls
+          port: 443
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: tls-gateway
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: spec.parentRefs[0].namespace
+          value: gateway-system
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: tls-listener
+        documentSelector:
+          path: kind
+          value: TLSRoute
+
+  - it: should configure TLSRoute hostnames
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TLSRoute
+    set:
+      gateway.tlsRoute.enabled: true
+      gateway.tlsRoute.hostnames:
+        - secure.example.com
+        - "*.secure.example.com"
+      service.ports:
+        - name: tls
+          port: 443
+    asserts:
+      - equal:
+          path: spec.hostnames
+          value:
+            - secure.example.com
+            - "*.secure.example.com"
+        documentSelector:
+          path: kind
+          value: TLSRoute
+
+  - it: should configure custom TLS rules with backendRef fields
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TLSRoute
+    set:
+      gateway.tlsRoute.enabled: true
+      gateway.tlsRoute.rules:
+        - backendRefs:
+            - name: tls-svc
+              namespace: backend-ns
+              port: 443
+              weight: 100
+      service.ports:
+        - name: tls
+          port: 443
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: tls-svc
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].namespace
+          value: backend-ns
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 443
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].weight
+          value: 100
+        documentSelector:
+          path: kind
+          value: TLSRoute
+
+  - it: should configure TLSRoute labels and annotations
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TLSRoute
+    set:
+      gateway.tlsRoute.enabled: true
+      gateway.tlsRoute.labels:
+        tls-label: value
+      gateway.tlsRoute.annotations:
+        tls-annotation: value
+      service.ports:
+        - name: tls
+          port: 443
+    asserts:
+      - equal:
+          path: metadata.labels.tls-label
+          value: value
+        documentSelector:
+          path: kind
+          value: TLSRoute
+      - equal:
+          path: metadata.annotations.tls-annotation
+          value: value
+        documentSelector:
+          path: kind
+          value: TLSRoute
+
+  - it: should create extra TLSRoutes
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/TLSRoute
+    set:
+      gateway.tlsRoute.enabled: true
+      gateway.tlsRoute.extraRoutes:
+        internal:
+          enabled: true
+          hostnames:
+            - internal.example.com
+          rules:
+            - backendRefs:
+                - name: internal-tls-svc
+                  port: 443
+      service.ports:
+        - name: tls
+          port: 443
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-internal-tls
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-internal-tls
+      - equal:
+          path: spec.hostnames[0]
+          value: internal.example.com
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-internal-tls
+
+  # ==========================================================================
+  # UDPRoute tests
+  # ==========================================================================
+  - it: should not render UDPRoute by default
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render UDPRoute when enabled
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/UDPRoute
+    set:
+      gateway.udpRoute.enabled: true
+      service.ports:
+        - name: udp
+          port: 5353
+    asserts:
+      - isKind:
+          of: UDPRoute
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1alpha2
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-udp
+        documentSelector:
+          path: kind
+          value: UDPRoute
+
+  - it: should not render UDPRoute when CRD is missing
+    set:
+      gateway.udpRoute.enabled: true
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render UDPRoute default rule when no rules specified
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/UDPRoute
+    set:
+      gateway.udpRoute.enabled: true
+      service.ports:
+        - name: udp
+          port: 5353
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].port
+          value: 5353
+        documentSelector:
+          path: kind
+          value: UDPRoute
+
+  - it: should configure UDPRoute parentRefs
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/UDPRoute
+    set:
+      gateway.udpRoute.enabled: true
+      gateway.udpRoute.parentRefs:
+        - name: udp-gateway
+          namespace: gateway-system
+          sectionName: udp-listener
+          port: 5353
+      service.ports:
+        - name: udp
+          port: 5353
+    asserts:
+      - equal:
+          path: spec.parentRefs[0].name
+          value: udp-gateway
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: spec.parentRefs[0].namespace
+          value: gateway-system
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: spec.parentRefs[0].sectionName
+          value: udp-listener
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: spec.parentRefs[0].port
+          value: 5353
+        documentSelector:
+          path: kind
+          value: UDPRoute
+
+  - it: should configure custom UDP rules with multiple backendRefs
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/UDPRoute
+    set:
+      gateway.udpRoute.enabled: true
+      gateway.udpRoute.rules:
+        - backendRefs:
+            - name: dns-primary
+              port: 53
+              weight: 80
+            - name: dns-secondary
+              port: 53
+              weight: 20
+      service.ports:
+        - name: udp
+          port: 5353
+    asserts:
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: dns-primary
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[0].weight
+          value: 80
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[1].name
+          value: dns-secondary
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: spec.rules[0].backendRefs[1].weight
+          value: 20
+        documentSelector:
+          path: kind
+          value: UDPRoute
+
+  - it: should configure UDPRoute labels and annotations
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/UDPRoute
+    set:
+      gateway.udpRoute.enabled: true
+      gateway.udpRoute.labels:
+        udp-label: value
+      gateway.udpRoute.annotations:
+        udp-annotation: value
+      service.ports:
+        - name: udp
+          port: 5353
+    asserts:
+      - equal:
+          path: metadata.labels.udp-label
+          value: value
+        documentSelector:
+          path: kind
+          value: UDPRoute
+      - equal:
+          path: metadata.annotations.udp-annotation
+          value: value
+        documentSelector:
+          path: kind
+          value: UDPRoute
+
+  - it: should create extra UDPRoutes
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1alpha2/UDPRoute
+    set:
+      gateway.udpRoute.enabled: true
+      gateway.udpRoute.extraRoutes:
+        dns:
+          enabled: true
+          rules:
+            - backendRefs:
+                - name: coredns
+                  port: 53
+      service.ports:
+        - name: udp
+          port: 5353
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-dns-udp
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-dns-udp
+      - equal:
+          path: spec.rules[0].backendRefs[0].name
+          value: coredns
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-dns-udp
+
+  # ==========================================================================
+  # LoadBalancerConfiguration tests
+  # ==========================================================================
+  - it: should not render LoadBalancerConfiguration by default
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render LoadBalancerConfiguration when enabled
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
+    set:
+      gateway.loadBalancerConfiguration.enabled: true
+    asserts:
+      - isKind:
+          of: LoadBalancerConfiguration
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: apiVersion
+          value: gateway.k8s.aws/v1beta1
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+
+  - it: should not render LoadBalancerConfiguration when CRD is missing
+    set:
+      gateway.loadBalancerConfiguration.enabled: true
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should configure LoadBalancerConfiguration scheme and ipAddressType
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
+    set:
+      gateway.loadBalancerConfiguration.enabled: true
+      gateway.loadBalancerConfiguration.scheme: internet-facing
+      gateway.loadBalancerConfiguration.ipAddressType: dualstack
+    asserts:
+      - equal:
+          path: spec.scheme
+          value: internet-facing
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.ipAddressType
+          value: dualstack
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+
+  - it: should configure LoadBalancerConfiguration with all options
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
+    set:
+      gateway.loadBalancerConfiguration.enabled: true
+      gateway.loadBalancerConfiguration.loadBalancerName: my-alb
+      gateway.loadBalancerConfiguration.scheme: internal
+      gateway.loadBalancerConfiguration.ipAddressType: ipv4
+      gateway.loadBalancerConfiguration.loadBalancerSubnets:
+        - subnet-abc123
+        - subnet-def456
+      gateway.loadBalancerConfiguration.securityGroups:
+        - sg-111222
+      gateway.loadBalancerConfiguration.sourceRanges:
+        - 10.0.0.0/8
+      gateway.loadBalancerConfiguration.loadBalancerAttributes:
+        - key: idle_timeout.timeout_seconds
+          value: "60"
+      gateway.loadBalancerConfiguration.tags:
+        Environment: production
+        Team: platform
+    asserts:
+      - equal:
+          path: spec.loadBalancerName
+          value: my-alb
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.scheme
+          value: internal
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.loadBalancerSubnets
+          value:
+            - subnet-abc123
+            - subnet-def456
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.securityGroups
+          value:
+            - sg-111222
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.sourceRanges
+          value:
+            - 10.0.0.0/8
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.loadBalancerAttributes[0].key
+          value: idle_timeout.timeout_seconds
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.tags.Environment
+          value: production
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+
+  - it: should configure LoadBalancerConfiguration labels and annotations
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
+    set:
+      gateway.loadBalancerConfiguration.enabled: true
+      gateway.loadBalancerConfiguration.labels:
+        lb-label: value
+      gateway.loadBalancerConfiguration.annotations:
+        lb-annotation: value
+    asserts:
+      - equal:
+          path: metadata.labels.lb-label
+          value: value
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: metadata.annotations.lb-annotation
+          value: value
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+
+  - it: should configure LoadBalancerConfiguration WAF and Shield
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
+    set:
+      gateway.loadBalancerConfiguration.enabled: true
+      gateway.loadBalancerConfiguration.wafV2:
+        webACLARN: arn:aws:wafv2:us-east-1:123456789:regional/webacl/my-acl/abc
+      gateway.loadBalancerConfiguration.shieldConfiguration:
+        enabled: true
+    asserts:
+      - equal:
+          path: spec.wafV2.webACLARN
+          value: arn:aws:wafv2:us-east-1:123456789:regional/webacl/my-acl/abc
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.shieldConfiguration.enabled
+          value: true
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+
+  # ==========================================================================
+  # TargetGroupConfiguration tests
+  # ==========================================================================
+  - it: should not render TargetGroupConfiguration by default
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render TargetGroupConfiguration when enabled
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+    set:
+      gateway.targetGroupConfiguration.enabled: true
+    asserts:
+      - isKind:
+          of: TargetGroupConfiguration
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: apiVersion
+          value: gateway.k8s.aws/v1beta1
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+
+  - it: should not render TargetGroupConfiguration when CRD is missing
+    set:
+      gateway.targetGroupConfiguration.enabled: true
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should configure TargetGroupConfiguration defaultConfiguration
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+    set:
+      gateway.targetGroupConfiguration.enabled: true
+      gateway.targetGroupConfiguration.defaultConfiguration:
+        targetType: ip
+        protocolVersion: HTTP1
+        healthCheckConfig:
+          healthCheckPath: /readyz
+          healthCheckPort: "8080"
+          healthCheckProtocol: HTTP
+          healthCheckIntervalSeconds: 15
+          healthCheckTimeoutSeconds: 5
+          healthyThresholdCount: 2
+          unhealthyThresholdCount: 3
+    asserts:
+      - equal:
+          path: spec.defaultConfiguration.targetType
+          value: ip
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.protocolVersion
+          value: HTTP1
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.healthCheckConfig.healthCheckPath
+          value: /readyz
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.healthCheckConfig.healthCheckPort
+          value: "8080"
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+
+  - it: should configure TargetGroupConfiguration targetReference
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+    set:
+      gateway.targetGroupConfiguration.enabled: true
+      gateway.targetGroupConfiguration.targetReference:
+        name: my-service
+        group: ""
+        kind: Service
+    asserts:
+      - equal:
+          path: spec.targetReference.name
+          value: my-service
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.targetReference.kind
+          value: Service
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+
+  - it: should configure TargetGroupConfiguration labels and annotations
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+    set:
+      gateway.targetGroupConfiguration.enabled: true
+      gateway.targetGroupConfiguration.labels:
+        tg-label: value
+      gateway.targetGroupConfiguration.annotations:
+        tg-annotation: value
+    asserts:
+      - equal:
+          path: metadata.labels.tg-label
+          value: value
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: metadata.annotations.tg-annotation
+          value: value
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+
+  # ==========================================================================
+  # ListenerRuleConfiguration tests
+  # ==========================================================================
+  - it: should not render ListenerRuleConfiguration by default
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ListenerRuleConfiguration when enabled
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/ListenerRuleConfiguration
+    set:
+      gateway.listenerRuleConfiguration.enabled: true
+      gateway.listenerRuleConfiguration.targetRef:
+        name: my-route
+    asserts:
+      - isKind:
+          of: ListenerRuleConfiguration
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+      - equal:
+          path: apiVersion
+          value: gateway.k8s.aws/v1beta1
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+
+  - it: should not render ListenerRuleConfiguration when CRD is missing
+    set:
+      gateway.listenerRuleConfiguration.enabled: true
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should configure ListenerRuleConfiguration with all fields
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/ListenerRuleConfiguration
+    set:
+      gateway.listenerRuleConfiguration.enabled: true
+      gateway.listenerRuleConfiguration.targetRef:
+        name: my-httproute
+        namespace: app-ns
+        group: gateway.networking.k8s.io
+        kind: HTTPRoute
+      gateway.listenerRuleConfiguration.conditions:
+        - field: path-pattern
+          pathPatternConfig:
+            values:
+              - /api/*
+      gateway.listenerRuleConfiguration.actions:
+        - type: forward
+          forwardConfig:
+            targetGroups:
+              - targetGroupARN: arn:aws:elasticloadbalancing:us-east-1:123456789:targetgroup/my-tg/abc
+                weight: 100
+      gateway.listenerRuleConfiguration.tags:
+        Environment: production
+    asserts:
+      - equal:
+          path: spec.targetRef.name
+          value: my-httproute
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+      - equal:
+          path: spec.targetRef.namespace
+          value: app-ns
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+      - equal:
+          path: spec.targetRef.group
+          value: gateway.networking.k8s.io
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+      - equal:
+          path: spec.targetRef.kind
+          value: HTTPRoute
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+      - equal:
+          path: spec.conditions[0].field
+          value: path-pattern
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+      - equal:
+          path: spec.tags.Environment
+          value: production
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+
+  - it: should configure ListenerRuleConfiguration labels and annotations
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/ListenerRuleConfiguration
+    set:
+      gateway.listenerRuleConfiguration.enabled: true
+      gateway.listenerRuleConfiguration.targetRef:
+        name: my-route
+      gateway.listenerRuleConfiguration.labels:
+        lr-label: value
+      gateway.listenerRuleConfiguration.annotations:
+        lr-annotation: value
+    asserts:
+      - equal:
+          path: metadata.labels.lr-label
+          value: value
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+      - equal:
+          path: metadata.annotations.lr-annotation
+          value: value
+        documentSelector:
+          path: kind
+          value: ListenerRuleConfiguration
+
+  # ==========================================================================
   # ReferenceGrant tests
+  # ==========================================================================
   - it: should not render ReferenceGrant by default
-    template: networking/gateway/referencegrant.yaml
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
   - it: should render ReferenceGrant when enabled
-    template: networking/gateway/referencegrant.yaml
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1beta1/ReferenceGrant
@@ -272,32 +2175,93 @@ tests:
           kind: Service
           name: backend-service
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: ReferenceGrant
+        documentSelector:
+          path: kind
+          value: ReferenceGrant
       - equal:
           path: spec.from[0].group
           value: gateway.networking.k8s.io
+        documentSelector:
+          path: kind
+          value: ReferenceGrant
       - equal:
           path: spec.from[0].kind
           value: Gateway
+        documentSelector:
+          path: kind
+          value: ReferenceGrant
       - equal:
           path: spec.from[0].namespace
           value: gateway-system
+        documentSelector:
+          path: kind
+          value: ReferenceGrant
       - equal:
           path: spec.to[0].group
           value: ""
+        documentSelector:
+          path: kind
+          value: ReferenceGrant
       - equal:
           path: spec.to[0].kind
           value: Service
+        documentSelector:
+          path: kind
+          value: ReferenceGrant
 
-  - it: should create extra ReferenceGrants
-    template: networking/gateway/referencegrant.yaml
+  - it: should not render ReferenceGrant when CRD is missing
+    set:
+      gateway.referenceGrant.enabled: true
+      gateway.referenceGrant.from:
+        - kind: Gateway
+      gateway.referenceGrant.to:
+        - kind: Service
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should configure ReferenceGrant labels and annotations
     capabilities:
       apiVersions:
         - gateway.networking.k8s.io/v1beta1/ReferenceGrant
     set:
+      gateway.referenceGrant.enabled: true
+      gateway.referenceGrant.labels:
+        rg-label: value
+      gateway.referenceGrant.annotations:
+        rg-annotation: value
+      gateway.referenceGrant.from:
+        - kind: Gateway
+          namespace: gw-ns
+      gateway.referenceGrant.to:
+        - kind: Service
+    asserts:
+      - equal:
+          path: metadata.labels.rg-label
+          value: value
+        documentSelector:
+          path: kind
+          value: ReferenceGrant
+      - equal:
+          path: metadata.annotations.rg-annotation
+          value: value
+        documentSelector:
+          path: kind
+          value: ReferenceGrant
+
+  - it: should create extra ReferenceGrants
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1beta1/ReferenceGrant
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
       gateway.referenceGrant.enabled: true
       gateway.referenceGrant.from:
         - group: gateway.networking.k8s.io
@@ -316,9 +2280,15 @@ tests:
             - group: ""
               kind: Secret
     asserts:
-      - hasDocuments:
-          count: 2
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME
       - equal:
           path: metadata.name
           value: RELEASE-NAME-secrets
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-secrets

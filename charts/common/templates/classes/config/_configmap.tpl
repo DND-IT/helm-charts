@@ -56,15 +56,38 @@ metadata:
   annotations:
     {{- include "common.annotations" (dict "context" $ "annotations" $configMap.annotations) | nindent 4 }}
   {{- end }}
-{{- if or $configMap.data $configMap.binaryData }}
-{{- with $configMap.data }}
+{{- if or $configMap.data $configMap.binaryData $configMap.files }}
+{{- if or $configMap.data $configMap.files }}
 data:
+  {{- with $configMap.data }}
   {{- range $key, $value := . }}
   {{- if kindIs "string" $value }}
   {{ $key }}: {{ include "common.tplValue" (dict "value" $value "context" $) | quote }}
   {{- else }}
   {{ $key }}: |
     {{- include "common.tplValue" (dict "value" ($value | toYaml) "context" $) | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- with $configMap.files }}
+  {{- $files := . }}
+  {{- if kindIs "slice" $files }}
+  {{- range $files }}
+  {{- if .name }}
+  {{ .name }}: |
+    {{- .content | nindent 4 }}
+  {{- else }}
+  {{- range $path := .paths }}
+  {{ base $path }}: |
+    {{- $.Files.Get $path | nindent 4 }}
+  {{- end }}
+  {{- end }}
+  {{- end }}
+  {{- else }}
+  {{- range $fileName, $filePath := $files }}
+  {{ $fileName }}: |
+    {{- $.Files.Get $filePath | nindent 4 }}
+  {{- end }}
   {{- end }}
   {{- end }}
 {{- end }}

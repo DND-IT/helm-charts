@@ -3,7 +3,7 @@ Gateway API ReferenceGrant resource template.
 Usage: {{- include "common.referenceGrant" . }}
 */}}
 {{- define "common.referenceGrant" -}}
-{{- if and .Values.gateway.referenceGrant.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1/ReferenceGrant") }}
+{{- if and .Values.gateway.referenceGrant .Values.gateway.referenceGrant.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1/ReferenceGrant") }}
 apiVersion: gateway.networking.k8s.io/v1beta1
 kind: ReferenceGrant
 metadata:
@@ -44,7 +44,7 @@ Extra ReferenceGrants resource template.
 Usage: {{- include "common.extraReferenceGrants" . }}
 */}}
 {{- define "common.extraReferenceGrants" -}}
-{{- if and .Values.gateway.referenceGrant.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1/ReferenceGrant") }}
+{{- if and .Values.gateway.referenceGrant .Values.gateway.referenceGrant.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1beta1/ReferenceGrant") }}
 {{- if .Values.gateway.referenceGrant.extraGrants }}
 {{- range $name, $grant := .Values.gateway.referenceGrant.extraGrants }}
 {{- if $grant.enabled | default true }}

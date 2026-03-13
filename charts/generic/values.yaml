@@ -1,27 +1,18 @@
 # Default values for generic chart
 # This is a YAML-formatted file with secure defaults
+# All values not specified here inherit from the common library chart
 
 # ============================================================================
 # GLOBAL CONFIGURATION
-# Applied to all resources in the chart
 # ============================================================================
 
-# Global values - passed down to subcharts following Helm convention
 global:
   image:
     # Container registry prepended to all images that don't specify one
-    # Only applies to images without a registry already in the repository
-    # Overridden by image.registry and per-container registry settings
     registry: ""
 
 # Common labels and annotations applied to all resources
 # Supports Helm template syntax for dynamic values
-# Example:
-# commonLabels:
-#   app.kubernetes.io/version: "{{ .Values.image.tag }}"
-#   environment: "{{ .Values.generic.environment }}"
-# commonAnnotations:
-#   deployment.version: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
 commonLabels: {}
 commonAnnotations: {}
 
@@ -35,102 +26,46 @@ nameOverride: ""
 fullnameOverride: ""
 namespaceOverride: ""
 
-# Default security contexts (can be overridden per workload)
-security:
-  # Default pod security context applied to all workloads
-  defaultPodSecurityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    runAsGroup: 1000
-    fsGroup: 1000
-    fsGroupChangePolicy: OnRootMismatch
-    seccompProfile:
-      type: RuntimeDefault
-
-  # Default container security context applied to all containers
-  defaultContainerSecurityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
-    allowPrivilegeEscalation: false
-    readOnlyRootFilesystem: true
-    capabilities:
-      drop:
-      - ALL
-    seccompProfile:
-      type: RuntimeDefault
-
-  # Pod Security Standards (PSS) - Kubernetes native
-  podSecurityStandards:
-    enabled: false
-    # Pod Security Standard levels: privileged, baseline, restricted
-    enforce: ""  # restricted, baseline, privileged
-    audit: ""    # restricted, baseline, privileged
-    warn: ""     # restricted, baseline, privileged
-    labels: {}
-    annotations: {}
-    # Namespace-level enforcement (creates namespace if not exists)
-    namespaceEnforcement: false
-
-  # AppArmor profile
-  apparmor:
-    enabled: false
-    profile: runtime/default
-
 # ============================================================================
-# PRIMARY DEPLOYMENT
-# Main deployment configuration at root level for easy access
+# IMAGE CONFIGURATION
 # ============================================================================
 
-# Enable/disable the primary deployment
+image:
+  registry: ""
+  repository: registry.k8s.io/pause
+  tag: "3.10"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# ============================================================================
+# DEPLOYMENT CONFIGURATION
+# ============================================================================
+
 deploymentEnabled: true
 replicas: 1
 revisionHistoryLimit: 2
+progressDeadlineSeconds: 600
 
-# Deployment strategy
 strategy:
   type: RollingUpdate
   rollingUpdate:
     maxUnavailable: 25%  # @schema type:[string, integer]
     maxSurge: 25%  # @schema type:[string, integer]
-progressDeadlineSeconds: 600
 
-# Image configuration
-image:
-  # Optional registry override - useful for private registries or mirrors
-  # If set, will replace any existing registry in repository
-  # Example: "my-registry.com" or "my-registry.com:5000"
-  registry: ""
+# ============================================================================
+# CONTAINER CONFIGURATION
+# ============================================================================
 
-  # Image repository - can include registry or just image name
-  # Examples:
-  #   - "nginx" (uses default registry)
-  #   - "docker.io/library/nginx" (explicit registry, will be replaced if image.registry is set)
-  repository: registry.k8s.io/pause
-
-  tag: "3.10"
-  pullPolicy: IfNotPresent
-
-imagePullSecrets: []
-# - name: myregistrykey
-
-# Main container configuration
 command: []
 args: []
 
 # Container ports
-# These ports are used for:
-# 1. Container port definitions in the Pod spec
-# 2. Service port configuration (when service.ports is not specified)
-# If service.ports is not defined, the service will automatically use these ports
-# You can optionally specify a 'port' field to use a different service port than containerPort
 ports: []
 # - name: http
 #   containerPort: 8000
 #   protocol: TCP
 #   port: 80  # Optional: Use port 80 for service, 8000 for container
-# - name: metrics
-#   containerPort: 9090
-#   protocol: TCP
 
 # Resources
 resources:
@@ -140,545 +75,147 @@ resources:
     cpu: "100m"
     memory: "128Mi"
 
-# Container-level security context (overrides security.defaultContainerSecurityContext)
+# Container-level security context
 securityContext: {}
-# readOnlyRootFilesystem: false  # Override for containers needing writable filesystem
 
 # Health checks
 livenessProbe: {}
-# httpGet:
-#   path: /health
-#   port: http
-# initialDelaySeconds: 30
-# periodSeconds: 10
-
 readinessProbe: {}
-# httpGet:
-#   path: /ready
-#   port: http
-# initialDelaySeconds: 5
-# periodSeconds: 5
-
 startupProbe: {}
-# httpGet:
-#   path: /startup
-#   port: http
-# initialDelaySeconds: 0
-# periodSeconds: 10
-# failureThreshold: 30
-
-# Lifecycle hooks
 lifecycle: {}
-# preStop:
-#   exec:
-#     command: ["/bin/sh", "-c", "sleep 15"]
 
-# Environment variables
+# ============================================================================
+# ENVIRONMENT CONFIGURATION
+# ============================================================================
+
 env: []
-# - name: MY_VAR
-#   value: "my-value"
-# - name: SECRET_VAR
-#   valueFrom:
-#     secretKeyRef:
-#       name: my-secret
-#       key: password
-
 envFrom: []
-# - configMapRef:
-#     name: my-config
-# - secretRef:
-#     name: my-secret
-
-# Extra environment sources (in addition to automatic envFrom from configMaps/secrets)
 extraEnvFrom: []
-# - secretRef:
-#     name: external-secret
-# - configMapRef:
-#     name: external-configmap
-#     optional: true
+commonEnvVars: true
 
-# Common environment variables (injects POD_NAME, POD_NAMESPACE, etc.)
-commonEnvVars: false
+# ============================================================================
+# ADDITIONAL CONTAINERS
+# ============================================================================
 
-# Additional containers
 extraContainers: []
-# - name: sidecar
-#   image: nginx:alpine
-#   ports:
-#   - name: http
-#     containerPort: 80
-#   env:
-#   - name: SIDECAR_VAR
-#     value: "value"
-#   resources:
-#     limits:
-#       memory: "128Mi"
-#     requests:
-#       cpu: "50m"
-#       memory: "64Mi"
-
-# Init containers
-# Supports multiple image formats:
-# 1. String image: "busybox:1.35"
-# 2. Structured image: { repository: "busybox", tag: "1.35", registry: "my-registry.io" }
-#    - Structured images automatically inherit image.registry if not specified
-# 3. Template string: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
-#    - Note: Use structured image format if you need registry inheritance
 initContainers: []
-# - name: wait-for-db
-#   image: busybox:1.35
-#   command: ['sh', '-c']
-#   args:
-#     - |
-#       echo "Waiting for database to be ready..."
-#       until nc -z postgres-service 5432; do
-#         echo "Database is unavailable - sleeping"
-#         sleep 2
-#       done
-#       echo "Database is up - continuing"
-#   resources:
-#     requests:
-#       cpu: 10m
-#       memory: 16Mi
-#     limits:
-#       cpu: 50m
-#       memory: 64Mi
-# - name: run-migrations
-#   # Recommended: Use structured format to inherit registry automatically
-#   image:
-#     repository: "{{ .Values.image.repository }}"
-#     tag: "{{ .Values.image.tag }}"
-#   command: ['sh', '-c', 'migrate up']
-# - name: with-different-tag
-#   # Use template in structured format for custom combinations
-#   image:
-#     repository: "{{ .Values.image.repository }}"
-#     tag: "migration-{{ .Values.image.tag }}"
-#   command: ['sh', '-c', 'special-migrate']
-
-# Sidecar containers (implemented as init containers with restartPolicy: Always)
 sidecarContainers: []
-# - name: metrics-exporter
-#   image: prom/node-exporter:latest
-#   ports:
-#   - name: metrics
-#     containerPort: 9100
-#   resources:
-#     limits:
-#       memory: "128Mi"
-#     requests:
-#       cpu: "50m"
-#       memory: "64Mi"
 
-# Pod configuration
+# ============================================================================
+# POD CONFIGURATION
+# ============================================================================
+
 pod:
-  # Pod-level labels and annotations
   labels: {}
   annotations: {}
-
-  # Pod security context (overrides security.defaultPodSecurityContext)
   securityContext: {}
-  # runAsUser: 1001  # Override default user
-
-  # Pod-level resources (Kubernetes 1.32+ alpha, 1.33+ beta)
-  # Requires PodLevelResources feature gate to be enabled
-  # resources:
-  #   requests:
-  #     cpu: "1"
-  #     memory: "1Gi"
-  #   limits:
-  #     cpu: "2"
-  #     memory: "2Gi"
   resources: {}
-
-  # Host settings
   hostNetwork: false
   hostPID: false
   hostIPC: false
   hostname: ""
-
-  # DNS configuration
   dnsPolicy: ""
   dnsConfig: {}
-  # nameservers:
-  # - 1.1.1.1
-  # searches:
-  # - my.dns.search.suffix
-  # options:
-  # - name: ndots
-  #   value: "2"
-
-  # Priority and runtime
   priorityClassName: ""
   priority: ""
   runtimeClassName: ""
   schedulerName: ""
-
-  # Lifecycle
   terminationGracePeriodSeconds: 30
   activeDeadlineSeconds: ""
   restartPolicy: ""
-
-  # Host aliases
   hostAliases: []
-  # - ip: "127.0.0.1"
-  #   hostnames:
-  #   - "foo.local"
-  #   - "bar.local"
 
-# Scheduling configuration
+# ============================================================================
+# SCHEDULING CONFIGURATION
+# ============================================================================
+
 scheduling:
   nodeSelector: {}
-  # kubernetes.io/arch: amd64
-  # node.kubernetes.io/instance-type: m5.large
-  # environment: production
-
   tolerations: []
-  # - key: nvidia.com/gpu
-  #   operator: Exists
-  #   effect: NoSchedule
-  # - key: spot-instance
-  #   operator: Equal
-  #   value: "true"
-  #   effect: NoSchedule
-
   affinity: {}
-  # nodeAffinity:
-  #   preferredDuringSchedulingIgnoredDuringExecution:
-  #     - weight: 100
-  #       preference:
-  #         matchExpressions:
-  #           - key: topology.kubernetes.io/zone
-  #             operator: In
-  #             values:
-  #               - us-east-1a
-  #               - us-east-1b
-  # podAntiAffinity:
-  #   preferredDuringSchedulingIgnoredDuringExecution:
-  #     - weight: 100
-  #       podAffinityTerm:
-  #         labelSelector:
-  #           matchExpressions:
-  #             - key: app.kubernetes.io/name
-  #               operator: In
-  #               values:
-  #                 - myapp
-  #         topologyKey: kubernetes.io/hostname
-
-  # Topology spread constraints for better pod distribution
   topologySpreadConstraints:
-    # Spread pods evenly across nodes
     - maxSkew: 1
       topologyKey: kubernetes.io/hostname
       whenUnsatisfiable: ScheduleAnyway
-    # Spread pods evenly across zones (if using multi-zone clusters)
     - maxSkew: 1
       topologyKey: topology.kubernetes.io/zone
       whenUnsatisfiable: ScheduleAnyway
-  # To disable, set to empty array: topologySpreadConstraints: []
-  # Custom topology spread constraints:
-  # - maxSkew: 1
-  #   topologyKey: kubernetes.io/hostname
-  #   whenUnsatisfiable: DoNotSchedule
-  #   minDomains: 2
-
-# Volume configuration
-volumes:
-  # Persistent volumes
-  persistent: {}
-  # data:
-  #   enabled: true
-  #   accessMode: ReadWriteOnce
-  #   size: 10Gi
-  #   storageClass: fast-ssd
-  #   mountPath: /data
-  #   subPath: ""
-  #   annotations: {}
-  #   labels: {}
-  #   selector: {}
-  #   dataSource: {}
-  #   volumeMode: Filesystem
-  # cache:
-  #   enabled: true
-  #   accessMode: ReadWriteOnce
-  #   size: 5Gi
-  #   mountPath: /cache
-
-  # EmptyDir volumes
-  emptyDir: {}
-  # temp:
-  #   medium: Memory
-  #   sizeLimit: 1Gi
-  #   mountPath: /tmp
-  # nginx-cache:
-  #   mountPath: /var/cache/nginx
-  #   sizeLimit: 100Mi
-  # nginx-run:
-  #   mountPath: /var/run
-  #   sizeLimit: 10Mi
-
-  # HostPath volumes (use with caution)
-  hostPath: {}
-  # logs:
-  #   path: /var/log
-  #   type: Directory
-  #   mountPath: /host/logs
-  #   readOnly: true
-
-  # Extra volumes (configMap, secret, projected, etc.)
-  extra: []
-  # - name: config-volume
-  #   configMap:
-  #     name: my-config
-  # - name: secret-volume
-  #   secret:
-  #     secretName: my-secret
-
-  # Extra volume mounts
-  extraMounts: []
-  # - name: config-volume
-  #   mountPath: /config
-  #   readOnly: true
-
-# Extra deployments
-# Note: Unlike the main deployment, extraDeployments require raw Kubernetes format for:
-#   - volumes: Use standard K8s volume array format (not the structured volumes.emptyDir/persistent format)
-#   - volumeMounts: Use standard K8s volumeMount array format
-#   - initContainers/sidecarContainers: Not inherited from root by default (set inheritInitContainers: true to inherit)
-extraDeployments: {}
-# worker:
-#   enabled: true
-#   replicas: 2
-#   inheritInitContainers: false  # Set to true to inherit root-level initContainers/sidecarContainers
-#   image:
-#     repository: myapp
-#     tag: worker-1.0.0
-#   command: ["/app/worker"]
-#   resources:
-#     requests:
-#       cpu: 200m
-#       memory: 256Mi
-#   env:
-#     - name: WORKER_TYPE
-#       value: background
-#   # Volumes must be in raw Kubernetes format
-#   volumes:
-#     - name: tmp
-#       emptyDir: {}
-#     - name: cache
-#       emptyDir:
-#         sizeLimit: 1Gi
-#   volumeMounts:
-#     - name: tmp
-#       mountPath: /tmp
-#     - name: cache
-#       mountPath: /cache
-#   scheduling:
-#     nodeSelector:
-#       workload-type: batch
-#     tolerations:
-#       - key: batch-processing
-#         operator: Equal
-#         value: "true"
-#         effect: NoSchedule
-# api:
-#   enabled: true
-#   replicas: 3
-#   image:
-#     repository: myapp
-#     tag: api-1.0.0
-#   ports:
-#     - name: http
-#       containerPort: 8080
-#   resources:
-#     requests:
-#       cpu: 500m
-#       memory: 512Mi
 
 # ============================================================================
-# CRONJOB WORKLOADS
-# Each key creates a new CronJob with the given name suffix
+# VOLUME CONFIGURATION
+# ============================================================================
+
+volumes:
+  persistent: {}
+  emptyDir: {}
+  hostPath: {}
+  extra: []
+  extraMounts: []
+
+# ============================================================================
+# EXTRA DEPLOYMENTS
+# ============================================================================
+
+extraDeployments: {}
+
+# ============================================================================
+# CRONJOBS (map-based)
 # ============================================================================
 
 cronjobs: {}
-# backup:
-#   enabled: true
-#   schedule: "0 2 * * *"
-#   concurrencyPolicy: Forbid
-#   successfulJobsHistoryLimit: 3
-#   failedJobsHistoryLimit: 1
-#   startingDeadlineSeconds: 200
-#
-#   # All deployment configs can be used here
-#   image:
-#     repository: myapp
-#     tag: backup-1.0.0
-#   command: ["/bin/sh"]
-#   args: ["-c", "backup.sh"]
-#   resources:
-#     requests:
-#       cpu: 100m
-#       memory: 128Mi
-#   env: []
-#   volumes:
-#     persistent:
-#       backup:
-#         enabled: true
-#         size: 50Gi
-#         mountPath: /backup
-#   scheduling:
-#     nodeSelector:
-#       storage-type: local-ssd
-#     tolerations:
-#       - key: dedicated
-#         operator: Equal
-#         value: backup
-#         effect: NoSchedule
 
 # ============================================================================
-# JOB WORKLOADS
-# Each key creates a new Job with the given name suffix
+# JOBS
 # ============================================================================
 
 jobs: {}
-# migration:
-#   enabled: true
-#   backoffLimit: 6
-#   completions: 1
-#   parallelism: 1
-#   ttlSecondsAfterFinished: 300
-#   restartPolicy: OnFailure
-#
-#   # All deployment configs can be used here
-#   image:
-#     repository: myapp
-#     tag: migration-1.0.0
-#   command: ["/bin/sh"]
-#   args: ["-c", "migrate.sh"]
-#   resources:
-#     requests:
-#       cpu: 100m
-#       memory: 256Mi
-#   env:
-#     - name: DB_HOST
-#       value: postgres-service
-#   scheduling:
-#     affinity:
-#       nodeAffinity:
-#         requiredDuringSchedulingIgnoredDuringExecution:
-#           nodeSelectorTerms:
-#             - matchExpressions:
-#                 - key: topology.kubernetes.io/zone
-#                   operator: In
-#                   values:
-#                     - us-east-1a
 
 # ============================================================================
-# SHARED RESOURCES
-# These resources can be used across all workload types
+# SERVICE CONFIGURATION
 # ============================================================================
 
-# Service configuration
 service:
   enabled: true
   type: ClusterIP
-  # Service ports - defaults to top-level ports configuration if not specified
-  # If neither service.ports nor top-level ports are set, defaults to port 80
   ports: []
-  # - name: http
-  #   port: 80
-  #   targetPort: 80  # Optional: defaults to port if not specified
-  #   protocol: TCP
-  #   nodePort: 30080  # Optional: for NodePort/LoadBalancer services
-  #   appProtocol: http  # Optional: application protocol
   annotations: {}
   labels: {}
   clusterIP: ""
   loadBalancerIP: ""
   loadBalancerSourceRanges: []
+  loadBalancerClass: ""
+  allocateLoadBalancerNodePorts: false
   externalTrafficPolicy: ""
+  internalTrafficPolicy: ""
+  healthCheckNodePort: ""
+  externalIPs: []
+  externalName: ""
   sessionAffinity: ""
   sessionAffinityConfig: {}
+  ipFamilyPolicy: ""
+  ipFamilies: []
   publishNotReadyAddresses: false
 
-# Extra services
 extraServices: {}
-# metrics:
-#   enabled: true
-#   type: ClusterIP
-#   ports:
-#   - name: metrics
-#     port: 9090
-#     targetPort: 9090
-#   annotations:
-#     prometheus.io/scrape: "true"
-#     prometheus.io/port: "9090"
-# headless:
-#   enabled: true
-#   type: ClusterIP
-#   clusterIP: None
-#   ports:
-#   - name: grpc
-#     port: 50051
-#     targetPort: 50051
 
-# Ingress configuration
+# ============================================================================
+# INGRESS CONFIGURATION
+# ============================================================================
+
 ingress:
   enabled: false
   ingressClassName: "alb"
   labels: {}
   annotations: {}
-  # Example ALB annotations for AWS Load Balancer Controller
-  # alb.ingress.kubernetes.io/scheme: internet-facing
-  # alb.ingress.kubernetes.io/target-type: ip
-  # alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:region:account-id:certificate/certificate-id
-  # alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
-  # alb.ingress.kubernetes.io/ssl-redirect: "443"
-  # alb.ingress.kubernetes.io/backend-protocol: HTTP
-  # alb.ingress.kubernetes.io/healthcheck-path: /health
-  # alb.ingress.kubernetes.io/healthcheck-interval-seconds: "15"
-  # alb.ingress.kubernetes.io/healthcheck-timeout-seconds: "5"
-  # alb.ingress.kubernetes.io/success-codes: "200"
-  # alb.ingress.kubernetes.io/tags: Environment=prod,Team=platform
-  # alb.ingress.kubernetes.io/group.name: my-alb-group
-  # alb.ingress.kubernetes.io/group.order: "10"
-
-  # Default backend
   defaultBackend: {}
-  # service:
-  #   name: default-backend
-  #   port:
-  #     number: 80
-
   hosts: []
-  # - host: "{{ .Values.generic.branchName }}.example.com"  # Template example
-  #   paths:
-  #   - path: /
-  #     pathType: ImplementationSpecific
-  #     backend:
-  #       service:
-  #         name: ""  # defaults to release fullname
-  #         port:
-  #           number: 80
 
-# Extra ingresses
 extraIngresses: {}
-# admin:
-#   enabled: true
-#   ingressClassName: nginx
-#   annotations: {}
-#   hosts:
-#   - host: admin.example.com
-#     paths:
-#     - path: /
-#       pathType: Prefix
-#       backend:
-#         service:
-#           name: admin-service
-#           port:
-#             number: 8080
 
-# ServiceAccount configuration
+# ============================================================================
+# SERVICE ACCOUNT
+# ============================================================================
+
 serviceAccount:
   enabled: true
   name: ""
@@ -686,41 +223,25 @@ serviceAccount:
   labels: {}
   automountServiceAccountToken: true
 
-# RBAC configuration
+# ============================================================================
+# RBAC
+# ============================================================================
+
 rbac:
   enabled: false
-  # Use Role or ClusterRole
   type: Role
   rules: []
-  # - apiGroups: [""]
-  #   resources: ["pods"]
-  #   verbs: ["get", "list", "watch"]
   aggregationRule: {}
-  # clusterRoleSelectors:
-  # - matchLabels:
-  #     rbac.example.com/aggregate-to-monitoring: "true"
   labels: {}
   annotations: {}
-  # Custom roleRef name (defaults to release fullname)
   roleRef: ""
-  # Custom subjects (defaults to service account)
   subjects: []
-  # - kind: ServiceAccount
-  #   name: custom-sa
-  #   namespace: default
-
-  # Extra roles and bindings
   extraRoles: {}
-  # reader:
-  #   enabled: true
-  #   type: Role
-  #   createBinding: true
-  #   rules:
-  #   - apiGroups: [""]
-  #     resources: ["pods", "services"]
-  #     verbs: ["get", "list", "watch"]
 
-# ConfigMap configuration
+# ============================================================================
+# CONFIG AND SECRETS
+# ============================================================================
+
 configMap:
   enabled: false
   data: {}
@@ -731,7 +252,6 @@ configMap:
   mountPath: ""
   subPath: ""
 
-# Secret configuration
 secret:
   enabled: false
   type: Opaque
@@ -743,405 +263,186 @@ secret:
   mountPath: ""
   subPath: ""
 
-# Extra ConfigMaps
 extraConfigMaps: {}
-# my-config:
-#   data:
-#     config.yaml: |
-#       key: value
-#   mountPath: /config
-#   envFrom: true
-
-# Extra Secrets
 extraSecrets: {}
-# my-secret:
-#   stringData:
-#     api-key: "secret-value"
-#   mountPath: /secrets
-#   envFrom: true
+externalSecrets: {}
 
-# Horizontal Pod Autoscaler (applies to main deployment)
+# ============================================================================
+# AUTOSCALING
+# ============================================================================
+
 hpa:
   enabled: false
   minReplicas: 1
   maxReplicas: 10
   metrics:
-  - type: Resource
-    resource:
-      name: cpu
-      target:
-        type: Utilization
-        averageUtilization: 80
-  - type: Resource
-    resource:
-      name: memory
-      target:
-        type: Utilization
-        averageUtilization: 80
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
   behavior: {}
-  # scaleDown:
-  #   stabilizationWindowSeconds: 300
-  #   policies:
-  #   - type: Percent
-  #     value: 50
-  #     periodSeconds: 15
-  # scaleUp:
-  #   stabilizationWindowSeconds: 0
-  #   policies:
-  #   - type: Percent
-  #     value: 100
-  #     periodSeconds: 15
-  #   - type: Pods
-  #     value: 2
-  #     periodSeconds: 60
-  #   selectPolicy: Max
 
-# Vertical Pod Autoscaler (applies to main deployment)
 vpa:
   enabled: false
-  updateMode: Auto  # Off, Initial, Recreate, Auto
+  updateMode: Auto
   labels: {}
   annotations: {}
-  # Update policy
   updatePolicy: {}
-  # updateMode: Auto
-  # minReplicas: 1
-
-  # Container policies
   containerPolicies: []
-  # - containerName: "*"
-  #   mode: Auto
-  #   minAllowed:
-  #     cpu: 100m
-  #     memory: 128Mi
-  #   maxAllowed:
-  #     cpu: 2
-  #     memory: 4Gi
-  #   controlledResources: ["cpu", "memory"]
-  #   controlledValues: RequestsAndLimits
-
-  # Full resource policy (alternative to containerPolicies)
   resourcePolicy: {}
-
-  # Custom recommenders
   recommenders: []
-  # - name: custom-recommender
 
-# Pod Disruption Budget (applies to main deployment)
+# ============================================================================
+# POD DISRUPTION BUDGET
+# ============================================================================
+
 podDisruptionBudget:
   enabled: false
   minAvailable: 1
-  # maxUnavailable: 1
   unhealthyPodEvictionPolicy: ""
 
-# Network Policy
+# ============================================================================
+# NETWORK POLICY
+# ============================================================================
+
 networkPolicy:
   enabled: false
   policyTypes:
-  - Ingress
-  - Egress
+    - Ingress
+    - Egress
   ingress: []
-  # - from:
-  #   - podSelector:
-  #       matchLabels:
-  #         role: frontend
-  #   ports:
-  #   - protocol: TCP
-  #     port: 80
   egress: []
-  # - to:
-  #   - podSelector:
-  #       matchLabels:
-  #         role: database
-  #   ports:
-  #   - protocol: TCP
-  #     port: 5432
 
-# Gateway API configuration
+# ============================================================================
+# GATEWAY API
+# ============================================================================
+
 gateway:
-  # HTTPRoute configuration
   httpRoute:
     enabled: false
     labels: {}
     annotations: {}
-    # Parent Gateway references
     parentRefs: []
-    # - name: example-gateway
-    #   namespace: gateway-system
-    #   sectionName: https
-    #   port: 443
-
-    # Hostnames for routing
     hostnames: []
-    # - "example.com"
-    # - "*.example.com"
-
-    # HTTP routing rules
     rules: []
-    # - matches:
-    #   - path:
-    #       type: PathPrefix
-    #       value: /api
-    #   backendRefs:
-    #   - name: api-service
-    #     port: 8080
-
-    # Extra HTTPRoutes
     extraRoutes: {}
-    # api:
-    #   enabled: true
-    #   parentRefs:
-    #   - name: api-gateway
-    #   hostnames:
-    #   - api.example.com
-    #   rules:
-    #   - matches:
-    #     - path:
-    #         type: PathPrefix
-    #         value: /v1
-    #     backendRefs:
-    #     - name: api-v1-service
-    #       port: 8080
 
-  # TCPRoute configuration
   tcpRoute:
     enabled: false
     labels: {}
     annotations: {}
-    # Parent Gateway references
     parentRefs: []
-    # - name: tcp-gateway
-    #   namespace: gateway-system
-    #   sectionName: tcp
-    #   port: 9000
-
-    # TCP routing rules
     rules: []
-    # - backendRefs:
-    #   - name: tcp-service
-    #     port: 9000
-    #     weight: 100
-
-    # Extra TCPRoutes
     extraRoutes: {}
-    # database:
-    #   enabled: true
-    #   parentRefs:
-    #   - name: database-gateway
-    #   rules:
-    #   - backendRefs:
-    #     - name: postgres-primary
-    #       port: 5432
-    #       weight: 70
-    #     - name: postgres-replica
-    #       port: 5432
-    #       weight: 30
 
-  # ReferenceGrant for cross-namespace access
   referenceGrant:
     enabled: false
     labels: {}
     annotations: {}
-
-    # Allow access from these resources
     from: []
-    # - group: gateway.networking.k8s.io
-    #   kind: Gateway
-    #   namespace: gateway-system
-
-    # Allow access to these resources
     to: []
-    # - group: ""
-    #   kind: Service
-    #   name: backend-service
-
-    # Extra ReferenceGrants
     extraGrants: {}
-    # secrets:
-    #   enabled: true
-    #   from:
-    #   - group: gateway.networking.k8s.io
-    #     kind: Gateway
-    #     namespace: gateway-system
-    #   to:
-    #   - group: ""
-    #     kind: Secret
 
-# Helm hooks for lifecycle management
+  grpcRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    parentRefs: []
+    hostnames: []
+    rules: []
+    extraRoutes: {}
+
+  tlsRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    parentRefs: []
+    hostnames: []
+    rules: []
+    extraRoutes: {}
+
+  udpRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    parentRefs: []
+    rules: []
+    extraRoutes: {}
+
+  targetGroupConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    targetReference: {}
+    defaultConfiguration: {}
+    routeConfigurations: []
+
+  loadBalancerConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    loadBalancerName: ""
+    scheme: ""
+    ipAddressType: ""
+    loadBalancerSubnets: []
+    securityGroups: []
+    sourceRanges: []
+    listenerConfigurations: []
+    loadBalancerAttributes: []
+    tags: {}
+    wafV2: {}
+    shieldConfiguration: {}
+
+  listenerRuleConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    targetRef: {}
+    conditions: []
+    actions: []
+    tags: {}
+
+# ============================================================================
+# HELM HOOKS
+# ============================================================================
+
 hooks:
   enabled: false
-
-  # Pre-install hooks (run before any resources are created)
   preInstall: []
-  # - name: db-migration
-  #   image: migrate/migrate:latest
-  #   command:
-  #   - migrate
-  #   args:
-  #   - -path=/migrations
-  #   - -database=postgres://user:pass@db:5432/mydb?sslmode=disable
-  #   - up
-  #   weight: 1
-  #   deletePolicy: before-hook-creation
-  #   ttlSecondsAfterFinished: 300
-  #   restartPolicy: Never
-
-  # Post-install hooks (run after all resources are created and ready)
   postInstall: []
-  # - name: data-seed
-  #   image: curlimages/curl:latest
-  #   command:
-  #   - sh
-  #   - -c
-  #   - |
-  #     curl -X POST http://release-name/api/seed \
-  #       -H "Content-Type: application/json" \
-  #       -d '{"action": "seed_initial_data"}'
-  #   weight: 1
-  #   deletePolicy: hook-succeeded
-  #   ttlSecondsAfterFinished: 600
-  #   restartPolicy: Never
-
-  # Pre-upgrade hooks (run before upgrade starts)
   preUpgrade: []
-  # - name: backup-db
-  #   image: postgres:13-alpine
-  #   command:
-  #   - pg_dump
-  #   args:
-  #   - -h
-  #   - postgres-service
-  #   - -U
-  #   - postgres
-  #   - mydb
-  #   weight: 1
-  #   deletePolicy: before-hook-creation
-  #   ttlSecondsAfterFinished: 3600
-  #   restartPolicy: Never
-
-  # Post-upgrade hooks (run after upgrade completes)
   postUpgrade: []
-  # - name: verify-migration
-  #   image: migrate/migrate:latest
-  #   command:
-  #   - migrate
-  #   args:
-  #   - -path=/migrations
-  #   - -database=postgres://user:pass@db:5432/mydb?sslmode=disable
-  #   - version
-  #   weight: 1
-  #   deletePolicy: hook-succeeded
-  #   ttlSecondsAfterFinished: 300
-  #   restartPolicy: Never
-
-  # Pre-delete hooks (run before any resources are deleted)
   preDelete: []
-  # - name: data-export
-  #   image: postgres:13-alpine
-  #   command:
-  #   - pg_dump
-  #   args:
-  #   - -h
-  #   - postgres-service
-  #   - mydb
-  #   weight: 1
-  #   deletePolicy: hook-succeeded
-  #   ttlSecondsAfterFinished: 3600
-  #   restartPolicy: Never
-
-  # Post-delete hooks (run after all resources are deleted)
   postDelete: []
-  # - name: cleanup-external
-  #   image: curlimages/curl:latest
-  #   command:
-  #   - sh
-  #   - -c
-  #   - |
-  #     curl -X DELETE http://external-service/api/cleanup \
-  #       -H "Authorization: Bearer $API_TOKEN"
-  #   weight: 1
-  #   deletePolicy: hook-succeeded
-  #   ttlSecondsAfterFinished: 300
-  #   restartPolicy: Never
 
-# External Secrets Operator integration
-# Note: Automatically detects and uses the latest available API version (v1 or v1beta1)
-externalSecrets: {}
-# aws-secrets:
-#   enabled: true
-#   refreshInterval: 1h
-#   secretStoreRef:
-#     name: aws-secretsmanager
-#     kind: ClusterSecretStore
-#
-#   target:
-#     name: aws-app-secrets
-#     creationPolicy: Owner
-#
-#   # Pull from AWS Secrets Manager
-#   data:
-#     - secretKey: api-key
-#       remoteRef:
-#         key: prod/api/external-service
-#         property: api_key
-#     - secretKey: client-secret
-#       remoteRef:
-#         key: prod/api/external-service
-#         property: client_secret
-#
-#   # Pull entire secret as JSON
-#   dataFrom:
-#     - extract:
-#         key: prod/api/config
-#
-#   # Use all keys from the created secret as environment variables
-#   envFrom: true
-#   # Optional: prefix all env vars from this secret
-#   prefix: AWS_
+# ============================================================================
+# AWS TARGET GROUP BINDING
+# ============================================================================
 
-# AWS Target Group Binding (for AWS Load Balancer Controller)
 targetGroupBinding:
   enabled: false
   labels: {}
   annotations: {}
-  # Target Group ARN from AWS
   targetGroupARN: ""
-  # Service reference
   serviceRef:
-    # Service name (defaults to release name)
     name: ""
-    # Service port name or number
     port: "http"  # @schema type:[string, integer]
-  # Target type: instance (default) or ip
   targetType: ""
-  # IP address type: ipv4 (default) or dualstack
   ipAddressType: ""
-  # Networking configuration
   networking: {}
-  # ingress:
-  # - from:
-  #   - securityGroup:
-  #       groupID: sg-123456
-  #   ports:
-  #   - protocol: TCP
-  #     port: 80
 
-# Extra Target Group Bindings
 extraTargetGroupBindings: {}
-# grpc-service:
-#   enabled: true
-#   targetGroupARN: arn:aws:elasticloadbalancing:region:account:targetgroup/grpc-tg/1234567890
-#   serviceRef:
-#     name: my-grpc-service
-#     port: 50051
-#   targetType: ip
 
-# Extra Kubernetes objects
+# ============================================================================
+# EXTRA OBJECTS
+# ============================================================================
+
 extraObjects: []
-# - apiVersion: v1
-#   kind: ConfigMap
-#   metadata:
-#     name: "{{ .Values.generic.branchName }}-extra-cm"
-#   data:
-#     branch: "{{ .Values.generic.branchName }}"
-#     key: value

@@ -1,0 +1,259 @@
+suite: test task chart defaults
+templates:
+  - common.yaml
+tests:
+  # ===========================================================================
+  # CronJob defaults
+  # ===========================================================================
+
+  - it: should create a CronJob (not a Deployment)
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: CronJob
+        documentSelector:
+          path: kind
+          value: CronJob
+      - not: true
+        isKind:
+          of: Deployment
+
+  - it: should have default schedule of hourly
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.schedule
+          value: "0 * * * *"
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should have default concurrencyPolicy Forbid
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.concurrencyPolicy
+          value: Forbid
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should have default successfulJobsHistoryLimit of 3
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.successfulJobsHistoryLimit
+          value: 3
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should have default failedJobsHistoryLimit of 1
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.failedJobsHistoryLimit
+          value: 1
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should have suspend set to false by default
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.suspend
+          value: false
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  # ===========================================================================
+  # Job spec defaults
+  # ===========================================================================
+
+  - it: should have default backoffLimit of 6
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.backoffLimit
+          value: 6
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should have default ttlSecondsAfterFinished of 300
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.ttlSecondsAfterFinished
+          value: 300
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should have default restartPolicy OnFailure
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.restartPolicy
+          value: OnFailure
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  # ===========================================================================
+  # Container defaults
+  # ===========================================================================
+
+  - it: should have default pod-level resource requests
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.resources.requests.cpu
+          value: 100m
+        documentSelector:
+          path: kind
+          value: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.resources.requests.memory
+          value: 128Mi
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should set the container image correctly
+    set:
+      image.repository: my-custom-task
+      image.tag: v2.0.0
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].image
+          value: "my-custom-task:v2.0.0"
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  # ===========================================================================
+  # No Deployment or Service
+  # ===========================================================================
+
+  - it: should not create a Deployment
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - not: true
+        isKind:
+          of: Deployment
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should not create a Service
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - not: true
+        isKind:
+          of: Service
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  # ===========================================================================
+  # Overrides
+  # ===========================================================================
+
+  - it: should allow overriding the schedule
+    set:
+      image.repository: mytask
+      image.tag: latest
+      schedule: "*/15 * * * *"
+    asserts:
+      - equal:
+          path: spec.schedule
+          value: "*/15 * * * *"
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should allow overriding concurrencyPolicy
+    set:
+      image.repository: mytask
+      image.tag: latest
+      concurrencyPolicy: Allow
+    asserts:
+      - equal:
+          path: spec.concurrencyPolicy
+          value: Allow
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should allow setting environment variables
+    set:
+      image.repository: mytask
+      image.tag: latest
+      env:
+        - name: MY_VAR
+          value: my-value
+        - name: ANOTHER_VAR
+          value: another-value
+    asserts:
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: MY_VAR
+            value: my-value
+        documentSelector:
+          path: kind
+          value: CronJob
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: ANOTHER_VAR
+            value: another-value
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should allow setting a custom command
+    set:
+      image.repository: mytask
+      image.tag: latest
+      command:
+        - /bin/sh
+        - -c
+        - echo hello
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].command
+          value:
+            - /bin/sh
+            - -c
+            - echo hello
+        documentSelector:
+          path: kind
+          value: CronJob

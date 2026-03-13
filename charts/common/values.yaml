@@ -1,12 +1,27 @@
 # Default values for common library chart
-# This file contains shared default values used by dependent charts
+# These defaults are merged with the consuming chart's values via common.values.init
+# All keys must be defined here to prevent nil pointer errors in templates
 
 # Global values - passed down from parent charts
 global:
-  # Container registry prepended to all images that don't specify one
-  registry: ""
+  image:
+    registry: ""
 
-# Default security contexts (can be overridden per workload)
+# Common labels and annotations applied to all resources
+commonLabels: {}
+commonAnnotations: {}
+workloadLabels: {}
+workloadAnnotations: {}
+
+# Metadata overrides
+nameOverride: ""
+fullnameOverride: ""
+namespaceOverride: ""
+
+# =============================================================================
+# SECURITY CONFIGURATION
+# =============================================================================
+
 security:
   # Default pod security context applied to all workloads
   defaultPodSecurityContext:
@@ -26,7 +41,7 @@ security:
     readOnlyRootFilesystem: true
     capabilities:
       drop:
-      - ALL
+        - ALL
     seccompProfile:
       type: RuntimeDefault
 
@@ -36,3 +51,450 @@ security:
     enforce: ""
     audit: ""
     warn: ""
+    labels: {}
+    annotations: {}
+    namespaceEnforcement: false
+
+  # AppArmor profile
+  apparmor:
+    enabled: false
+    profile: runtime/default
+
+# =============================================================================
+# DEPLOYMENT CONFIGURATION
+# =============================================================================
+
+deploymentEnabled: true
+replicas: 1
+revisionHistoryLimit: 2
+
+strategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 25%  # @schema type:[string, integer]
+    maxSurge: 25%  # @schema type:[string, integer]
+progressDeadlineSeconds: 600
+
+# Workload type override (deployment, statefulset, daemonset)
+workload:
+  type: ""
+
+# =============================================================================
+# IMAGE CONFIGURATION
+# =============================================================================
+
+image:
+  registry: ""
+  repository: ""
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# =============================================================================
+# CONTAINER CONFIGURATION
+# =============================================================================
+
+command: []
+args: []
+
+ports: []
+
+# Pod-level resources (Kubernetes 1.32+) - applied at spec.resources
+resources: {}
+
+# Container-level overrides
+container:
+  # Container-level resources - applied at spec.containers[].resources
+  # When set, takes precedence over pod-level resources for the main container
+  resources: {}
+
+# Container-level security context (overrides security.defaultContainerSecurityContext)
+securityContext: {}
+
+# Health checks
+livenessProbe: {}
+readinessProbe: {}
+startupProbe: {}
+
+# Lifecycle hooks
+lifecycle: {}
+
+# =============================================================================
+# ENVIRONMENT CONFIGURATION
+# =============================================================================
+
+env: []
+envFrom: []
+extraEnvFrom: []
+commonEnvVars: true
+
+# =============================================================================
+# ADDITIONAL CONTAINERS
+# =============================================================================
+
+extraContainers: []
+initContainers: []
+sidecarContainers: []
+
+# =============================================================================
+# POD CONFIGURATION
+# =============================================================================
+
+pod:
+  labels: {}
+  annotations: {}
+  securityContext: {}
+  hostNetwork: false
+  hostPID: false
+  hostIPC: false
+  hostname: ""
+  dnsPolicy: ""
+  dnsConfig: {}
+  priorityClassName: ""
+  priority: ""
+  runtimeClassName: ""
+  schedulerName: ""
+  terminationGracePeriodSeconds: 30
+  activeDeadlineSeconds: ""
+  restartPolicy: ""
+  hostAliases: []
+
+# =============================================================================
+# SCHEDULING CONFIGURATION
+# =============================================================================
+
+scheduling:
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+  topologySpreadConstraints: []
+
+# =============================================================================
+# VOLUME CONFIGURATION
+# =============================================================================
+
+volumes:
+  persistent: {}
+  emptyDir: {}
+  hostPath: {}
+  extra: []
+  extraMounts: []
+
+# =============================================================================
+# EXTRA DEPLOYMENTS
+# =============================================================================
+
+extraDeployments: {}
+
+# =============================================================================
+# CRONJOB CONFIGURATION (singular - legacy)
+# =============================================================================
+
+# schedule: ""  # When set, renders a single CronJob instead of Deployment
+concurrencyPolicy: Forbid
+successfulJobsHistoryLimit: 3
+failedJobsHistoryLimit: 1
+startingDeadlineSeconds: ""
+suspend: false
+job:
+  backoffLimit: 6
+  ttlSecondsAfterFinished: 300
+  completions: 1
+  parallelism: 1
+  activeDeadlineSeconds: ""
+  completionMode: ""
+
+# =============================================================================
+# CRONJOBS (plural - map-based)
+# =============================================================================
+
+cronjobs: {}
+
+# =============================================================================
+# JOBS
+# =============================================================================
+
+jobs: {}
+
+# =============================================================================
+# SERVICE CONFIGURATION
+# =============================================================================
+
+service:
+  enabled: false
+  type: ClusterIP
+  ports: []
+  annotations: {}
+  labels: {}
+  clusterIP: ""
+  loadBalancerIP: ""
+  loadBalancerSourceRanges: []
+  loadBalancerClass: ""
+  allocateLoadBalancerNodePorts: false
+  externalTrafficPolicy: ""
+  internalTrafficPolicy: ""
+  healthCheckNodePort: ""
+  externalIPs: []
+  externalName: ""
+  sessionAffinity: ""
+  sessionAffinityConfig: {}
+  ipFamilyPolicy: ""
+  ipFamilies: []
+  publishNotReadyAddresses: false
+
+extraServices: {}
+
+# =============================================================================
+# INGRESS CONFIGURATION
+# =============================================================================
+
+ingress:
+  enabled: false
+  ingressClassName: ""
+  labels: {}
+  annotations: {}
+  defaultBackend: {}
+  hosts: []
+
+extraIngresses: {}
+
+# =============================================================================
+# SERVICE ACCOUNT
+# =============================================================================
+
+serviceAccount:
+  enabled: true
+  name: ""
+  annotations: {}
+  labels: {}
+  automountServiceAccountToken: true
+
+# =============================================================================
+# RBAC
+# =============================================================================
+
+rbac:
+  enabled: false
+  type: Role
+  rules: []
+  aggregationRule: {}
+  labels: {}
+  annotations: {}
+  roleRef: ""
+  subjects: []
+  extraRoles: {}
+
+# =============================================================================
+# CONFIG AND SECRETS
+# =============================================================================
+
+configMap:
+  enabled: false
+  data: {}
+  binaryData: {}
+  annotations: {}
+  labels: {}
+  envFrom: false
+  mountPath: ""
+  subPath: ""
+
+secret:
+  enabled: false
+  type: Opaque
+  data: {}
+  stringData: {}
+  annotations: {}
+  labels: {}
+  envFrom: false
+  mountPath: ""
+  subPath: ""
+
+extraConfigMaps: {}
+extraSecrets: {}
+
+# =============================================================================
+# EXTERNAL SECRETS
+# =============================================================================
+
+externalSecrets: {}
+
+# =============================================================================
+# AUTOSCALING
+# =============================================================================
+
+hpa:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 10
+  metrics: []
+  behavior: {}
+
+vpa:
+  enabled: false
+  updateMode: Auto
+  labels: {}
+  annotations: {}
+  updatePolicy: {}
+  containerPolicies: []
+  resourcePolicy: {}
+  recommenders: []
+
+# =============================================================================
+# POD DISRUPTION BUDGET
+# =============================================================================
+
+podDisruptionBudget:
+  enabled: false
+  minAvailable: 1
+  unhealthyPodEvictionPolicy: ""
+
+# =============================================================================
+# NETWORK POLICY
+# =============================================================================
+
+networkPolicy:
+  enabled: false
+  policyTypes: []
+  ingress: []
+  egress: []
+
+# =============================================================================
+# GATEWAY API
+# =============================================================================
+
+gateway:
+  httpRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    parentRefs: []
+    hostnames: []
+    rules: []
+    extraRoutes: {}
+
+  tcpRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    parentRefs: []
+    rules: []
+    extraRoutes: {}
+
+  referenceGrant:
+    enabled: false
+    labels: {}
+    annotations: {}
+    from: []
+    to: []
+    extraGrants: {}
+
+  grpcRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    parentRefs: []
+    hostnames: []
+    rules: []
+    extraRoutes: {}
+
+  tlsRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    parentRefs: []
+    hostnames: []
+    rules: []
+    extraRoutes: {}
+
+  udpRoute:
+    enabled: false
+    labels: {}
+    annotations: {}
+    parentRefs: []
+    rules: []
+    extraRoutes: {}
+
+  targetGroupConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    targetReference: {}
+    defaultConfiguration: {}
+    routeConfigurations: []
+
+  loadBalancerConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    loadBalancerName: ""
+    scheme: ""
+    ipAddressType: ""
+    loadBalancerSubnets: []
+    securityGroups: []
+    sourceRanges: []
+    listenerConfigurations: []
+    loadBalancerAttributes: []
+    tags: {}
+    wafV2: {}
+    shieldConfiguration: {}
+
+  listenerRuleConfiguration:
+    enabled: false
+    labels: {}
+    annotations: {}
+    targetRef: {}
+    conditions: []
+    actions: []
+    tags: {}
+
+# =============================================================================
+# AWS TARGET GROUP BINDING
+# =============================================================================
+
+targetGroupBinding:
+  enabled: false
+  labels: {}
+  annotations: {}
+  targetGroupARN: ""
+  serviceRef:
+    name: ""
+    port: "http"  # @schema type:[string, integer]
+  targetType: ""
+  ipAddressType: ""
+  networking: {}
+
+extraTargetGroupBindings: {}
+
+# =============================================================================
+# HELM HOOKS
+# =============================================================================
+
+hooks:
+  enabled: false
+  preInstall: []
+  postInstall: []
+  preUpgrade: []
+  postUpgrade: []
+  preDelete: []
+  postDelete: []
+
+# =============================================================================
+# DATADOG
+# Unified service tagging: https://docs.datadoghq.com/getting_started/tagging/unified_service_tagging/
+# =============================================================================
+
+datadog:
+  enabled: true
+  # Service name (defaults to chart fullname)
+  service: ""
+  # Environment (defaults to release namespace)
+  env: ""
+  # Version (defaults to image.tag)
+  version: ""
+
+# =============================================================================
+# EXTRA OBJECTS
+# =============================================================================
+
+extraObjects: []

@@ -1,2 +1,0 @@
-{{- include "common.configmap" . }}
-{{- include "common.extraConfigMaps" . }}
