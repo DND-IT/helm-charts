@@ -17,6 +17,6 @@ kubectl apply -f https://github.com/kubernetes-sigs/gateway-api/releases/downloa
 # AWS Load Balancer Controller v3 CRDs (TargetGroupConfiguration, LoadBalancerConfiguration, ListenerRuleConfiguration)
 # renovate: datasource=github-releases depName=aws-load-balancer-controller packageName=kubernetes-sigs/aws-load-balancer-controller
 AWS_LBC_VERSION="v3.1.0"
-kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/bases/gateway.k8s.aws_targetgroupconfigurations.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/bases/gateway.k8s.aws_loadbalancerconfigurations.yaml
-kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/bases/gateway.k8s.aws_listenerruleconfigurations.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/gateway/gateway.k8s.aws_targetgroupconfigurations.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/gateway/gateway.k8s.aws_loadbalancerconfigurations.yaml
+kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/gateway/gateway.k8s.aws_listenerruleconfigurations.yaml
