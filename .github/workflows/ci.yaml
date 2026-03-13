@@ -45,7 +45,7 @@ jobs:
           done
 
       - name: Run lint
-        run: ct lint --config ct.yaml
+        run: ct lint --config ct.yaml --skip-helm-dependencies
 
   unit-test:
     runs-on: ubuntu-latest
