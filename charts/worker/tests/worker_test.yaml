@@ -1,0 +1,251 @@
+suite: test worker chart defaults
+templates:
+  - common.yaml
+tests:
+  # ==========================================================================
+  # Deployment defaults
+  # ==========================================================================
+  - it: should create deployment by default
+    set:
+      image.repository: myworker
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: Deployment
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.replicas
+          value: 1
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have no container ports by default
+    set:
+      image.repository: myworker
+      image.tag: latest
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].ports
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have default pod-level resource requests and limits
+    set:
+      image.repository: myworker
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.resources.requests.cpu
+          value: 100m
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.resources.requests.memory
+          value: 128Mi
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.resources.limits.memory
+          value: 256Mi
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have no probes by default
+    set:
+      image.repository: myworker
+      image.tag: latest
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].livenessProbe
+        documentSelector:
+          path: kind
+          value: Deployment
+      - isNull:
+          path: spec.template.spec.containers[0].readinessProbe
+        documentSelector:
+          path: kind
+          value: Deployment
+      - isNull:
+          path: spec.template.spec.containers[0].startupProbe
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ==========================================================================
+  # Service tests
+  # ==========================================================================
+  - it: should not create service by default
+    set:
+      image.repository: myworker
+      image.tag: latest
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  - it: should create service when enabled
+    set:
+      image.repository: myworker
+      image.tag: latest
+      service:
+        enabled: true
+        ports:
+          - name: http
+            port: 8080
+            protocol: TCP
+    asserts:
+      - hasDocuments:
+          count: 3
+      - isKind:
+          of: Service
+        documentSelector:
+          path: kind
+          value: Service
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+        documentSelector:
+          path: kind
+          value: Service
+
+  # ==========================================================================
+  # Scheduling defaults
+  # ==========================================================================
+  - it: should have no nodeSelector by default
+    set:
+      image.repository: myworker
+      image.tag: latest
+    asserts:
+      - isNull:
+          path: spec.template.spec.nodeSelector
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have topology spread constraints on hostname and zone
+    set:
+      image.repository: myworker
+      image.tag: latest
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.topologySpreadConstraints
+          count: 2
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].topologyKey
+          value: kubernetes.io/hostname
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].maxSkew
+          value: 1
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].whenUnsatisfiable
+          value: ScheduleAnyway
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[1].topologyKey
+          value: topology.kubernetes.io/zone
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[1].maxSkew
+          value: 1
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[1].whenUnsatisfiable
+          value: ScheduleAnyway
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ==========================================================================
+  # No gateway resources
+  # ==========================================================================
+  - it: should not create any gateway resources by default
+    set:
+      image.repository: myworker
+      image.tag: latest
+      deploymentEnabled: false
+      serviceAccount.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  # ==========================================================================
+  # Override tests
+  # ==========================================================================
+  - it: should set custom image
+    set:
+      image.repository: my-custom-worker
+      image.tag: v2.0.0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: my-custom-worker:v2.0.0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should set replicas
+    set:
+      image.repository: myworker
+      image.tag: latest
+      replicas: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 5
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should add env vars
+    set:
+      image.repository: myworker
+      image.tag: latest
+      env:
+        - name: QUEUE_NAME
+          value: high-priority
+        - name: CONCURRENCY
+          value: "10"
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: QUEUE_NAME
+            value: high-priority
+        documentSelector:
+          path: kind
+          value: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: CONCURRENCY
+            value: "10"
+        documentSelector:
+          path: kind
+          value: Deployment
