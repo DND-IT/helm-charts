@@ -146,10 +146,10 @@ gateway:
         healthCheckPath: /readyz
         healthCheckPort: "8080"
         healthCheckProtocol: HTTP
-        healthCheckIntervalSeconds: "15"
-        healthCheckTimeoutSeconds: "5"
-        healthyThresholdCount: "2"
-        unhealthyThresholdCount: "3"
+        healthCheckIntervalSeconds: 15
+        healthCheckTimeoutSeconds: 5
+        healthyThresholdCount: 2
+        unhealthyThresholdCount: 3
 ```
 
 ## Migration from Ingress

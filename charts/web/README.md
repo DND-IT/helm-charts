@@ -203,13 +203,13 @@ Kubernetes: `>=1.32.0-0`
 | gateway.loadBalancerConfiguration.enabled | bool | `true` |  |
 | gateway.loadBalancerConfiguration.ipAddressType | string | `"ipv4"` |  |
 | gateway.loadBalancerConfiguration.scheme | string | `"internet-facing"` |  |
-| gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthCheckIntervalSeconds | string | `"15"` |  |
+| gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthCheckIntervalSeconds | int | `15` |  |
 | gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthCheckPath | string | `"/readyz"` |  |
 | gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthCheckPort | string | `"8080"` |  |
 | gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthCheckProtocol | string | `"HTTP"` |  |
-| gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthCheckTimeoutSeconds | string | `"5"` |  |
-| gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthyThresholdCount | string | `"2"` |  |
-| gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.unhealthyThresholdCount | string | `"3"` |  |
+| gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthCheckTimeoutSeconds | int | `5` |  |
+| gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.healthyThresholdCount | int | `2` |  |
+| gateway.targetGroupConfiguration.defaultConfiguration.healthCheckConfig.unhealthyThresholdCount | int | `3` |  |
 | gateway.targetGroupConfiguration.defaultConfiguration.protocolVersion | string | `"HTTP1"` |  |
 | gateway.targetGroupConfiguration.defaultConfiguration.targetType | string | `"ip"` |  |
 | gateway.targetGroupConfiguration.enabled | bool | `true` |  |
