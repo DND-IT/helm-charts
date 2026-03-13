@@ -16,22 +16,9 @@ metadata:
     {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.httpRoute.annotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.gateway.httpRoute.parentRefs }}
+  {{- with .Values.gateway.httpRoute.parentRefs }}
   parentRefs:
-    {{- range $parentRef := .Values.gateway.httpRoute.parentRefs }}
-    - group: {{ $parentRef.group | default "gateway.networking.k8s.io" }}
-      kind: {{ $parentRef.kind | default "Gateway" }}
-      {{- if $parentRef.namespace }}
-      namespace: {{ $parentRef.namespace }}
-      {{- end }}
-      name: {{ $parentRef.name }}
-      {{- with $parentRef.sectionName }}
-      sectionName: {{ . }}
-      {{- end }}
-      {{- with $parentRef.port }}
-      port: {{ . }}
-      {{- end }}
-    {{- end }}
+    {{- include "common.gatewayParentRefs" . | nindent 4 }}
   {{- end }}
   {{- with .Values.gateway.httpRoute.hostnames }}
   hostnames:
@@ -83,156 +70,16 @@ spec:
         {{- end }}
       {{- with $rule.filters }}
       filters:
-        {{- range $filter := . }}
-        - type: {{ $filter.type }}
-          {{- if eq $filter.type "RequestHeaderModifier" }}
-          {{- with $filter.requestHeaderModifier }}
-          requestHeaderModifier:
-            {{- with .set }}
-            set:
-              {{- range $header := . }}
-              - name: {{ $header.name }}
-                value: {{ $header.value }}
-              {{- end }}
-            {{- end }}
-            {{- with .add }}
-            add:
-              {{- range $header := . }}
-              - name: {{ $header.name }}
-                value: {{ $header.value }}
-              {{- end }}
-            {{- end }}
-            {{- with .remove }}
-            remove:
-              {{- toYaml . | nindent 14 }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "ResponseHeaderModifier" }}
-          {{- with $filter.responseHeaderModifier }}
-          responseHeaderModifier:
-            {{- with .set }}
-            set:
-              {{- range $header := . }}
-              - name: {{ $header.name }}
-                value: {{ $header.value }}
-              {{- end }}
-            {{- end }}
-            {{- with .add }}
-            add:
-              {{- range $header := . }}
-              - name: {{ $header.name }}
-                value: {{ $header.value }}
-              {{- end }}
-            {{- end }}
-            {{- with .remove }}
-            remove:
-              {{- toYaml . | nindent 14 }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "RequestMirror" }}
-          {{- with $filter.requestMirror }}
-          requestMirror:
-            backendRef:
-              {{- if .backendRef.group }}
-              group: {{ .backendRef.group }}
-              {{- end }}
-              {{- if .backendRef.kind }}
-              kind: {{ .backendRef.kind }}
-              {{- end }}
-              {{- if .backendRef.namespace }}
-              namespace: {{ .backendRef.namespace }}
-              {{- end }}
-              name: {{ .backendRef.name }}
-              {{- with .backendRef.port }}
-              port: {{ . }}
-              {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "RequestRedirect" }}
-          {{- with $filter.requestRedirect }}
-          requestRedirect:
-            {{- with .scheme }}
-            scheme: {{ . }}
-            {{- end }}
-            {{- with .hostname }}
-            hostname: {{ . }}
-            {{- end }}
-            {{- with .path }}
-            path:
-              {{- if .type }}
-              type: {{ .type }}
-              {{- end }}
-              {{- if .replaceFullPath }}
-              replaceFullPath: {{ .replaceFullPath }}
-              {{- end }}
-              {{- if .replacePrefixMatch }}
-              replacePrefixMatch: {{ .replacePrefixMatch }}
-              {{- end }}
-            {{- end }}
-            {{- with .port }}
-            port: {{ . }}
-            {{- end }}
-            {{- with .statusCode }}
-            statusCode: {{ . }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "URLRewrite" }}
-          {{- with $filter.urlRewrite }}
-          urlRewrite:
-            {{- with .hostname }}
-            hostname: {{ . }}
-            {{- end }}
-            {{- with .path }}
-            path:
-              {{- if .type }}
-              type: {{ .type }}
-              {{- end }}
-              {{- if .replaceFullPath }}
-              replaceFullPath: {{ .replaceFullPath }}
-              {{- end }}
-              {{- if .replacePrefixMatch }}
-              replacePrefixMatch: {{ .replacePrefixMatch }}
-              {{- end }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "ExtensionRef" }}
-          {{- with $filter.extensionRef }}
-          extensionRef:
-            group: {{ .group }}
-            kind: {{ .kind }}
-            name: {{ .name }}
-          {{- end }}
-          {{- end }}
-        {{- end }}
+        {{- include "common.gatewayFilters" . | nindent 8 }}
       {{- end }}
       backendRefs:
         {{- if $rule.backendRefs }}
         {{- range $backendRef := $rule.backendRefs }}
-        - group: {{ $backendRef.group | default "" | quote }}
-          kind: {{ $backendRef.kind | default "Service" }}
-          {{- if $backendRef.namespace }}
-          namespace: {{ $backendRef.namespace }}
-          {{- end }}
-          name: {{ $backendRef.name }}
-          {{- with $backendRef.port }}
-          port: {{ . }}
-          {{- end }}
-          weight: {{ $backendRef.weight | default 1 }}
-          {{- with $backendRef.filters }}
-          filters:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+        - {{- include "common.gatewayBackendRef" $backendRef | nindent 10 }}
         {{- end }}
         {{- else }}
-        - group: ""
-          kind: Service
-          name: {{ include "common.fullname" $ }}
+        - name: {{ include "common.fullname" $ }}
           port: {{ include "common.servicePort" $ }}
-          weight: 1
         {{- end }}
     {{- end }}
     {{- else }}
@@ -242,11 +89,8 @@ spec:
             type: PathPrefix
             value: /
       backendRefs:
-        - group: ""
-          kind: Service
-          name: {{ include "common.fullname" . }}
+        - name: {{ include "common.fullname" . }}
           port: {{ include "common.servicePort" . }}
-          weight: 1
     {{- end }}
 {{- end }}
 {{- end -}}

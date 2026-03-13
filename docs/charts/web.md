@@ -1,6 +1,9 @@
 # Web Chart
 
-Opinionated chart for **external-facing HTTP applications**. Pre-configured with Gateway API routing, AWS ALB integration, health probes, and topology spread.
+Opinionated chart for **HTTP applications** (both external-facing and internal APIs). Pre-configured with Gateway API routing, AWS ALB integration, health probes, and topology spread.
+
+!!! tip "For both external and internal services"
+    Use `web` for all HTTP workloads. Configure `loadBalancerConfiguration.scheme` as `internal` or `internet-facing` as needed.
 
 ## What's Pre-configured
 
@@ -127,10 +130,23 @@ readinessProbe:
   initialDelaySeconds: 5
 ```
 
-## Differences from API Chart
+## Internal API Services
 
-The web chart is nearly identical to the API chart, with these key differences:
+To use the web chart for internal services, set the load balancer scheme to `internal`:
 
-- **HTTPRoute** is enabled by default (API has it disabled)
-- **TargetGroupConfiguration** is enabled by default
-- **LoadBalancerConfiguration** uses `internet-facing` scheme (API uses `internal`)
+```yaml
+image:
+  repository: my-registry/my-api
+  tag: "1.0.0"
+
+gateway:
+  httpRoute:
+    parentRefs:
+      - name: internal-gateway
+        namespace: gateway-system
+    hostnames:
+      - api.internal.example.com
+
+  loadBalancerConfiguration:
+    scheme: internal
+```

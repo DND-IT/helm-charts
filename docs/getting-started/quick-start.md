@@ -43,22 +43,22 @@ This gives you:
 - Datadog unified service tagging
 - Common environment variables (TZ, PORT, POD_NAME, etc.)
 
-## Minimal API Service
+## Minimal Internal API
+
+Use the web chart with `internal` scheme:
 
 ```yaml
 image:
   repository: my-registry/my-api
   tag: "1.0.0"
+
+gateway:
+  loadBalancerConfiguration:
+    scheme: internal
 ```
 
-That's it. The API chart provides sensible defaults for everything:
-
-- Port 8080 with `/livez` and `/readyz` health probes
-- ClusterIP service (no external exposure)
-- Resource requests and scheduling defaults
-
 ```bash
-helm install my-api oci://ghcr.io/dnd-it/helm-charts/api -f values.yaml
+helm install my-api oci://ghcr.io/dnd-it/helm-charts/web -f values.yaml
 ```
 
 ## Minimal Worker

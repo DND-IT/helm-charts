@@ -25,60 +25,10 @@ spec:
   backoffLimit: {{ . }}
   {{- end }}
   template:
-    metadata:
-      labels:
-        {{- include "common.selectorLabels" $.root | nindent 8 }}
-        app.kubernetes.io/component: hook
-        app.kubernetes.io/hook-type: {{ $.hookType }}
-      annotations:
-        {{- include "common.podAnnotations" $.root | nindent 8 }}
-    spec:
-      restartPolicy: {{ $hook.restartPolicy | default "Never" }}
-      {{- with $hook.imagePullSecrets | default $.root.Values.imagePullSecrets }}
-      imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if $.root.Values.serviceAccount.enabled }}
-      serviceAccountName: {{ include "common.serviceAccountName" $.root }}
-      {{- else if $.root.Values.serviceAccount.name }}
-      serviceAccountName: {{ $.root.Values.serviceAccount.name }}
-      {{- end }}
-      securityContext:
-        {{- include "common.podSecurityContext" (dict "securityContext" $.root.Values.security.defaultPodSecurityContext "defaults" $.root.Values.security.defaultPodSecurityContext) | nindent 8 }}
-      containers:
-      - name: {{ $hook.name }}
-        image: {{ include "common.resolveStringImage" (dict "image" $hook.image "root" $.root) }}
-        imagePullPolicy: {{ $hook.imagePullPolicy | default $.root.Values.image.pullPolicy | default "IfNotPresent" }}
-        {{- with $hook.command }}
-        command:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with $hook.args }}
-        args:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with $hook.env }}
-        env:
-          {{- include "common.envVars" (dict "envVars" . "root" $.root) | nindent 10 }}
-        {{- end }}
-        {{- with $hook.envFrom }}
-        envFrom:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with $hook.resources }}
-        resources:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with $hook.volumeMounts }}
-        volumeMounts:
-          {{- toYaml . | nindent 10 }}
-        {{- end }}
-        securityContext:
-          {{- include "common.containerSecurityContext" (dict "securityContext" $hook.securityContext "root" $.root) | nindent 10 }}
-      {{- with $hook.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+    {{- $hookName := $hook.name | default "hook" }}
+    {{- $hookPodLabels := merge (dict "app.kubernetes.io/hook-type" $.hookType) ($hook.podLabels | default dict) }}
+    {{- $hookConfig := merge (dict "podLabels" $hookPodLabels) $hook }}
+    {{- include "common.podTemplate" (dict "root" $.root "config" $hookConfig "componentName" $hookName "defaultRestartPolicy" "Never") | nindent 4 }}
 {{- end }}
 {{- end -}}
 

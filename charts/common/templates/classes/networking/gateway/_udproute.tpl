@@ -16,48 +16,16 @@ metadata:
     {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.udpRoute.annotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.gateway.udpRoute.parentRefs }}
+  {{- with .Values.gateway.udpRoute.parentRefs }}
   parentRefs:
-    {{- range $parentRef := .Values.gateway.udpRoute.parentRefs }}
-    - {{- if $parentRef.group }}
-      group: {{ $parentRef.group }}
-      {{- end }}
-      {{- if $parentRef.kind }}
-      kind: {{ $parentRef.kind }}
-      {{- end }}
-      {{- if $parentRef.namespace }}
-      namespace: {{ $parentRef.namespace }}
-      {{- end }}
-      name: {{ $parentRef.name }}
-      {{- with $parentRef.sectionName }}
-      sectionName: {{ . }}
-      {{- end }}
-      {{- with $parentRef.port }}
-      port: {{ . }}
-      {{- end }}
-    {{- end }}
+    {{- include "common.gatewayParentRefs" . | nindent 4 }}
   {{- end }}
   rules:
     {{- if .Values.gateway.udpRoute.rules }}
     {{- range $rule := .Values.gateway.udpRoute.rules }}
     - backendRefs:
         {{- range $backendRef := $rule.backendRefs }}
-        - {{- if $backendRef.group }}
-          group: {{ $backendRef.group }}
-          {{- end }}
-          {{- if $backendRef.kind }}
-          kind: {{ $backendRef.kind }}
-          {{- end }}
-          {{- if $backendRef.namespace }}
-          namespace: {{ $backendRef.namespace }}
-          {{- end }}
-          name: {{ $backendRef.name }}
-          {{- with $backendRef.port }}
-          port: {{ . }}
-          {{- end }}
-          {{- with $backendRef.weight }}
-          weight: {{ . }}
-          {{- end }}
+        - {{- include "common.gatewayBackendRef" $backendRef | nindent 10 }}
         {{- end }}
     {{- end }}
     {{- else }}

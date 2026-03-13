@@ -32,7 +32,6 @@ helm install my-app oci://ghcr.io/dnd-it/helm-charts/web \
 |-------|---------------|
 | generic | `oci://ghcr.io/dnd-it/helm-charts/generic` |
 | web | `oci://ghcr.io/dnd-it/helm-charts/web` |
-| api | `oci://ghcr.io/dnd-it/helm-charts/api` |
 | worker | `oci://ghcr.io/dnd-it/helm-charts/worker` |
 | task | `oci://ghcr.io/dnd-it/helm-charts/task` |
 | karpenter-resources | `oci://ghcr.io/dnd-it/helm-charts/karpenter-resources` |

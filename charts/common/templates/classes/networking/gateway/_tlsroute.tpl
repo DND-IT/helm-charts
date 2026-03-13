@@ -16,26 +16,9 @@ metadata:
     {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.tlsRoute.annotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.gateway.tlsRoute.parentRefs }}
+  {{- with .Values.gateway.tlsRoute.parentRefs }}
   parentRefs:
-    {{- range $parentRef := .Values.gateway.tlsRoute.parentRefs }}
-    - {{- if $parentRef.group }}
-      group: {{ $parentRef.group }}
-      {{- end }}
-      {{- if $parentRef.kind }}
-      kind: {{ $parentRef.kind }}
-      {{- end }}
-      {{- if $parentRef.namespace }}
-      namespace: {{ $parentRef.namespace }}
-      {{- end }}
-      name: {{ $parentRef.name }}
-      {{- with $parentRef.sectionName }}
-      sectionName: {{ . }}
-      {{- end }}
-      {{- with $parentRef.port }}
-      port: {{ . }}
-      {{- end }}
-    {{- end }}
+    {{- include "common.gatewayParentRefs" . | nindent 4 }}
   {{- end }}
   {{- if .Values.gateway.tlsRoute.hostnames }}
   hostnames:
@@ -46,22 +29,7 @@ spec:
     {{- range $rule := .Values.gateway.tlsRoute.rules }}
     - backendRefs:
         {{- range $backendRef := $rule.backendRefs }}
-        - {{- if $backendRef.group }}
-          group: {{ $backendRef.group }}
-          {{- end }}
-          {{- if $backendRef.kind }}
-          kind: {{ $backendRef.kind }}
-          {{- end }}
-          {{- if $backendRef.namespace }}
-          namespace: {{ $backendRef.namespace }}
-          {{- end }}
-          name: {{ $backendRef.name }}
-          {{- with $backendRef.port }}
-          port: {{ . }}
-          {{- end }}
-          {{- with $backendRef.weight }}
-          weight: {{ . }}
-          {{- end }}
+        - {{- include "common.gatewayBackendRef" $backendRef | nindent 10 }}
         {{- end }}
     {{- end }}
     {{- else }}

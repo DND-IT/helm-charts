@@ -58,14 +58,14 @@ gateway:
     scheme: internet-facing
 ```
 
-## API Chart (Opt-in)
+## Internal Services
 
-The API chart has Gateway API disabled by default with internal scheme pre-configured:
+For internal services (formerly the `api` chart use case), use the web chart with `internal` scheme:
 
 ```yaml
 gateway:
   httpRoute:
-    enabled: true  # Enable when external access is needed
+    enabled: true
     parentRefs:
       - name: internal-gateway
         namespace: gateway-system
@@ -77,8 +77,11 @@ gateway:
 
   loadBalancerConfiguration:
     enabled: true
-    scheme: internal  # Default for API chart
+    scheme: internal
 ```
+
+!!! note
+    Use the `web` chart for both internal and external HTTP services.
 
 ## Supported Route Types
 

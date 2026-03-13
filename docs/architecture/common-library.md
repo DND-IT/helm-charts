@@ -120,9 +120,22 @@ seccompProfile:
   type: RuntimeDefault
 ```
 
-## Pod Template
+## Composition Hierarchy
 
-The `common.podTemplate` helper generates a unified pod template used by all workload types (Deployment, CronJob, Job). It supports:
+All workload types share the same composition chain:
+
+```
+Deployment  → common.podTemplate → common.container
+CronJob     → common.jobSpec → common.podTemplate → common.container
+Job         → common.jobSpec → common.podTemplate → common.container
+Hook        → common.podTemplate → common.container
+```
+
+This means Jobs, CronJobs, and Hooks automatically inherit every pod-level feature that Deployments support: hostAliases, dnsPolicy, priorityClassName, topologySpreadConstraints, sidecar containers, and consistent security context defaults.
+
+### Pod Template
+
+The `common.podTemplate` helper generates a unified pod template used by all workload types. It supports:
 
 - Pod-level resources (`resources:` at top level)
 - Container-level resources (`container.resources:`)
@@ -132,3 +145,25 @@ The `common.podTemplate` helper generates a unified pod template used by all wor
 - Topology spread constraints with automatic label selectors
 - Volume mounts from ConfigMap, Secret, PVC, emptyDir, hostPath
 - Config/secret checksum annotations for auto-reload
+- `defaultRestartPolicy` parameter for caller-specified defaults (e.g., `OnFailure` for jobs, `Never` for hooks)
+
+### Container
+
+The `common.container` helper renders a single container spec. It supports two modes:
+
+- **Main container** (`mainContainer: true`): Merges common env vars, uses `envFrom` helper for auto-injection from ConfigMaps/Secrets, falls back to service port when no explicit ports defined, uses `volumeMounts` helper
+- **Component container** (default): Used for extra deployments, jobs, cronjobs, and hooks — renders from the config dict directly
+
+### Job Spec
+
+The `common.jobSpec` helper renders shared Job spec fields used by both standalone Jobs and CronJobs: `completions`, `parallelism`, `backoffLimit`, `activeDeadlineSeconds`, `ttlSecondsAfterFinished`, `completionMode`, `suspend`, `podFailurePolicy`.
+
+## Gateway API Helpers
+
+Route templates use shared helpers to avoid duplication across the 5 route types:
+
+| Helper | Used By | Purpose |
+|--------|---------|---------|
+| `common.gatewayParentRefs` | All 5 route types | Render parentRef list items |
+| `common.gatewayBackendRef` | All 5 route types | Render individual backendRef fields |
+| `common.gatewayFilters` | HTTPRoute, GRPCRoute | Render filter lists (header modifiers, redirects, rewrites, mirrors, extensions) |
