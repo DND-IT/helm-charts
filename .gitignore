@@ -1,4 +1,5 @@
 charts/*/charts
+charts/*/Chart.lock
 .bin/
 site/
 CLAUDE.md
