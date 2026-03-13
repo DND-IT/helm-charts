@@ -36,22 +36,8 @@ jobs:
         with:
           version: v3.12.0 # renovate: datasource=github-releases depName=chart-testing packageName=helm/chart-testing
 
-      - name: Build chart dependencies
-        run: |
-          # Package library charts first, then copy to dependent charts
-          helm package charts/common -d /tmp/helm-packages
-          for chart in charts/*/; do
-            if [ -f "${chart}Chart.lock" ]; then
-              mkdir -p "${chart}charts"
-              # Copy matching library chart packages
-              if grep -q 'name: common' "${chart}Chart.yaml" 2>/dev/null; then
-                cp /tmp/helm-packages/common-*.tgz "${chart}charts/"
-              fi
-            fi
-          done
-
       - name: Run lint
-        run: ct lint --config ct.yaml --skip-helm-dependencies
+        run: ct lint --config ct.yaml
 
   unit-test:
     runs-on: ubuntu-latest
