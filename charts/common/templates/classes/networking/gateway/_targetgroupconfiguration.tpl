@@ -16,16 +16,14 @@ metadata:
     {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.targetGroupConfiguration.annotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- with .Values.gateway.targetGroupConfiguration.targetReference }}
   targetReference:
-    name: {{ .name }}
-    {{- with .group }}
+    name: {{ (.Values.gateway.targetGroupConfiguration.targetReference).name | default (include "common.fullname" .) }}
+    {{- with (.Values.gateway.targetGroupConfiguration.targetReference).group }}
     group: {{ . }}
     {{- end }}
-    {{- with .kind }}
+    {{- with (.Values.gateway.targetGroupConfiguration.targetReference).kind }}
     kind: {{ . }}
     {{- end }}
-  {{- end }}
   {{- with .Values.gateway.targetGroupConfiguration.defaultConfiguration }}
   defaultConfiguration:
     {{- toYaml . | nindent 4 }}
