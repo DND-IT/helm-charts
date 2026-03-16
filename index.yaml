@@ -80,6 +80,30 @@ entries:
     version: 0.1.0
   common:
   - apiVersion: v2
+    created: "2026-03-16T14:49:34.500885733Z"
+    description: 'A Helm library chart containing shared templates and helpers for
+      Kubernetes workloads. Provides common functionality for naming, labels, security
+      contexts, containers, pods, and volumes. Designed to be used as a dependency
+      by application charts (web, worker, task). '
+    digest: da820a84e7b2c3eafe93f00b471deb7efcea71d10ac80a9735f4ce1cedc51a48
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - library
+    - common
+    - helpers
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: common
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: library
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/common-1.2.0/common-1.2.0.tgz
+    version: 1.2.0
+  - apiVersion: v2
     created: "2026-02-20T18:02:44.8084746Z"
     description: 'A Helm library chart containing shared templates and helpers for
       Kubernetes workloads. Provides common functionality for naming, labels, security
@@ -397,6 +421,33 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/datadog-resources-0.1.0/datadog-resources-0.1.0.tgz
     version: 0.1.0
   generic:
+  - apiVersion: v2
+    created: "2026-03-16T14:49:34.73376729Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
+      workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
+      options. Designed for maximum flexibility while maintaining security best practices
+      by default. Optimized for AWS with ALB ingress controller support. '
+    digest: 78c7d3c3fee6ad0155ef8eabd6ba19691f117a769dd47bfb30c22b05ef2194ed
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - application
+    - kubernetes
+    - generic
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: generic
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/generic-0.9.0/generic-0.9.0.tgz
+    version: 0.9.0
   - apiVersion: v2
     created: "2026-02-20T18:02:45.062066109Z"
     dependencies:
@@ -947,6 +998,35 @@ entries:
     version: 0.1.0
   task:
   - apiVersion: v2
+    created: "2026-03-16T14:49:34.889499353Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying scheduled CronJob workloads to Kubernetes.
+      Includes CronJob and ServiceAccount. Designed for scheduled tasks with configurable
+      concurrency, history limits, and job settings. No HPA, PDB, service, or ingress
+      - focused purely on scheduled job execution. '
+    digest: b9844d860ceadb409f1f94dbead960e7264b23f864dc3271a2d9ab3d947df455
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - task
+    - cronjob
+    - scheduled
+    - job
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: task
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/task-1.1.0/task-1.1.0.tgz
+    version: 1.1.0
+  - apiVersion: v2
     created: "2026-03-05T06:57:54.935419284Z"
     dependencies:
     - name: common
@@ -976,6 +1056,33 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/task-1.0.0/task-1.0.0.tgz
     version: 1.0.0
   web:
+  - apiVersion: v2
+    created: "2026-03-16T14:49:35.094005285Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying HTTP-facing web applications to Kubernetes.
+      Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
+      Designed for web applications that need external traffic exposure. '
+    digest: f8acc3fbd29ed45a5acd619681d1cd1f33dcc2c52a2175d8524dc174717ccbfe
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - web
+    - application
+    - ingress
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: web
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/web-1.2.0/web-1.2.0.tgz
+    version: 1.2.0
   - apiVersion: v2
     created: "2026-03-05T06:57:55.075010101Z"
     dependencies:
@@ -1273,6 +1380,33 @@ entries:
     version: 0.2.0
   worker:
   - apiVersion: v2
+    created: "2026-03-16T14:49:35.305570857Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying background worker processes to Kubernetes.
+      Includes Deployment, HPA, PDB, and ServiceAccount. Designed for background processing
+      workloads that don''t expose HTTP endpoints. No service or ingress by default. '
+    digest: 93bd4e6f7cdbbe557b05fd245bbedc6e8566fdf33505927ed49d00e3e2c4df0e
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - worker
+    - background
+    - processing
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: worker
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/worker-1.1.0/worker-1.1.0.tgz
+    version: 1.1.0
+  - apiVersion: v2
     created: "2026-03-05T06:57:55.248104167Z"
     dependencies:
     - name: common
@@ -1299,4 +1433,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/worker-1.0.0/worker-1.0.0.tgz
     version: 1.0.0
-generated: "2026-03-05T06:57:55.248245732Z"
+generated: "2026-03-16T14:49:35.305873093Z"
