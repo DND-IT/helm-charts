@@ -1,8 +1,12 @@
 suite: test helm hooks
 templates:
-  - lifecycle/hooks.yaml
+  - common.yaml
 tests:
   - it: should not render hooks by default
+    set:
+      service.enabled: false
+      deploymentEnabled: false
+      serviceAccount.enabled: false
     asserts:
       - hasDocuments:
           count: 0
@@ -34,43 +38,77 @@ tests:
                 cpu: "100m"
                 memory: "128Mi"
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: Job
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
+        documentSelector:
           path: metadata.name
           value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: metadata.annotations["helm.sh/hook"]
           value: pre-install
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "1"
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: metadata.annotations["helm.sh/hook-delete-policy"]
           value: before-hook-creation
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: spec.ttlSecondsAfterFinished
           value: 300
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: spec.template.spec.restartPolicy
           value: Never
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: spec.template.spec.containers[0].name
           value: db-migration
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: spec.template.spec.containers[0].image
           value: migrate/migrate:latest
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: spec.template.spec.containers[0].command[0]
           value: migrate
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: spec.template.spec.containers[0].env[0].name
           value: DB_HOST
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
       - equal:
           path: spec.template.spec.containers[0].env[0].value
           value: postgres-service
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-db-migration
 
   - it: should render post-install hook
     set:
@@ -91,31 +129,53 @@ tests:
             deletePolicy: hook-succeeded
             ttlSecondsAfterFinished: 600
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: Job
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-install-data-seed
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-post-install-data-seed
+        documentSelector:
           path: metadata.name
           value: RELEASE-NAME-post-install-data-seed
       - equal:
           path: metadata.annotations["helm.sh/hook"]
           value: post-install
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-install-data-seed
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "2"
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-install-data-seed
       - equal:
           path: metadata.annotations["helm.sh/hook-delete-policy"]
           value: hook-succeeded
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-install-data-seed
       - equal:
           path: spec.ttlSecondsAfterFinished
           value: 600
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-install-data-seed
       - equal:
           path: spec.template.spec.containers[0].name
           value: data-seed
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-install-data-seed
       - equal:
           path: spec.template.spec.containers[0].image
           value: curlimages/curl:latest
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-install-data-seed
 
   - it: should render pre-upgrade hook
     set:
@@ -145,28 +205,47 @@ tests:
                 persistentVolumeClaim:
                   claimName: backup-pvc
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: Job
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-upgrade-backup-db
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pre-upgrade-backup-db
+        documentSelector:
           path: metadata.name
           value: RELEASE-NAME-pre-upgrade-backup-db
       - equal:
           path: metadata.annotations["helm.sh/hook"]
           value: pre-upgrade
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-upgrade-backup-db
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "1"
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-upgrade-backup-db
       - equal:
           path: metadata.annotations["helm.sh/hook-delete-policy"]
           value: before-hook-creation
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-upgrade-backup-db
       - equal:
           path: spec.template.spec.containers[0].volumeMounts[0].name
           value: backup-storage
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-upgrade-backup-db
       - equal:
           path: spec.template.spec.volumes[0].name
           value: backup-storage
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-upgrade-backup-db
 
   - it: should render post-upgrade hook
     set:
@@ -185,19 +264,29 @@ tests:
             deletePolicy: hook-succeeded
             ttlSecondsAfterFinished: 300
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: Job
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-upgrade-verify-migration
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-post-upgrade-verify-migration
+        documentSelector:
           path: metadata.name
           value: RELEASE-NAME-post-upgrade-verify-migration
       - equal:
           path: metadata.annotations["helm.sh/hook"]
           value: post-upgrade
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-upgrade-verify-migration
       - equal:
           path: metadata.annotations["helm.sh/hook-delete-policy"]
           value: hook-succeeded
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-upgrade-verify-migration
 
   - it: should render pre-delete hook
     set:
@@ -220,16 +309,23 @@ tests:
             deletePolicy: hook-succeeded
             ttlSecondsAfterFinished: 3600
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: Job
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-delete-data-export
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-pre-delete-data-export
+        documentSelector:
           path: metadata.name
           value: RELEASE-NAME-pre-delete-data-export
       - equal:
           path: metadata.annotations["helm.sh/hook"]
           value: pre-delete
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-delete-data-export
 
   - it: should render post-delete hook
     set:
@@ -249,16 +345,23 @@ tests:
             deletePolicy: hook-succeeded
             ttlSecondsAfterFinished: 300
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: Job
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-delete-cleanup-external
       - equal:
+          path: metadata.name
+          value: RELEASE-NAME-post-delete-cleanup-external
+        documentSelector:
           path: metadata.name
           value: RELEASE-NAME-post-delete-cleanup-external
       - equal:
           path: metadata.annotations["helm.sh/hook"]
           value: post-delete
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-post-delete-cleanup-external
 
   - it: should render multiple hooks with different weights
     set:
@@ -278,35 +381,45 @@ tests:
             command: ["echo", "third"]
             weight: 3
     asserts:
-      - hasDocuments:
-          count: 3
       # First hook
       - equal:
           path: metadata.name
           value: RELEASE-NAME-pre-install-first-hook
-        documentIndex: 0
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-first-hook
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "1"
-        documentIndex: 0
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-first-hook
       # Second hook
       - equal:
           path: metadata.name
           value: RELEASE-NAME-pre-install-second-hook
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-second-hook
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "2"
-        documentIndex: 1
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-second-hook
       # Third hook
       - equal:
           path: metadata.name
           value: RELEASE-NAME-pre-install-third-hook
-        documentIndex: 2
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-third-hook
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "3"
-        documentIndex: 2
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-third-hook
 
   - it: should apply security contexts to hook jobs
     set:
@@ -317,23 +430,36 @@ tests:
             image: busybox:latest
             command: ["echo", "secure"]
     asserts:
-      - hasDocuments:
-          count: 1
       - equal:
           path: spec.template.spec.securityContext.runAsNonRoot
           value: true
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-secure-hook
       - equal:
           path: spec.template.spec.securityContext.runAsUser
           value: 1000
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-secure-hook
       - equal:
           path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
           value: false
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-secure-hook
       - equal:
           path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
           value: true
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-secure-hook
       - equal:
           path: spec.template.spec.containers[0].securityContext.capabilities.drop[0]
           value: ALL
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-secure-hook
 
   - it: should use default values for optional fields
     set:
@@ -343,17 +469,27 @@ tests:
           - name: minimal-hook
             image: busybox:latest
     asserts:
-      - hasDocuments:
-          count: 1
       - equal:
           path: metadata.annotations["helm.sh/hook-weight"]
           value: "1"  # default weight
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-minimal-hook
       - equal:
           path: metadata.annotations["helm.sh/hook-delete-policy"]
           value: before-hook-creation  # default for pre-install
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-minimal-hook
       - equal:
           path: spec.template.spec.restartPolicy
           value: Never  # default restartPolicy
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-minimal-hook
       - equal:
           path: spec.template.spec.containers[0].imagePullPolicy
           value: IfNotPresent  # default imagePullPolicy
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-pre-install-minimal-hook

@@ -4,17 +4,19 @@ Parameters:
 - root: The root context (defaults to .)
 - config: Optional deployment/workload configuration
 - componentName: Optional component name for extra deployments
+- defaultRestartPolicy: Optional default restartPolicy (e.g., "OnFailure" for jobs, "Never" for hooks)
 */}}
 {{- define "common.podTemplate" -}}
 {{- $root := .root | default . -}}
 {{- $config := .config | default dict -}}
 {{- $componentName := .componentName | default "main" -}}
+{{- $defaultRestartPolicy := .defaultRestartPolicy | default "" -}}
 {{- $deployment := $root.Values -}}
 metadata:
   labels:
     {{- $podLabels := $config.podLabels | default ($config.pod).labels | default $deployment.pod.labels -}}
     {{- $podLabels = merge (dict "app.kubernetes.io/component" $componentName) $podLabels -}}
-    {{- include "common.labels" (dict "context" $root "labels" $podLabels) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $root "labels" $podLabels "pod" true) | nindent 4 }}
   annotations:
     {{- $podAnnotations := $config.podAnnotations | default ($config.pod).annotations | default $deployment.pod.annotations -}}
     {{- include "common.podAnnotations" (dict "root" $root "annotations" $podAnnotations) | nindent 4 }}
@@ -93,11 +95,11 @@ spec:
   securityContext:
     {{- $podSecurityContext := $config.podSecurityContext | default ($config.pod).securityContext | default $deployment.pod.securityContext | default $root.Values.security.defaultPodSecurityContext -}}
     {{- include "common.podSecurityContext" (dict "securityContext" $podSecurityContext "defaults" $root.Values.security.defaultPodSecurityContext) | nindent 4 }}
-  {{- /* Pod-level resources (Kubernetes 1.32+) */ -}}
-  {{- $podResources := $config.podResources | default ($config.pod).resources | default $deployment.pod.resources -}}
-  {{- with $podResources }}
+  {{- /* Pod-level resources (Kubernetes 1.32+) - from top-level resources key */ -}}
+  {{- $podResources := $config.podResources | default $deployment.resources -}}
+  {{- if and $podResources (not (empty $podResources)) }}
   resources:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml $podResources | nindent 4 }}
   {{- end }}
   {{- /* For extraDeployments, only inherit root initContainers/sidecarContainers if inheritInitContainers is true */ -}}
   {{- $inheritInit := $config.inheritInitContainers | default false -}}
@@ -114,132 +116,17 @@ spec:
     {{- end }}
   {{- end }}
   containers:
-    {{- if $config }}
-    {{/* Handle extra deployments */}}
-    - name: {{ $componentName | default "main" }}
-      {{/* Only set registry if explicitly specified on extraDeployment or root image */}}
-      {{- $extraImage := dict "repository" ($config.image.repository | default $root.Values.image.repository) "tag" ($config.image.tag | default $root.Values.image.tag) }}
-      {{- if $config.image.registry }}
-        {{- $extraImage = merge (dict "registry" $config.image.registry) $extraImage }}
-      {{- else if $root.Values.image.registry }}
-        {{- $extraImage = merge (dict "registry" $root.Values.image.registry) $extraImage }}
-      {{- end }}
-      image: {{ include "common.image" (dict "image" $extraImage "context" $root) }}
-      imagePullPolicy: {{ $config.image.pullPolicy | default $root.Values.image.pullPolicy }}
-      {{- with $config.command }}
-      command:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $config.args }}
-      args:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $config.env }}
-      env:
-        {{- include "common.envVars" (dict "envVars" . "root" $root) | nindent 8 }}
-      {{- end }}
-      {{- with $config.envFrom }}
-      envFrom:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $config.ports }}
-      ports:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $config.livenessProbe }}
-      livenessProbe:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $config.readinessProbe }}
-      readinessProbe:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $config.startupProbe }}
-      startupProbe:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $config.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $config.volumeMounts }}
-      volumeMounts:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      securityContext:
-        {{- $containerSecurityContext := $config.securityContext | default $root.Values.containerSecurityContext -}}
-        {{- if $containerSecurityContext }}
-        {{- toYaml $containerSecurityContext | nindent 8 }}
-        {{- else }}
-        {{- include "common.containerSecurityContext" (dict "securityContext" nil "root" $root) | nindent 8 }}
-        {{- end }}
+    {{- if and (not (empty $config)) $config }}
+    {{/* Handle extra deployments / component containers - prefer config.name for container name */}}
+    {{- $resolvedContainerName := $config.name | default ($componentName | default "main") -}}
+    {{- include "common.container" (dict "container" $config "root" $root "containerName" $resolvedContainerName) | nindent 4 }}
     {{- else if $deployment.extraContainers }}
     {{- range $container := $deployment.extraContainers }}
     {{- include "common.container" (dict "container" $container "root" $root) | nindent 4 }}
     {{- end }}
     {{- else }}
     {{/* Default single container configuration */}}
-    {{- $imageConfig := $config.image | default $deployment.image -}}
-    - name: main
-      image: {{ include "common.image" (dict "image" $imageConfig "context" $root) }}
-      imagePullPolicy: {{ $imageConfig.pullPolicy }}
-      {{- with $deployment.command }}
-      command:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $deployment.args }}
-      args:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- if or $deployment.env $deployment.commonEnvVars }}
-      {{- if $deployment.commonEnvVars }}
-      env:
-        {{- include "common.commonEnvVars" $root | nindent 8 }}
-        {{- with $deployment.env }}
-        {{- include "common.envVars" (dict "envVars" . "root" $root) | nindent 8 }}
-        {{- end }}
-      {{- else if $deployment.env }}
-      env:
-        {{- include "common.envVars" (dict "envVars" $deployment.env "root" $root) | nindent 8 }}
-      {{- end }}
-      {{- end }}
-      {{- include "common.envFrom" $root | nindent 6 }}
-      {{- if $deployment.ports }}
-      ports:
-        {{- range $deployment.ports }}
-        - name: {{ .name }}
-          containerPort: {{ .containerPort }}
-          protocol: {{ .protocol | default "TCP" }}
-        {{- end }}
-      {{- else if $root.Values.service.enabled }}
-      ports:
-        - name: http
-          containerPort: {{ $root.Values.service.targetPort | default $root.Values.service.port | default 80 }}
-          protocol: TCP
-      {{- end }}
-      {{- with $deployment.livenessProbe }}
-      livenessProbe:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $deployment.readinessProbe }}
-      readinessProbe:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $deployment.startupProbe }}
-      startupProbe:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with $deployment.resources }}
-      resources:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- include "common.volumeMounts" (dict "container" $deployment "root" $root) | nindent 6 }}
-      {{- with $deployment.lifecycle }}
-      lifecycle:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      securityContext:
-        {{- include "common.containerSecurityContext" (dict "securityContext" $deployment.securityContext "root" $root) | nindent 8 }}
+    {{- include "common.container" (dict "container" $deployment "root" $root "mainContainer" true) | nindent 4 }}
     {{- end }}
   {{- with $config.volumes }}
   volumes:
@@ -247,7 +134,8 @@ spec:
   {{- else }}
   {{- include "common.volumes" $root | nindent 2 }}
   {{- end }}
-  {{- with $config.restartPolicy | default ($config.pod).restartPolicy | default $deployment.pod.restartPolicy }}
+  {{- $restartPolicy := $config.restartPolicy | default ($config.pod).restartPolicy | default $deployment.pod.restartPolicy | default $defaultRestartPolicy -}}
+  {{- with $restartPolicy }}
   restartPolicy: {{ . }}
   {{- end }}
 {{- end -}}
@@ -260,10 +148,10 @@ Pod annotations including checksums
 {{- $extraAnnotations := .annotations | default dict -}}
 {{- $annotations := dict -}}
 {{- if $root.Values.configMap.enabled -}}
-  {{- $_ := set $annotations "checksum/config" (include (print $root.Template.BasePath "/configmap.yaml") $root | sha256sum) -}}
+  {{- $_ := set $annotations "checksum/config" (include "common.configmap" $root | sha256sum) -}}
 {{- end -}}
 {{- if $root.Values.secret.enabled -}}
-  {{- $_ := set $annotations "checksum/secret" (include (print $root.Template.BasePath "/secret.yaml") $root | sha256sum) -}}
+  {{- $_ := set $annotations "checksum/secret" (include "common.secret" $root | sha256sum) -}}
 {{- end -}}
 {{- $securityAnnotations := include "common.securityAnnotations" $root -}}
 {{- if $securityAnnotations -}}

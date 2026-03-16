@@ -1,0 +1,549 @@
+suite: test web chart defaults
+templates:
+  - common.yaml
+tests:
+  # ==========================================================================
+  # Deployment defaults
+  # ==========================================================================
+  - it: should create deployment by default
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: Deployment
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have default port 8080 named http
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: http
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 8080
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].protocol
+          value: TCP
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have default liveness probe to /livez
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.path
+          value: /livez
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.httpGet.port
+          value: http
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.initialDelaySeconds
+          value: 30
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have default readiness probe to /readyz
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.path
+          value: /readyz
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.httpGet.port
+          value: http
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.initialDelaySeconds
+          value: 5
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have default startup probe to /readyz
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.path
+          value: /readyz
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.httpGet.port
+          value: http
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].startupProbe.failureThreshold
+          value: 30
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have default resource requests
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.resources.requests.cpu
+          value: 100m
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.resources.requests.memory
+          value: 128Mi
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ==========================================================================
+  # Service defaults
+  # ==========================================================================
+  - it: should create service enabled with type ClusterIP
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: Service
+        documentSelector:
+          path: kind
+          value: Service
+      - equal:
+          path: spec.type
+          value: ClusterIP
+        documentSelector:
+          path: kind
+          value: Service
+
+  - it: should have service port matching container port 8080
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.ports[0].name
+          value: http
+        documentSelector:
+          path: kind
+          value: Service
+      - equal:
+          path: spec.ports[0].port
+          value: 8080
+        documentSelector:
+          path: kind
+          value: Service
+      - equal:
+          path: spec.ports[0].targetPort
+          value: 8080
+        documentSelector:
+          path: kind
+          value: Service
+
+  - it: should allow disabling the service
+    set:
+      image.repository: nginx
+      image.tag: latest
+      service.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 2
+
+  # ==========================================================================
+  # Scheduling defaults
+  # ==========================================================================
+  - it: should have nodeSelector for amd64
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.nodeSelector["kubernetes.io/arch"]
+          value: amd64
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have topology spread constraints on hostname and zone
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].topologyKey
+          value: kubernetes.io/hostname
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].maxSkew
+          value: 1
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].whenUnsatisfiable
+          value: ScheduleAnyway
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[1].topologyKey
+          value: topology.kubernetes.io/zone
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[1].maxSkew
+          value: 1
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[1].whenUnsatisfiable
+          value: ScheduleAnyway
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ==========================================================================
+  # Gateway API defaults
+  # ==========================================================================
+  - it: should create HTTPRoute by default when CRD is available
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: HTTPRoute
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: apiVersion
+          value: gateway.networking.k8s.io/v1
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: HTTPRoute
+
+  - it: should create TargetGroupConfiguration with correct defaults
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: TargetGroupConfiguration
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: apiVersion
+          value: gateway.k8s.aws/v1beta1
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.targetType
+          value: ip
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.protocolVersion
+          value: HTTP1
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+
+  - it: should have health check config in TargetGroupConfiguration
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.defaultConfiguration.healthCheckConfig.healthCheckPath
+          value: /readyz
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.healthCheckConfig.healthCheckPort
+          value: "8080"
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.healthCheckConfig.healthCheckProtocol
+          value: HTTP
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.healthCheckConfig.healthCheckIntervalSeconds
+          value: 15
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.healthCheckConfig.healthyThresholdCount
+          value: 2
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+      - equal:
+          path: spec.defaultConfiguration.healthCheckConfig.unhealthyThresholdCount
+          value: 3
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+
+  - it: should auto-populate targetReference name from release name
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.targetReference.name
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: TargetGroupConfiguration
+
+  - it: should create LoadBalancerConfiguration with internet-facing scheme
+    capabilities:
+      apiVersions:
+        - gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: LoadBalancerConfiguration
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: apiVersion
+          value: gateway.k8s.aws/v1beta1
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.scheme
+          value: internet-facing
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+      - equal:
+          path: spec.ipAddressType
+          value: ipv4
+        documentSelector:
+          path: kind
+          value: LoadBalancerConfiguration
+
+  - it: should not create gateway resources when disabled
+    capabilities:
+      apiVersions:
+        - gateway.networking.k8s.io/v1/HTTPRoute
+        - gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+        - gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
+    set:
+      image.repository: nginx
+      image.tag: latest
+      gateway.httpRoute.enabled: false
+      gateway.targetGroupConfiguration.enabled: false
+      gateway.loadBalancerConfiguration.enabled: false
+    asserts:
+      # Without gateway resources, only ServiceAccount + Service + Deployment = 3 documents
+      - hasDocuments:
+          count: 3
+
+  # ==========================================================================
+  # ConfigMap
+  # ==========================================================================
+  - it: should create ConfigMap when data is provided
+    set:
+      image.repository: nginx
+      image.tag: latest
+      configMap.enabled: true
+      configMap.data:
+        APP_ENV: production
+        LOG_LEVEL: info
+    asserts:
+      - isKind:
+          of: ConfigMap
+        documentSelector:
+          path: kind
+          value: ConfigMap
+      - equal:
+          path: data.APP_ENV
+          value: production
+        documentSelector:
+          path: kind
+          value: ConfigMap
+      - equal:
+          path: data.LOG_LEVEL
+          value: info
+        documentSelector:
+          path: kind
+          value: ConfigMap
+
+  - it: should have envFrom injection when configMap is enabled
+    set:
+      image.repository: nginx
+      image.tag: latest
+      configMap.enabled: true
+      configMap.data:
+        MY_VAR: myvalue
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-config
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ==========================================================================
+  # Security
+  # ==========================================================================
+  - it: should apply default pod security context
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should apply default container security context
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - contains:
+          path: spec.template.spec.containers[0].securityContext.capabilities.drop
+          content: ALL
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ==========================================================================
+  # Overrides
+  # ==========================================================================
+  - it: should allow overriding the image
+    set:
+      image.repository: myapp
+      image.tag: v1.2.3
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].image
+          value: myapp:v1.2.3
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should allow overriding replicas
+    set:
+      image.repository: nginx
+      image.tag: latest
+      replicas: 5
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 5
+        documentSelector:
+          path: kind
+          value: Deployment

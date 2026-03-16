@@ -19,7 +19,20 @@ curl -sSfLo .bin/semver2 https://raw.githubusercontent.com/Ariel-Rodriguez/sh-se
 chmod +x .bin/semver2
 
 # Initialize apis array
-apis=(--api-versions batch/v1/CronJob)
+apis=(
+  --api-versions batch/v1/CronJob
+  # Gateway API
+  --api-versions gateway.networking.k8s.io/v1/HTTPRoute
+  --api-versions gateway.networking.k8s.io/v1/GRPCRoute
+  --api-versions gateway.networking.k8s.io/v1beta1/ReferenceGrant
+  --api-versions gateway.networking.k8s.io/v1alpha2/TCPRoute
+  --api-versions gateway.networking.k8s.io/v1alpha2/TLSRoute
+  --api-versions gateway.networking.k8s.io/v1alpha2/UDPRoute
+  # AWS Load Balancer Controller v3
+  --api-versions gateway.k8s.aws/v1beta1/TargetGroupConfiguration
+  --api-versions gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
+  --api-versions gateway.k8s.aws/v1beta1/ListenerRuleConfiguration
+)
 
 
 # validate charts

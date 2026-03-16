@@ -73,17 +73,32 @@ service:
       port: 80
       targetPort: 8080  # Maps to nginx-unprivileged port
 
-ingress:
-  enabled: true
-  ingressClassName: "alb"
-  annotations:
-    alb.ingress.kubernetes.io/scheme: internet-facing
-    alb.ingress.kubernetes.io/target-type: ip
-  hosts:
-    - host: myapp.example.com
-      paths:
-        - path: /
-          pathType: Prefix
+gateway:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: default-gateway
+        namespace: gateway-system
+    hostnames:
+      - myapp.example.com
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /
+        backendRefs:
+          - name: my-web-app
+            port: 80
+  targetGroupConfiguration:
+    enabled: true
+    defaultConfiguration:
+      targetType: ip
+      healthCheckConfig:
+        healthCheckPath: /health
+        healthCheckPort: "8080"
+  loadBalancerConfiguration:
+    enabled: true
+    scheme: internet-facing
 
 # Persistence disabled for this test
 # To enable, use volumes.persistent configuration

@@ -46,21 +46,34 @@ Environment variables template
 {{- end -}}
 
 {{/*
-Common environment variables
+Common environment variables injected into all containers when commonEnvVars is enabled.
+Includes: runtime defaults, Kubernetes downward API, and Datadog unified service tagging.
 */}}
 {{- define "common.commonEnvVars" -}}
 {{- $root := . -}}
 {{- $commonEnv := list -}}
-{{/* Add POD_NAME */}}
+{{/* Runtime defaults */}}
+{{- $commonEnv = append $commonEnv (dict "name" "TZ" "value" "UTC") -}}
+{{- $commonEnv = append $commonEnv (dict "name" "LOG_FORMAT" "value" "json") -}}
+{{- if $root.Values.ports -}}
+  {{- $firstPort := index $root.Values.ports 0 -}}
+  {{- $commonEnv = append $commonEnv (dict "name" "PORT" "value" ($firstPort.containerPort | toString)) -}}
+{{- end -}}
+{{/* Kubernetes downward API */}}
 {{- $commonEnv = append $commonEnv (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name"))) -}}
-{{/* Add POD_NAMESPACE */}}
 {{- $commonEnv = append $commonEnv (dict "name" "POD_NAMESPACE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.namespace"))) -}}
-{{/* Add POD_IP */}}
 {{- $commonEnv = append $commonEnv (dict "name" "POD_IP" "valueFrom" (dict "fieldRef" (dict "fieldPath" "status.podIP"))) -}}
-{{/* Add NODE_NAME */}}
 {{- $commonEnv = append $commonEnv (dict "name" "NODE_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.nodeName"))) -}}
-{{/* Add SERVICE_ACCOUNT */}}
 {{- $commonEnv = append $commonEnv (dict "name" "SERVICE_ACCOUNT" "valueFrom" (dict "fieldRef" (dict "fieldPath" "spec.serviceAccountName"))) -}}
+{{/* Datadog unified service tagging (from pod labels via downward API) */}}
+{{- if $root.Values.datadog.enabled -}}
+{{- $commonEnv = append $commonEnv (dict "name" "DD_SERVICE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.labels['tags.datadoghq.com/service']"))) -}}
+{{- $commonEnv = append $commonEnv (dict "name" "DD_ENV" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.labels['tags.datadoghq.com/env']"))) -}}
+{{- $commonEnv = append $commonEnv (dict "name" "DD_VERSION" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.labels['tags.datadoghq.com/version']"))) -}}
+{{/* Datadog agent connection */}}
+{{- $commonEnv = append $commonEnv (dict "name" "DD_AGENT_HOST" "valueFrom" (dict "fieldRef" (dict "fieldPath" "status.hostIP"))) -}}
+{{- $commonEnv = append $commonEnv (dict "name" "DD_ENTITY_ID" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.uid"))) -}}
+{{- end -}}
 {{- include "common.envVars" (dict "envVars" $commonEnv "root" $root) -}}
 {{- end -}}
 

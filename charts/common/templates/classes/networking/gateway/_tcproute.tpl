@@ -3,7 +3,7 @@ Gateway API TCPRoute resource template.
 Usage: {{- include "common.tcpRoute" . }}
 */}}
 {{- define "common.tcpRoute" -}}
-{{- if and .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
+{{- if and .Values.gateway.tcpRoute .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
 apiVersion: gateway.networking.k8s.io/v1alpha2
 kind: TCPRoute
 metadata:
@@ -16,55 +16,23 @@ metadata:
     {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.tcpRoute.annotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.gateway.tcpRoute.parentRefs }}
+  {{- with .Values.gateway.tcpRoute.parentRefs }}
   parentRefs:
-    {{- range $parentRef := .Values.gateway.tcpRoute.parentRefs }}
-    - {{- if $parentRef.group }}
-      group: {{ $parentRef.group }}
-      {{- end }}
-      {{- if $parentRef.kind }}
-      kind: {{ $parentRef.kind }}
-      {{- end }}
-      {{- if $parentRef.namespace }}
-      namespace: {{ $parentRef.namespace }}
-      {{- end }}
-      name: {{ $parentRef.name }}
-      {{- with $parentRef.sectionName }}
-      sectionName: {{ . }}
-      {{- end }}
-      {{- with $parentRef.port }}
-      port: {{ . }}
-      {{- end }}
-    {{- end }}
+    {{- include "common.gatewayParentRefs" . | nindent 4 }}
   {{- end }}
   rules:
     {{- if .Values.gateway.tcpRoute.rules }}
     {{- range $rule := .Values.gateway.tcpRoute.rules }}
     - backendRefs:
         {{- range $backendRef := $rule.backendRefs }}
-        - {{- if $backendRef.group }}
-          group: {{ $backendRef.group }}
-          {{- end }}
-          {{- if $backendRef.kind }}
-          kind: {{ $backendRef.kind }}
-          {{- end }}
-          {{- if $backendRef.namespace }}
-          namespace: {{ $backendRef.namespace }}
-          {{- end }}
-          name: {{ $backendRef.name }}
-          {{- with $backendRef.port }}
-          port: {{ . }}
-          {{- end }}
-          {{- with $backendRef.weight }}
-          weight: {{ . }}
-          {{- end }}
+        - {{- include "common.gatewayBackendRef" $backendRef | nindent 10 }}
         {{- end }}
     {{- end }}
     {{- else }}
     # Default rule
     - backendRefs:
         - name: {{ include "common.fullname" . }}
-          port: {{ (index .Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" . }}
     {{- end }}
 {{- end }}
 {{- end -}}
@@ -74,7 +42,7 @@ Extra TCPRoutes resource template.
 Usage: {{- include "common.extraTcpRoutes" . }}
 */}}
 {{- define "common.extraTcpRoutes" -}}
-{{- if and .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
+{{- if and .Values.gateway.tcpRoute .Values.gateway.tcpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1alpha2/TCPRoute") }}
 {{- if .Values.gateway.tcpRoute.extraRoutes }}
 {{- range $name, $route := .Values.gateway.tcpRoute.extraRoutes }}
 {{- if $route.enabled | default true }}

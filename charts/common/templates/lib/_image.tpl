@@ -97,6 +97,7 @@ Usage: include "common.resolveStringImage" (dict "image" "nginx:1.25" "root" $)
 Container image helper
 Supports same registry override functionality as common.image
 If container.image.registry is not set, inherits from root image.registry
+Falls back to root image.repository and image.tag for partial image objects
 Supports template strings with {{ }} syntax via tpl function
 */}}
 {{- define "common.containerImage" -}}
@@ -105,25 +106,24 @@ Supports template strings with {{ }} syntax via tpl function
 {{- if $container.image -}}
   {{- if kindIs "string" $container.image -}}
     {{- include "common.resolveStringImage" (dict "image" $container.image "root" $root) -}}
-  {{- else if $container.image.repository -}}
+  {{- else -}}
     {{- $imageConfig := dict -}}
-    {{- range $key, $value := $container.image -}}
+    {{/* Fall back to root image values for partial image objects */}}
+    {{- $_ := set $imageConfig "repository" ($container.image.repository | default $root.Values.image.repository) -}}
+    {{- $_ := set $imageConfig "tag" ($container.image.tag | default $root.Values.image.tag) -}}
+    {{/* Handle registry: container > root */}}
+    {{- if $container.image.registry -}}
+      {{- $_ := set $imageConfig "registry" $container.image.registry -}}
+    {{- else if $root.Values.image.registry -}}
+      {{- $_ := set $imageConfig "registry" $root.Values.image.registry -}}
+    {{- end -}}
+    {{/* Handle tpl expressions */}}
+    {{- range $key, $value := $imageConfig -}}
       {{- if and (kindIs "string" $value) (contains "{{" $value) -}}
         {{- $_ := set $imageConfig $key (tpl $value $root) -}}
-      {{- else -}}
-        {{- $_ := set $imageConfig $key $value -}}
-      {{- end -}}
-    {{- end -}}
-    {{/* Only set explicit registry if container has one - let common.image handle global fallback */}}
-    {{- if not $imageConfig.registry -}}
-      {{- $effectiveRegistry := $root.Values.image.registry | default "" -}}
-      {{- if $effectiveRegistry -}}
-        {{- $imageConfig = merge (dict "registry" $effectiveRegistry) $imageConfig -}}
       {{- end -}}
     {{- end -}}
     {{- include "common.image" (dict "image" $imageConfig "context" $root) -}}
-  {{- else -}}
-    {{- $container.image -}}
   {{- end -}}
 {{- else -}}
   {{- include "common.image" (dict "image" $root.Values.image "context" $root) -}}

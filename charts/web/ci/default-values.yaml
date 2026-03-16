@@ -32,18 +32,35 @@ startupProbe:
     port: http
   failureThreshold: 15
 
-ingress:
-  enabled: true
-  ingressClassName: alb
-  hosts:
-    - host: test.example.com
-      paths:
-        - path: /
-          pathType: Prefix
-          backend:
-            service:
-              port:
-                number: 80
+# Gateway API (replaces Ingress)
+gateway:
+  httpRoute:
+    enabled: true
+    parentRefs:
+      - name: default-gateway
+        namespace: gateway-system
+    hostnames:
+      - test.example.com
+    rules:
+      - matches:
+          - path:
+              type: PathPrefix
+              value: /
+        backendRefs:
+          - name: test
+            port: 8080
+
+  targetGroupConfiguration:
+    enabled: true
+    defaultConfiguration:
+      targetType: ip
+      healthCheckConfig:
+        healthCheckPath: /
+        healthCheckPort: "8080"
+
+  loadBalancerConfiguration:
+    enabled: true
+    scheme: internet-facing
 
 security:
   defaultPodSecurityContext:

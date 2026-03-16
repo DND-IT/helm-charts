@@ -3,9 +3,9 @@ name: common
 description: |
   A Helm library chart containing shared templates and helpers for Kubernetes workloads.
   Provides common functionality for naming, labels, security contexts, containers, pods, and volumes.
-  Designed to be used as a dependency by application charts (web, api, worker, cronjob).
+  Designed to be used as a dependency by application charts (web, worker, task).
 type: library
-version: 1.0.1
+version: 1.2.0
 
 keywords:
   - library

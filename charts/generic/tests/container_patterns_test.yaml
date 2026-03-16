@@ -1,14 +1,20 @@
 suite: test sidecar containers
 templates:
-  - deployment.yaml
+  - common.yaml
 tests:
   - it: should not render sidecar containers by default
     asserts:
       - lengthEqual:
           path: spec.template.spec.containers
           count: 1
+        documentSelector:
+          path: kind
+          value: Deployment
       - notExists:
           path: spec.template.spec.initContainers
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should render sidecar containers as native Kubernetes sidecars
     set:
@@ -31,21 +37,39 @@ tests:
       - lengthEqual:
           path: spec.template.spec.containers
           count: 1  # Only main container
+        documentSelector:
+          path: kind
+          value: Deployment
       - lengthEqual:
           path: spec.template.spec.initContainers
           count: 1  # Sidecar container as native Kubernetes sidecar
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: metrics-exporter
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: prom/node-exporter:latest
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].restartPolicy
           value: Always
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].ports[0].containerPort
           value: 9100
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should render multiple sidecar containers
     set:
@@ -64,21 +88,39 @@ tests:
       - lengthEqual:
           path: spec.template.spec.containers
           count: 1  # Only main container
+        documentSelector:
+          path: kind
+          value: Deployment
       - lengthEqual:
           path: spec.template.spec.initContainers
           count: 2  # Both sidecar containers
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: metrics-exporter
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].restartPolicy
           value: Always
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[1].name
           value: log-shipper
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[1].restartPolicy
           value: Always
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should combine with regular init containers
     set:
@@ -96,20 +138,38 @@ tests:
       - lengthEqual:
           path: spec.template.spec.containers
           count: 1  # Only main container
+        documentSelector:
+          path: kind
+          value: Deployment
       - lengthEqual:
           path: spec.template.spec.initContainers
           count: 2  # Regular init + sidecar
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[0].name
           value: setup-init
+        documentSelector:
+          path: kind
+          value: Deployment
       - notExists:
           path: spec.template.spec.initContainers[0].restartPolicy  # Regular init containers don't have restartPolicy
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[1].name
           value: metrics-sidecar
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[1].restartPolicy
           value: Always
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should support registry override for init containers
     set:
@@ -136,12 +196,21 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: custom-registry.io/busybox:1.35
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[1].image
           value: my-registry.example.com/alpine:3.18
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.containers[0].image
           value: my-registry.example.com/nginx:1.25
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should handle string images in init containers
     set:
@@ -159,9 +228,15 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: docker.io/alpine:3.18
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.containers[0].image
           value: my-registry.example.com/nginx:1.25
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should handle registry replacement in init containers
     set:
@@ -182,6 +257,9 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: override-registry.io/alpine:3.18
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should support template strings in init container images
     set:
@@ -202,9 +280,15 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: my-registry.example.com/myapp:v1.2.3
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[1].image
           value: docker.io/myapp:v1.2.3
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should support template strings in sidecar and extra containers
     set:
@@ -224,9 +308,15 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: my-registry.example.com/prometheus:latest
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.containers[0].image
           value: my-registry.example.com/fluent-bit:v1.0.0
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should support templates in structured image fields
     set:
@@ -251,9 +341,15 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: my-registry.example.com/myapp:v1.2.3
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.initContainers[1].image
           value: my-registry.example.com/myapp:migration-v1.2.3
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should handle empty registry with structured templates
     set:
@@ -273,6 +369,12 @@ tests:
       - equal:
           path: spec.template.spec.initContainers[0].image
           value: nginx:1.25
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.spec.containers[0].image
           value: nginx:1.25
+        documentSelector:
+          path: kind
+          value: Deployment

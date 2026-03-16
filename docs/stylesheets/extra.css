@@ -1,0 +1,171 @@
+/* Tamedia Color Scheme */
+:root {
+  /* Primary Tamedia red */
+  --md-primary-fg-color: #FF0050;
+  --md-primary-fg-color--light: #ff0050;
+  --md-primary-fg-color--dark: #d20052;
+
+  /* Accent color */
+  --md-accent-fg-color: #FF0050;
+  --md-accent-fg-color--transparent: rgba(255, 0, 80, 0.1);
+
+  /* Background colors */
+  --md-default-bg-color: #ffffff;
+  --md-default-bg-color--light: #f5f5f4;
+  --md-default-bg-color--lighter: #fafafa;
+  --md-default-bg-color--lightest: #ffffff;
+
+  /* Text colors */
+  --md-default-fg-color: #302c28;
+  --md-default-fg-color--light: #4e4a46;
+  --md-default-fg-color--lighter: #6b6865;
+  --md-default-fg-color--lightest: #8a8784;
+
+  /* Code block colors */
+  --md-code-bg-color: #f5f5f4;
+  --md-code-fg-color: #302c28;
+
+  /* Link colors */
+  --md-typeset-a-color: #FF0050;
+
+  /* Footer background */
+  --md-footer-bg-color: #302c28;
+  --md-footer-bg-color--dark: #1a1816;
+
+  /* Border colors */
+  --md-default-border-color: #deddda;
+}
+
+/* Dark mode colors */
+[data-md-color-scheme="slate"] {
+  --md-primary-fg-color: #FF0050;
+  --md-primary-fg-color--light: #ff0050;
+  --md-primary-fg-color--dark: #d20052;
+
+  --md-accent-fg-color: #FF0050;
+
+  --md-default-bg-color: #1a1816;
+  --md-default-bg-color--light: #302c28;
+  --md-default-bg-color--lighter: #3a3632;
+  --md-default-bg-color--lightest: #4e4a46;
+
+  --md-default-fg-color: #f5f5f4;
+  --md-default-fg-color--light: #deddda;
+  --md-default-fg-color--lighter: #b8b6b3;
+  --md-default-fg-color--lightest: #8a8784;
+
+  --md-code-bg-color: #302c28;
+  --md-code-fg-color: #f5f5f4;
+
+  --md-typeset-a-color: #FF0050;
+
+  --md-footer-bg-color: #0f0e0d;
+  --md-footer-bg-color--dark: #000000;
+}
+
+/* Custom button styles */
+.md-button {
+  border-radius: 0;
+  background-image: linear-gradient(90deg, #d20052 50%, #ff0050 0);
+  background-position: 100% 100%;
+  background-repeat: no-repeat;
+  background-size: 200% 100%;
+  transition: background-position 0.25s ease-out;
+}
+
+.md-button:hover {
+  background-position: 0 100%;
+}
+
+.md-button--primary {
+  background-image: linear-gradient(90deg, #d20052 50%, #ff0050 0);
+  color: #fff;
+}
+
+/* Header gradient effect */
+.md-header {
+  background-color: #FF0050;
+  background-image: linear-gradient(90deg, #d20052 0%, #ff0050 100%);
+}
+
+/* Navigation tabs */
+.md-tabs {
+  background-color: #FF0050;
+  background-image: linear-gradient(90deg, #d20052 0%, #ff0050 100%);
+}
+
+/* Active navigation items */
+.md-nav__link--active {
+  color: #FF0050;
+}
+
+.md-nav__link:hover {
+  color: #FF0050;
+}
+
+/* Search box */
+.md-search__input {
+  border-radius: 0;
+  background-color: #f5f5f4;
+  border: 1px solid #deddda;
+}
+
+.md-search__input:focus {
+  background-color: #ffffff;
+}
+
+/* Tables */
+.md-typeset table:not([class]) {
+  border: 1px solid #deddda;
+}
+
+.md-typeset table:not([class]) th {
+  background-color: #f5f5f4;
+  color: #302c28;
+}
+
+/* Admonitions */
+.md-typeset .admonition {
+  border-radius: 0;
+}
+
+/* Code blocks */
+.md-typeset pre > code {
+  border-radius: 0;
+}
+
+/* Footer styling */
+.md-footer {
+  background-color: #302c28;
+}
+
+.md-footer-meta {
+  background-color: #1a1816;
+}
+
+/* Links with underline effect */
+.md-typeset a {
+  text-decoration: none;
+  background-image: linear-gradient(90deg, #ff0050 50%, rgba(255, 255, 255, 0) 0);
+  background-position: 101% 100%;
+  background-repeat: no-repeat;
+  background-size: 200% 1px;
+  transition: background-position 0.25s ease-out;
+  padding-bottom: 1px;
+}
+
+.md-typeset a:hover {
+  background-position: 0 100%;
+}
+
+/* Hero section styling */
+.md-typeset h1 {
+  font-weight: 300;
+  line-height: 1.1;
+}
+
+.md-typeset h2,
+.md-typeset h3,
+.md-typeset h4 {
+  font-weight: 300;
+}

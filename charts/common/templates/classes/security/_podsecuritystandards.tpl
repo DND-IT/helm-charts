@@ -1,0 +1,28 @@
+{{/*
+Pod Security Standards namespace labels template.
+Usage: {{- include "common.podSecurityStandards" . }}
+*/}}
+{{- define "common.podSecurityStandards" -}}
+{{- if and (hasKey (.Values.security | default dict) "podSecurityStandards") .Values.security.podSecurityStandards.enabled }}
+{{- if .Values.security.podSecurityStandards.enforce }}
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: {{ include "common.namespace" . }}
+  labels:
+    {{- $extraLabels := dict "pod-security.kubernetes.io/enforce" .Values.security.podSecurityStandards.enforce }}
+    {{- if .Values.security.podSecurityStandards.audit }}
+    {{- $_ := set $extraLabels "pod-security.kubernetes.io/audit" .Values.security.podSecurityStandards.audit }}
+    {{- end }}
+    {{- if .Values.security.podSecurityStandards.warn }}
+    {{- $_ := set $extraLabels "pod-security.kubernetes.io/warn" .Values.security.podSecurityStandards.warn }}
+    {{- end }}
+    {{- $allLabels := merge $extraLabels (.Values.security.podSecurityStandards.labels | default dict) }}
+    {{- include "common.labels" (dict "context" . "labels" $allLabels) | nindent 4 }}
+  {{- if or .Values.security.podSecurityStandards.annotations .Values.commonAnnotations }}
+  annotations:
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.security.podSecurityStandards.annotations) | nindent 4 }}
+  {{- end }}
+{{- end }}
+{{- end }}
+{{- end -}}

@@ -1,22 +1,26 @@
 suite: test deployment basics
 templates:
-  - deployment.yaml
+  - common.yaml
 tests:
   - it: should create deployment by default
     asserts:
-      - hasDocuments:
-          count: 1
       - isKind:
           of: Deployment
-          documentIndex: 0
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: metadata.name
           value: RELEASE-NAME
-          documentIndex: 0
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should not create deployment when disabled
     set:
       deploymentEnabled: false
+      service.enabled: false
+      serviceAccount.enabled: false
     asserts:
       - hasDocuments:
           count: 0
@@ -28,6 +32,9 @@ tests:
       - equal:
           path: spec.replicas
           value: 5
+        documentSelector:
+          path: kind
+          value: Deployment
 
   - it: should add labels
     set:
@@ -39,6 +46,12 @@ tests:
       - equal:
           path: spec.template.metadata.labels.custom
           value: label
+        documentSelector:
+          path: kind
+          value: Deployment
       - equal:
           path: spec.template.metadata.labels.environment
           value: test
+        documentSelector:
+          path: kind
+          value: Deployment

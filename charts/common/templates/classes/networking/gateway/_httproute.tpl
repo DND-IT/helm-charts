@@ -3,7 +3,7 @@ Gateway API HTTPRoute resource template.
 Usage: {{- include "common.httpRoute" . }}
 */}}
 {{- define "common.httpRoute" -}}
-{{- if and .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
+{{- if and .Values.gateway.httpRoute .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -16,26 +16,9 @@ metadata:
     {{- include "common.annotations" (dict "context" . "annotations" .Values.gateway.httpRoute.annotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if .Values.gateway.httpRoute.parentRefs }}
+  {{- with .Values.gateway.httpRoute.parentRefs }}
   parentRefs:
-    {{- range $parentRef := .Values.gateway.httpRoute.parentRefs }}
-    - {{- if $parentRef.group }}
-      group: {{ $parentRef.group }}
-      {{- end }}
-      {{- if $parentRef.kind }}
-      kind: {{ $parentRef.kind }}
-      {{- end }}
-      {{- if $parentRef.namespace }}
-      namespace: {{ $parentRef.namespace }}
-      {{- end }}
-      name: {{ $parentRef.name }}
-      {{- with $parentRef.sectionName }}
-      sectionName: {{ . }}
-      {{- end }}
-      {{- with $parentRef.port }}
-      port: {{ . }}
-      {{- end }}
-    {{- end }}
+    {{- include "common.gatewayParentRefs" . | nindent 4 }}
   {{- end }}
   {{- with .Values.gateway.httpRoute.hostnames }}
   hostnames:
@@ -44,17 +27,13 @@ spec:
   rules:
     {{- if .Values.gateway.httpRoute.rules }}
     {{- range $rule := .Values.gateway.httpRoute.rules }}
-    - {{- with $rule.matches }}
-      matches:
-        {{- range $match := . }}
+    - matches:
+        {{- if $rule.matches }}
+        {{- range $match := $rule.matches }}
         - {{- with $match.path }}
           path:
-            {{- if .type }}
-            type: {{ .type }}
-            {{- end }}
-            {{- if .value }}
-            value: {{ .value }}
-            {{- end }}
+            type: {{ .type | default "PathPrefix" }}
+            value: {{ .value | default "/" }}
           {{- end }}
           {{- with $match.headers }}
           headers:
@@ -84,169 +63,34 @@ spec:
           method: {{ . }}
           {{- end }}
         {{- end }}
-      {{- end }}
+        {{- else }}
+        - path:
+            type: PathPrefix
+            value: /
+        {{- end }}
       {{- with $rule.filters }}
       filters:
-        {{- range $filter := . }}
-        - type: {{ $filter.type }}
-          {{- if eq $filter.type "RequestHeaderModifier" }}
-          {{- with $filter.requestHeaderModifier }}
-          requestHeaderModifier:
-            {{- with .set }}
-            set:
-              {{- range $header := . }}
-              - name: {{ $header.name }}
-                value: {{ $header.value }}
-              {{- end }}
-            {{- end }}
-            {{- with .add }}
-            add:
-              {{- range $header := . }}
-              - name: {{ $header.name }}
-                value: {{ $header.value }}
-              {{- end }}
-            {{- end }}
-            {{- with .remove }}
-            remove:
-              {{- toYaml . | nindent 14 }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "ResponseHeaderModifier" }}
-          {{- with $filter.responseHeaderModifier }}
-          responseHeaderModifier:
-            {{- with .set }}
-            set:
-              {{- range $header := . }}
-              - name: {{ $header.name }}
-                value: {{ $header.value }}
-              {{- end }}
-            {{- end }}
-            {{- with .add }}
-            add:
-              {{- range $header := . }}
-              - name: {{ $header.name }}
-                value: {{ $header.value }}
-              {{- end }}
-            {{- end }}
-            {{- with .remove }}
-            remove:
-              {{- toYaml . | nindent 14 }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "RequestMirror" }}
-          {{- with $filter.requestMirror }}
-          requestMirror:
-            backendRef:
-              {{- if .backendRef.group }}
-              group: {{ .backendRef.group }}
-              {{- end }}
-              {{- if .backendRef.kind }}
-              kind: {{ .backendRef.kind }}
-              {{- end }}
-              {{- if .backendRef.namespace }}
-              namespace: {{ .backendRef.namespace }}
-              {{- end }}
-              name: {{ .backendRef.name }}
-              {{- with .backendRef.port }}
-              port: {{ . }}
-              {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "RequestRedirect" }}
-          {{- with $filter.requestRedirect }}
-          requestRedirect:
-            {{- with .scheme }}
-            scheme: {{ . }}
-            {{- end }}
-            {{- with .hostname }}
-            hostname: {{ . }}
-            {{- end }}
-            {{- with .path }}
-            path:
-              {{- if .type }}
-              type: {{ .type }}
-              {{- end }}
-              {{- if .replaceFullPath }}
-              replaceFullPath: {{ .replaceFullPath }}
-              {{- end }}
-              {{- if .replacePrefixMatch }}
-              replacePrefixMatch: {{ .replacePrefixMatch }}
-              {{- end }}
-            {{- end }}
-            {{- with .port }}
-            port: {{ . }}
-            {{- end }}
-            {{- with .statusCode }}
-            statusCode: {{ . }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "URLRewrite" }}
-          {{- with $filter.urlRewrite }}
-          urlRewrite:
-            {{- with .hostname }}
-            hostname: {{ . }}
-            {{- end }}
-            {{- with .path }}
-            path:
-              {{- if .type }}
-              type: {{ .type }}
-              {{- end }}
-              {{- if .replaceFullPath }}
-              replaceFullPath: {{ .replaceFullPath }}
-              {{- end }}
-              {{- if .replacePrefixMatch }}
-              replacePrefixMatch: {{ .replacePrefixMatch }}
-              {{- end }}
-            {{- end }}
-          {{- end }}
-          {{- end }}
-          {{- if eq $filter.type "ExtensionRef" }}
-          {{- with $filter.extensionRef }}
-          extensionRef:
-            group: {{ .group }}
-            kind: {{ .kind }}
-            name: {{ .name }}
-          {{- end }}
-          {{- end }}
-        {{- end }}
+        {{- include "common.gatewayFilters" . | nindent 8 }}
       {{- end }}
       backendRefs:
         {{- if $rule.backendRefs }}
         {{- range $backendRef := $rule.backendRefs }}
-        - {{- if $backendRef.group }}
-          group: {{ $backendRef.group }}
-          {{- end }}
-          {{- if $backendRef.kind }}
-          kind: {{ $backendRef.kind }}
-          {{- end }}
-          {{- if $backendRef.namespace }}
-          namespace: {{ $backendRef.namespace }}
-          {{- end }}
-          name: {{ $backendRef.name }}
-          {{- with $backendRef.port }}
-          port: {{ . }}
-          {{- end }}
-          {{- with $backendRef.weight }}
-          weight: {{ . }}
-          {{- end }}
-          {{- with $backendRef.filters }}
-          filters:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+        - {{- include "common.gatewayBackendRef" $backendRef | nindent 10 }}
         {{- end }}
         {{- else }}
         - name: {{ include "common.fullname" $ }}
-          port: {{ (index $.Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" $ }}
         {{- end }}
     {{- end }}
     {{- else }}
     # Default rule
-    - backendRefs:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+      backendRefs:
         - name: {{ include "common.fullname" . }}
-          port: {{ (index .Values.service.ports 0).port | default 80 }}
+          port: {{ include "common.servicePort" . }}
     {{- end }}
 {{- end }}
 {{- end -}}
@@ -256,7 +100,7 @@ Extra HTTPRoutes resource template.
 Usage: {{- include "common.extraHttpRoutes" . }}
 */}}
 {{- define "common.extraHttpRoutes" -}}
-{{- if and .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
+{{- if and .Values.gateway.httpRoute .Values.gateway.httpRoute.enabled (.Capabilities.APIVersions.Has "gateway.networking.k8s.io/v1/HTTPRoute") }}
 {{- if .Values.gateway.httpRoute.extraRoutes }}
 {{- range $name, $route := .Values.gateway.httpRoute.extraRoutes }}
 {{- if $route.enabled | default true }}
