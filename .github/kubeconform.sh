@@ -8,6 +8,7 @@ KUBECONFORM_VERSION=v0.7.0
 SEMVER_VERSION=v1.0.5
 CHART_DIRS="$(git diff --find-renames --name-only "$(git rev-parse --abbrev-ref HEAD)" remotes/origin/main -- charts | cut -d '/' -f 2 | uniq)"
 SCHEMA_LOCATION="https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/"
+CRD_SCHEMA_LOCATION="https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json"
 
 # install kubeconform
 curl --silent --show-error --fail --location --output /tmp/kubeconform.tar.gz https://github.com/yannh/kubeconform/releases/download/"${KUBECONFORM_VERSION}"/kubeconform-linux-amd64.tar.gz
@@ -61,7 +62,8 @@ for CHART_DIR in ${CHART_DIRS}; do
         -strict \
         -ignore-missing-schemas \
         -kubernetes-version "${KUBERNETES_VERSION#v}" \
-        -schema-location "${SCHEMA_LOCATION}"
+        -schema-location "${SCHEMA_LOCATION}" \
+        -schema-location "${CRD_SCHEMA_LOCATION}"
     continue
   fi
 
@@ -73,6 +75,7 @@ for CHART_DIR in ${CHART_DIRS}; do
         -strict \
         -ignore-missing-schemas \
         -kubernetes-version "${KUBERNETES_VERSION#v}" \
-        -schema-location "${SCHEMA_LOCATION}"
+        -schema-location "${SCHEMA_LOCATION}" \
+        -schema-location "${CRD_SCHEMA_LOCATION}"
   done
 done

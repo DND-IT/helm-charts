@@ -176,16 +176,50 @@ scheduling:
 
 volumes:
   persistent: {}
+    # data:
+    #   mountPath: /data
+    #   size: 10Gi
+    #   accessModes:
+    #     - ReadWriteOnce
+    #   storageClass: gp3
   emptyDir: {}
+    # tmp:
+    #   mountPath: /tmp
+    # cache:
+    #   mountPath: /cache
+    #   medium: Memory
+    #   sizeLimit: 256Mi
   hostPath: {}
+    # docker-sock:
+    #   path: /var/run/docker.sock
+    #   mountPath: /var/run/docker.sock
+    #   type: Socket
+    #   readOnly: true
   extra: []
+    # - name: custom-volume
+    #   csi:
+    #     driver: secrets-store.csi.k8s.io
+    #     readOnly: true
+    #     volumeAttributes:
+    #       secretProviderClass: my-secret-provider
   extraMounts: []
+    # - name: custom-volume
+    #   mountPath: /mnt/secrets
+    #   readOnly: true
 
 # =============================================================================
 # EXTRA DEPLOYMENTS
 # =============================================================================
 
 extraDeployments: {}
+  # worker:
+  #   enabled: true
+  #   replicas: 2
+  #   image:
+  #     repository: my-app
+  #     tag: latest
+  #   command: ["worker"]
+  #   args: ["--queue=default"]
 
 # =============================================================================
 # CRONJOB CONFIGURATION (singular - legacy)
@@ -210,12 +244,34 @@ job:
 # =============================================================================
 
 cronjobs: {}
+  # cleanup:
+  #   enabled: true
+  #   schedule: "0 2 * * *"
+  #   concurrencyPolicy: Forbid
+  #   successfulJobsHistoryLimit: 3
+  #   failedJobsHistoryLimit: 1
+  #   backoffLimit: 3
+  #   ttlSecondsAfterFinished: 300
+  #   image:
+  #     repository: my-app
+  #     tag: latest
+  #   command: ["cleanup"]
+  #   args: ["--older-than=30d"]
 
 # =============================================================================
 # JOBS
 # =============================================================================
 
 jobs: {}
+  # migrate:
+  #   enabled: true
+  #   backoffLimit: 3
+  #   ttlSecondsAfterFinished: 300
+  #   image:
+  #     repository: my-app
+  #     tag: latest
+  #   command: ["migrate"]
+  #   args: ["--target=latest"]
 
 # =============================================================================
 # SERVICE CONFIGURATION
@@ -244,6 +300,14 @@ service:
   publishNotReadyAddresses: false
 
 extraServices: {}
+  # metrics:
+  #   enabled: true
+  #   type: ClusterIP
+  #   ports:
+  #     - name: metrics
+  #       port: 9090
+  #       targetPort: 9090
+  #       protocol: TCP
 
 # =============================================================================
 # INGRESS CONFIGURATION
@@ -258,6 +322,16 @@ ingress:
   hosts: []
 
 extraIngresses: {}
+  # admin:
+  #   enabled: true
+  #   ingressClassName: alb
+  #   annotations:
+  #     alb.ingress.kubernetes.io/scheme: internal
+  #   hosts:
+  #     - host: admin.example.com
+  #       paths:
+  #         - path: /
+  #           pathType: Prefix
 
 # =============================================================================
 # SERVICE ACCOUNT
@@ -278,12 +352,24 @@ rbac:
   enabled: false
   type: Role
   rules: []
+    # - apiGroups: [""]
+    #   resources: ["pods", "services"]
+    #   verbs: ["get", "list", "watch"]
+    # - apiGroups: ["apps"]
+    #   resources: ["deployments"]
+    #   verbs: ["get", "list"]
   aggregationRule: {}
   labels: {}
   annotations: {}
   roleRef: ""
   subjects: []
   extraRoles: {}
+    # secret-reader:
+    #   type: Role
+    #   rules:
+    #     - apiGroups: [""]
+    #       resources: ["secrets"]
+    #       verbs: ["get", "list"]
 
 # =============================================================================
 # CONFIG AND SECRETS
@@ -311,13 +397,42 @@ secret:
   subPath: ""
 
 extraConfigMaps: {}
+  # nginx-config:
+  #   enabled: true
+  #   mountPath: /etc/nginx/conf.d
+  #   data:
+  #     default.conf: |
+  #       server {
+  #         listen 80;
+  #         location / { proxy_pass http://localhost:8080; }
+  #       }
+
 extraSecrets: {}
+  # api-credentials:
+  #   enabled: true
+  #   type: Opaque
+  #   mountPath: /etc/secrets
+  #   stringData:
+  #     api-key: my-secret-key
 
 # =============================================================================
 # EXTERNAL SECRETS
 # =============================================================================
 
 externalSecrets: {}
+  # app-secrets:
+  #   enabled: true
+  #   refreshInterval: 1h
+  #   secretStoreRef:
+  #     name: aws-secrets-manager
+  #     kind: ClusterSecretStore
+  #   target:
+  #     creationPolicy: Owner
+  #   data:
+  #     - secretKey: database-url
+  #       remoteRef:
+  #         key: prod/my-app/database
+  #         property: url
 
 # =============================================================================
 # AUTOSCALING
@@ -328,7 +443,25 @@ hpa:
   minReplicas: 1
   maxReplicas: 10
   metrics: []
+    # - type: Resource
+    #   resource:
+    #     name: cpu
+    #     target:
+    #       type: Utilization
+    #       averageUtilization: 80
+    # - type: Resource
+    #   resource:
+    #     name: memory
+    #     target:
+    #       type: Utilization
+    #       averageUtilization: 80
   behavior: {}
+    # scaleDown:
+    #   stabilizationWindowSeconds: 300
+    #   policies:
+    #     - type: Percent
+    #       value: 10
+    #       periodSeconds: 60
 
 vpa:
   enabled: false
@@ -337,6 +470,14 @@ vpa:
   annotations: {}
   updatePolicy: {}
   containerPolicies: []
+    # - containerName: "*"
+    #   minAllowed:
+    #     cpu: 100m
+    #     memory: 128Mi
+    #   maxAllowed:
+    #     cpu: 2
+    #     memory: 2Gi
+    #   controlledResources: ["cpu", "memory"]
   resourcePolicy: {}
   recommenders: []
 
@@ -356,8 +497,27 @@ podDisruptionBudget:
 networkPolicy:
   enabled: false
   policyTypes: []
+    # - Ingress
+    # - Egress
   ingress: []
+    # - from:
+    #     - namespaceSelector:
+    #         matchLabels:
+    #           name: ingress-nginx
+    #     - podSelector:
+    #         matchLabels:
+    #           app: frontend
+    #   ports:
+    #     - port: 8080
+    #       protocol: TCP
   egress: []
+    # - to:
+    #     - namespaceSelector: {}
+    #   ports:
+    #     - port: 53
+    #       protocol: UDP
+    #     - port: 443
+    #       protocol: TCP
 
 # =============================================================================
 # GATEWAY API
@@ -369,16 +529,56 @@ gateway:
     labels: {}
     annotations: {}
     parentRefs: []
+      # - name: my-gateway
+      #   namespace: gateway-system
+      #   sectionName: https
     hostnames: []
+      # - app.example.com
     rules: []
+      # - matches:
+      #     - path:
+      #         type: PathPrefix
+      #         value: /
+      #   backendRefs:
+      #     - port: 8080
+      #       weight: 100
+      # - matches:
+      #     - path:
+      #         type: PathPrefix
+      #         value: /api
+      #     - headers:
+      #         - name: x-canary
+      #           value: "true"
+      #   filters:
+      #     - type: RequestHeaderModifier
+      #       requestHeaderModifier:
+      #         add:
+      #           - name: X-Forwarded-Proto
+      #             value: https
+      #   backendRefs:
+      #     - port: 8080
     extraRoutes: {}
+      # canary:
+      #   enabled: true
+      #   hostnames:
+      #     - canary.example.com
+      #   rules:
+      #     - matches:
+      #         - path:
+      #             type: PathPrefix
+      #             value: /
 
   tcpRoute:
     enabled: false
     labels: {}
     annotations: {}
     parentRefs: []
+      # - name: my-gateway
+      #   namespace: gateway-system
+      #   sectionName: tcp
     rules: []
+      # - backendRefs:
+      #     - port: 5432
     extraRoutes: {}
 
   referenceGrant:
@@ -386,7 +586,12 @@ gateway:
     labels: {}
     annotations: {}
     from: []
+      # - group: gateway.networking.k8s.io
+      #   kind: HTTPRoute
+      #   namespace: app-namespace
     to: []
+      # - group: ""
+      #   kind: Service
     extraGrants: {}
 
   grpcRoute:
@@ -394,8 +599,18 @@ gateway:
     labels: {}
     annotations: {}
     parentRefs: []
+      # - name: my-gateway
+      #   namespace: gateway-system
+      #   sectionName: grpc
     hostnames: []
+      # - grpc.example.com
     rules: []
+      # - matches:
+      #     - method:
+      #         service: my.package.MyService
+      #         method: GetItem
+      #   backendRefs:
+      #     - port: 50051
     extraRoutes: {}
 
   tlsRoute:
@@ -403,8 +618,14 @@ gateway:
     labels: {}
     annotations: {}
     parentRefs: []
+      # - name: my-gateway
+      #   namespace: gateway-system
+      #   sectionName: tls
     hostnames: []
+      # - secure.example.com
     rules: []
+      # - backendRefs:
+      #     - port: 8443
     extraRoutes: {}
 
   udpRoute:
@@ -412,7 +633,12 @@ gateway:
     labels: {}
     annotations: {}
     parentRefs: []
+      # - name: my-gateway
+      #   namespace: gateway-system
+      #   sectionName: udp
     rules: []
+      # - backendRefs:
+      #     - port: 5353
     extraRoutes: {}
 
   targetGroupConfiguration:
@@ -420,7 +646,13 @@ gateway:
     labels: {}
     annotations: {}
     targetReference: {}
+      # name: my-service
+      # kind: Service
     defaultConfiguration: {}
+      # targetGroupProps:
+      #   healthCheckProtocol: HTTP
+      #   healthCheckPath: /healthz
+      #   healthCheckInterval: 15
     routeConfigurations: []
 
   loadBalancerConfiguration:
@@ -429,14 +661,26 @@ gateway:
     annotations: {}
     loadBalancerName: ""
     scheme: ""
+      # internet-facing
+      # internal
     ipAddressType: ""
+      # ipv4
+      # dualstack
     loadBalancerSubnets: []
+      # - subnet-abc123
+      # - subnet-def456
     securityGroups: []
+      # - sg-abc123
     sourceRanges: []
+      # - 10.0.0.0/8
     listenerConfigurations: []
     loadBalancerAttributes: []
+      # - key: idle_timeout.timeout_seconds
+      #   value: "60"
     tags: {}
+      # Environment: production
     wafV2: {}
+      # webACLArn: arn:aws:wafv2:us-east-1:123456789012:regional/webacl/my-acl/abc123
     shieldConfiguration: {}
 
   listenerRuleConfiguration:
@@ -444,8 +688,14 @@ gateway:
     labels: {}
     annotations: {}
     targetRef: {}
+      # name: my-httproute
+      # namespace: default
     conditions: []
+      # - field: path-pattern
+      #   values:
+      #     - /api/*
     actions: []
+      # - type: forward
     tags: {}
 
 # =============================================================================
@@ -457,14 +707,24 @@ targetGroupBinding:
   labels: {}
   annotations: {}
   targetGroupARN: ""
+    # arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/my-tg/abc123
   serviceRef:
     name: ""
     port: "http"  # @schema type:[string, integer]
   targetType: ""
+    # ip
+    # instance
   ipAddressType: ""
   networking: {}
 
 extraTargetGroupBindings: {}
+  # grpc:
+  #   enabled: true
+  #   targetGroupARN: arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/grpc-tg/abc123
+  #   serviceRef:
+  #     name: my-grpc-service
+  #     port: 50051
+  #   targetType: ip
 
 # =============================================================================
 # HELM HOOKS
@@ -473,8 +733,23 @@ extraTargetGroupBindings: {}
 hooks:
   enabled: false
   preInstall: []
+    # - name: init-db
+    #   image:
+    #     repository: my-app
+    #     tag: latest
+    #   command: ["sh", "-c", "migrate up"]
+    #   weight: 1
+    #   deletePolicy: before-hook-creation
+    #   backoffLimit: 3
   postInstall: []
   preUpgrade: []
+    # - name: run-migrations
+    #   image:
+    #     repository: my-app
+    #     tag: latest
+    #   command: ["migrate", "--target=latest"]
+    #   weight: 1
+    #   deletePolicy: before-hook-creation
   postUpgrade: []
   preDelete: []
   postDelete: []
@@ -498,3 +773,21 @@ datadog:
 # =============================================================================
 
 extraObjects: []
+  # Example: Add arbitrary Kubernetes resources
+  # - apiVersion: v1
+  #   kind: ConfigMap
+  #   metadata:
+  #     name: '{{ include "common.fullname" . }}-extra'
+  #   data:
+  #     key: value
+  #
+  # Example: String form (supports templating)
+  # - |
+  #   apiVersion: v1
+  #   kind: Secret
+  #   metadata:
+  #     name: {{ include "common.fullname" . }}-extra
+  #     namespace: {{ .Release.Namespace }}
+  #   type: Opaque
+  #   stringData:
+  #     key: value

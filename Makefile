@@ -326,7 +326,7 @@ kubeconform: validate-chart ## Run kubeconform validation on specified chart
 		for VALUES_FILE in $(CHART_PATH)/ci/*.yaml; do \
 			if [ -f "$VALUES_FILE" ]; then \
 				echo "Validating with $VALUES_FILE..."; \
-				helm template $(CHART_PATH) --values "$VALUES_FILE" | kubeconform -strict -ignore-missing-schemas -kubernetes-version 1.32.0 || exit 1; \
+				helm template $(CHART_PATH) --values "$VALUES_FILE" | kubeconform -strict -ignore-missing-schemas -kubernetes-version 1.32.0 -schema-location 'https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/' -schema-location 'https://raw.githubusercontent.com/datreeio/CRDs-catalog/main/{{.Group}}/{{.ResourceKind}}_{{.ResourceAPIVersion}}.json' || exit 1; \
 			fi; \
 		done; \
 		echo "Kubeconform validation passed for $(CHART)"; \

@@ -5,6 +5,16 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-03-17
+
+### Added
+
+- Commented-out examples in `values.yaml` for all major configuration sections: volumes, extraDeployments, cronjobs, jobs, extraServices, extraIngresses, rbac, extraConfigMaps, extraSecrets, externalSecrets, hpa, vpa, networkPolicy, all Gateway API routes, targetGroupBinding, hooks, and extraObjects
+
+### Fixed
+
+- Fixed invalid TargetGroupConfiguration health check field names in commented examples (`healthCheckIntervalSeconds` → `healthCheckInterval`)
+
 ## [1.2.0] - 2026-03-13
 
 ### Changed

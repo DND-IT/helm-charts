@@ -1933,8 +1933,7 @@ tests:
           healthCheckPath: /readyz
           healthCheckPort: "8080"
           healthCheckProtocol: HTTP
-          healthCheckIntervalSeconds: 15
-          healthCheckTimeoutSeconds: 5
+          healthCheckInterval: 15
           healthyThresholdCount: 2
           unhealthyThresholdCount: 3
     asserts:
