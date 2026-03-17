@@ -328,7 +328,7 @@ tests:
           path: kind
           value: TargetGroupConfiguration
       - equal:
-          path: spec.defaultConfiguration.healthCheckConfig.healthCheckIntervalSeconds
+          path: spec.defaultConfiguration.healthCheckConfig.healthCheckInterval
           value: 15
         documentSelector:
           path: kind
