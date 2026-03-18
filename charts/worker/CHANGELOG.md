@@ -5,6 +5,12 @@ All notable changes to the worker Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-03-18
+
+### Changed
+
+- Updated to common library 1.4.0 (`deploymentEnabled` replaced by `workload.type`)
+
 ## [1.0.0] - 2026-02-10
 
 ### Added
