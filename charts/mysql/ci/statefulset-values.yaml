@@ -1,0 +1,39 @@
+# CI test values for mysql chart - StatefulSet mode
+
+image:
+  repository: mysql
+  tag: "8.0"
+
+# Switch to StatefulSet mode
+workload:
+  type: statefulset
+
+# Disable standalone PVC, use volumeClaimTemplates instead
+volumes:
+  persistent:
+    data:
+      enabled: false
+
+statefulset:
+  volumeClaimTemplates:
+    data:
+      mountPath: /var/lib/mysql
+      size: 1Gi
+      storageClass: standard
+
+# Headless service for StatefulSet
+service:
+  clusterIP: None
+
+secret:
+  enabled: true
+  envFrom: true
+  stringData:
+    MYSQL_ROOT_PASSWORD: "ci-test-password"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi

@@ -1,0 +1,25 @@
+# CI test values for mysql chart
+
+image:
+  repository: mysql
+  tag: "8.0"
+
+statefulset:
+  volumeClaimTemplates:
+    data:
+      mountPath: /var/lib/mysql
+      size: 1Gi
+      storageClass: standard
+
+secret:
+  enabled: true
+  envFrom: true
+  stringData:
+    MYSQL_ROOT_PASSWORD: "ci-test-password"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi

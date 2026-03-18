@@ -5,6 +5,25 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-18
+
+### Added
+
+- StatefulSet workload type support (`workload.type: statefulset`) with `serviceName`, `volumeClaimTemplates`, `podManagementPolicy`, `updateStrategy`, `ordinals`, and `persistentVolumeClaimRetentionPolicy`
+- DaemonSet workload type support (`workload.type: daemonset`) with `updateStrategy`
+- Automatic volume mount generation for StatefulSet `volumeClaimTemplates`
+- `statefulset` and `daemonset` values sections in `values.yaml`
+
+### Changed
+
+- HPA `scaleTargetRef.kind` now dynamically resolves based on `workload.type` (supports Deployment and StatefulSet, excludes DaemonSet)
+- VPA `targetRef.kind` now correctly renders `StatefulSet` and `DaemonSet` (fixed `title` casing bug)
+- `common.validateValues` now validates `image.repository` for all workload types
+
+### Fixed
+
+- PVC and volume rendering now correctly honors `enabled: false` on persistent volumes (previously `false | default true` evaluated to `true`)
+
 ## [1.3.0] - 2026-03-17
 
 ### Added

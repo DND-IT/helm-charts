@@ -256,9 +256,11 @@ Get the service port name
 Validate required values
 */}}
 {{- define "common.validateValues" -}}
-{{- if .Values.deploymentEnabled }}
+{{- $workloadType := .Values.workload.type | default "deployment" -}}
+{{- $hasWorkload := or (eq $workloadType "deployment") (eq $workloadType "statefulset") (eq $workloadType "daemonset") -}}
+{{- if $hasWorkload }}
 {{- if not .Values.image.repository }}
-{{- fail "image.repository is required when deployment is enabled" }}
+{{- fail "image.repository is required when a workload is enabled" }}
 {{- end }}
 {{- end }}
 {{- end }}

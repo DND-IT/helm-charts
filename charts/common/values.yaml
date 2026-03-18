@@ -61,10 +61,13 @@ security:
     profile: runtime/default
 
 # =============================================================================
-# DEPLOYMENT CONFIGURATION
+# WORKLOAD CONFIGURATION
 # =============================================================================
 
-deploymentEnabled: true
+# Workload type: deployment (default), statefulset, daemonset, or none
+workload:
+  type: deployment
+
 replicas: 1
 revisionHistoryLimit: 2
 
@@ -75,9 +78,38 @@ strategy:
     maxSurge: 25%  # @schema type:[string, integer]
 progressDeadlineSeconds: 600
 
-# Workload type override (deployment, statefulset, daemonset)
-workload:
-  type: ""
+# StatefulSet-specific configuration (when workload.type is "statefulset")
+statefulset:
+  # serviceName defaults to the release fullname (matching the headless service)
+  serviceName: ""
+  # podManagementPolicy: OrderedReady (default) or Parallel
+  podManagementPolicy: ""
+  # updateStrategy for StatefulSet
+  updateStrategy:
+    type: RollingUpdate
+  # ordinals configuration
+  ordinals: {}
+    # start: 0
+  # persistentVolumeClaimRetentionPolicy
+  persistentVolumeClaimRetentionPolicy: {}
+    # whenDeleted: Retain
+    # whenScaled: Retain
+  # volumeClaimTemplates - map of PVC templates for per-replica storage
+  volumeClaimTemplates: {}
+    # data:
+    #   mountPath: /var/lib/data
+    #   size: 10Gi
+    #   accessModes:
+    #     - ReadWriteOnce
+    #   storageClass: gp3
+
+# DaemonSet-specific configuration (when workload.type is "daemonset")
+daemonset:
+  # updateStrategy for DaemonSet
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1  # @schema type:[string, integer]
 
 # =============================================================================
 # IMAGE CONFIGURATION

@@ -268,7 +268,6 @@ Kubernetes: `>=1.32.0-0`
 | configMap.mountPath | string | `""` |  |
 | configMap.subPath | string | `""` |  |
 | cronjobs | object | `{}` |  |
-| deploymentEnabled | bool | `true` |  |
 | env | list | `[]` |  |
 | envFrom | list | `[]` |  |
 | externalSecrets | object | `{}` |  |

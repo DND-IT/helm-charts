@@ -189,7 +189,7 @@ tests:
     set:
       image.repository: myworker
       image.tag: latest
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
