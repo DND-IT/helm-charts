@@ -162,8 +162,8 @@ Volume mounts template
   {{- end -}}
 {{- end -}}
 
-{{/* StatefulSet volumeClaimTemplate mounts */}}
-{{- if $root.Values.statefulset -}}
+{{/* StatefulSet volumeClaimTemplate mounts (only when using statefulset workload) */}}
+{{- if and $root.Values.statefulset (eq ($root.Values.workload.type | default "deployment") "statefulset") -}}
 {{- range $name, $vct := $root.Values.statefulset.volumeClaimTemplates -}}
   {{- if $vct.mountPath -}}
     {{- $mount := dict "name" $name "mountPath" $vct.mountPath -}}

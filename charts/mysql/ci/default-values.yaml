@@ -1,15 +1,8 @@
-# CI test values for mysql chart
+# CI test values for mysql chart - Deployment mode (default)
 
 image:
   repository: mysql
   tag: "8.0"
-
-statefulset:
-  volumeClaimTemplates:
-    data:
-      mountPath: /var/lib/mysql
-      size: 1Gi
-      storageClass: standard
 
 secret:
   enabled: true
