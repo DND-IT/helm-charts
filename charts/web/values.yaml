@@ -109,9 +109,7 @@ gateway:
 
   # AWS ALB load balancer configuration
   loadBalancerConfiguration:
-    enabled: true
-    scheme: internet-facing
-    ipAddressType: ipv4
+    enabled: false
 
 # ConfigMap defaults to envFrom injection when enabled
 configMap:
