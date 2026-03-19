@@ -56,28 +56,20 @@ tests:
           path: kind
           value: PersistentVolumeClaim
 
-  - it: should have liveness probe with mysqladmin ping
+  - it: should have liveness probe on port 3306
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].livenessProbe.exec.command
-          value:
-            - mysqladmin
-            - ping
-            - -h
-            - localhost
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 3306
         documentSelector:
           path: kind
           value: Deployment
 
-  - it: should have readiness probe with mysqladmin ping
+  - it: should have readiness probe on port 3306
     asserts:
       - equal:
-          path: spec.template.spec.containers[0].readinessProbe.exec.command
-          value:
-            - mysqladmin
-            - ping
-            - -h
-            - localhost
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: 3306
         documentSelector:
           path: kind
           value: Deployment
