@@ -80,6 +80,30 @@ entries:
     version: 0.1.0
   common:
   - apiVersion: v2
+    created: "2026-03-19T10:45:21.824191524Z"
+    description: 'A Helm library chart containing shared templates and helpers for
+      Kubernetes workloads. Provides common functionality for naming, labels, security
+      contexts, containers, pods, and volumes. Designed to be used as a dependency
+      by application charts (web, worker, task). '
+    digest: 46b712779453b16d3cf0f6f9d4b463a153aac3656600b8892b06c7bb6ce91ac3
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - library
+    - common
+    - helpers
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: common
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: library
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/common-1.4.0/common-1.4.0.tgz
+    version: 1.4.0
+  - apiVersion: v2
     created: "2026-03-17T11:25:12.473576919Z"
     description: 'A Helm library chart containing shared templates and helpers for
       Kubernetes workloads. Provides common functionality for naming, labels, security
@@ -445,6 +469,33 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/datadog-resources-0.1.0/datadog-resources-0.1.0.tgz
     version: 0.1.0
   generic:
+  - apiVersion: v2
+    created: "2026-03-19T10:45:21.964394699Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A highly flexible and unopinionated Helm chart for deploying Kubernetes
+      workloads. Supports Deployments, CronJobs, and Jobs with extensive configuration
+      options. Designed for maximum flexibility while maintaining security best practices
+      by default. Optimized for AWS with ALB ingress controller support. '
+    digest: b0b3a88b98da60388f74329f359ab46e5401e1496ce1bc5f7c4d01fd52c4b598
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - application
+    - kubernetes
+    - generic
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: generic
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/generic-0.10.0/generic-0.10.0.tgz
+    version: 0.10.0
   - apiVersion: v2
     created: "2026-03-17T11:25:12.642551681Z"
     dependencies:
@@ -1047,7 +1098,65 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/karpenter-resources-0.1.0/karpenter-resources-0.1.0.tgz
     version: 0.1.0
+  mysql:
+  - apiVersion: v2
+    created: "2026-03-19T10:45:22.16132242Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying MySQL 8.0 to Kubernetes using a StatefulSet.
+      Includes headless Service, PVC via volumeClaimTemplates, ConfigMap for custom
+      my.cnf, Secret for credentials, and health checks. Designed for stateful MySQL
+      deployments with persistent storage. '
+    digest: f67758f748d22942ac3af2884882c2aa32d53f37636ddecf28032dae5d5798d2
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - mysql
+    - database
+    - statefulset
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: mysql
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/mysql-0.1.0/mysql-0.1.0.tgz
+    version: 0.1.0
   task:
+  - apiVersion: v2
+    created: "2026-03-19T10:45:22.309302476Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying scheduled CronJob workloads to Kubernetes.
+      Includes CronJob and ServiceAccount. Designed for scheduled tasks with configurable
+      concurrency, history limits, and job settings. No HPA, PDB, service, or ingress
+      - focused purely on scheduled job execution. '
+    digest: 1e46e9cf6ddf174fcbcff62aee7669beef19476b205262a5e2bb95b45b456565
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - task
+    - cronjob
+    - scheduled
+    - job
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: task
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/task-1.2.0/task-1.2.0.tgz
+    version: 1.2.0
   - apiVersion: v2
     created: "2026-03-16T14:49:34.889499353Z"
     dependencies:
@@ -1458,6 +1567,33 @@ entries:
     version: 0.2.0
   worker:
   - apiVersion: v2
+    created: "2026-03-19T10:45:22.455360194Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying background worker processes to Kubernetes.
+      Includes Deployment, HPA, PDB, and ServiceAccount. Designed for background processing
+      workloads that don''t expose HTTP endpoints. No service or ingress by default. '
+    digest: 28fa0ba6d2a8c7ef018b3efc26b18f089c9ef27012ec5f82caa3c3692bf45809
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - worker
+    - background
+    - processing
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: worker
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/worker-1.2.0/worker-1.2.0.tgz
+    version: 1.2.0
+  - apiVersion: v2
     created: "2026-03-16T14:49:35.305570857Z"
     dependencies:
     - name: common
@@ -1511,4 +1647,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/worker-1.0.0/worker-1.0.0.tgz
     version: 1.0.0
-generated: "2026-03-17T11:25:12.844373623Z"
+generated: "2026-03-19T10:45:22.455707689Z"
