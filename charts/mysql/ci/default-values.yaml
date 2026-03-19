@@ -17,16 +17,3 @@ resources:
     memory: 256Mi
   limits:
     memory: 512Mi
-
-# Faster startup for CI - MySQL init takes time
-startupProbe:
-  exec:
-    command:
-      - mysqladmin
-      - ping
-      - -h
-      - localhost
-  initialDelaySeconds: 30
-  periodSeconds: 5
-  timeoutSeconds: 3
-  failureThreshold: 30

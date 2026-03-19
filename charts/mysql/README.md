@@ -80,13 +80,10 @@ Kubernetes: `>=1.32.0-0`
 | service.enabled | bool | `true` |  |
 | service.publishNotReadyAddresses | bool | `true` |  |
 | service.type | string | `"ClusterIP"` |  |
-| startupProbe.exec.command[0] | string | `"mysqladmin"` |  |
-| startupProbe.exec.command[1] | string | `"ping"` |  |
-| startupProbe.exec.command[2] | string | `"-h"` |  |
-| startupProbe.exec.command[3] | string | `"localhost"` |  |
 | startupProbe.failureThreshold | int | `30` |  |
-| startupProbe.initialDelaySeconds | int | `10` |  |
+| startupProbe.initialDelaySeconds | int | `30` |  |
 | startupProbe.periodSeconds | int | `5` |  |
+| startupProbe.tcpSocket.port | int | `3306` |  |
 | startupProbe.timeoutSeconds | int | `3` |  |
 | statefulset.persistentVolumeClaimRetentionPolicy.whenDeleted | string | `"Retain"` |  |
 | statefulset.persistentVolumeClaimRetentionPolicy.whenScaled | string | `"Retain"` |  |
