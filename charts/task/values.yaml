@@ -14,8 +14,9 @@ image:
 # OPINIONATED DEFAULTS
 # =============================================================================
 
-# Disable deployment - tasks use CronJob workload
-deploymentEnabled: false
+# No deployment - tasks use CronJob workload
+workload:
+  type: none
 
 # Cron schedule (required for task charts)
 schedule: "0 * * * *"

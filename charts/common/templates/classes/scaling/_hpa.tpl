@@ -3,7 +3,7 @@ Full HorizontalPodAutoscaler resource template.
 Usage: {{- include "common.hpa" . }}
 */}}
 {{- define "common.hpa" -}}
-{{- if and .Values.hpa .Values.hpa.enabled }}
+{{- if and .Values.hpa .Values.hpa.enabled (ne (.Values.workload.type | default "deployment") "daemonset") }}
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
@@ -14,7 +14,7 @@ metadata:
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
-    kind: Deployment
+    kind: {{ if eq (.Values.workload.type | default "deployment") "statefulset" }}StatefulSet{{ else }}Deployment{{ end }}
     name: {{ include "common.fullname" . }}
   minReplicas: {{ .Values.hpa.minReplicas }}
   maxReplicas: {{ .Values.hpa.maxReplicas }}

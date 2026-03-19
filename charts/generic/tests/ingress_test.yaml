@@ -5,7 +5,7 @@ tests:
   - it: should not create ingress by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:

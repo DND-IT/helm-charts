@@ -58,7 +58,7 @@ tests:
     set:
       service.enabled: false
       serviceAccount.enabled: false
-      deploymentEnabled: false
+      workload.type: none
     asserts:
       - hasDocuments:
           count: 0
@@ -277,7 +277,7 @@ tests:
   - it: extraServices should use component selector when matching extraDeployment exists
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
       extraDeployments:
         worker:
@@ -324,7 +324,7 @@ tests:
   - it: extraServices should use base selector without component when no matching extraDeployment
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
       extraServices:
         external-api:
@@ -366,7 +366,7 @@ tests:
   - it: extraServices should allow custom selector override
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
       extraDeployments:
         worker:
@@ -402,7 +402,7 @@ tests:
   - it: extraServices should use fullnameOverride in name and selector
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
       fullnameOverride: my-app
       extraDeployments:

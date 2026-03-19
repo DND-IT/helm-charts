@@ -18,7 +18,7 @@ metadata:
 spec:
   targetRef:
     apiVersion: apps/v1
-    kind: {{ .Values.workload.type | default "deployment" | title }}
+    kind: {{ if eq (.Values.workload.type | default "deployment") "statefulset" }}StatefulSet{{ else if eq .Values.workload.type "daemonset" }}DaemonSet{{ else }}Deployment{{ end }}
     name: {{ include "common.fullname" . }}
   {{- with .Values.vpa.updatePolicy }}
   updatePolicy:

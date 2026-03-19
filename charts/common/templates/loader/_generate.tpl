@@ -46,6 +46,8 @@ If content already starts with "---", it is used as-is (multi-document output).
 
   {{- /* Workloads */ -}}
   {{- include "common.loader.renderResource" (include "common.deployment" .) -}}
+  {{- include "common.loader.renderResource" (include "common.statefulset" .) -}}
+  {{- include "common.loader.renderResource" (include "common.daemonset" .) -}}
   {{- include "common.loader.renderResource" (include "common.extraDeployments" .) -}}
   {{- include "common.loader.renderResource" (include "common.jobs" .) -}}
   {{- include "common.loader.renderResource" (include "common.cronjob" .) -}}

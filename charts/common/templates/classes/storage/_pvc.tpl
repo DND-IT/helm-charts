@@ -4,7 +4,7 @@ Usage: {{- include "common.pvc" . }}
 */}}
 {{- define "common.pvc" -}}
 {{- range $name, $pvc := .Values.volumes.persistent }}
-{{- if $pvc.enabled | default true }}
+{{- if ne (toString $pvc.enabled) "false" }}
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim

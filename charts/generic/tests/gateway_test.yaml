@@ -8,7 +8,7 @@ tests:
   - it: should not render HTTPRoute by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -46,7 +46,7 @@ tests:
     set:
       gateway.httpRoute.enabled: true
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -668,7 +668,7 @@ tests:
         - gateway.networking.k8s.io/v1/HTTPRoute
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
       gateway.httpRoute.enabled: true
       gateway.httpRoute.extraRoutes:
@@ -713,7 +713,7 @@ tests:
   - it: should not render GRPCRoute by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -751,7 +751,7 @@ tests:
     set:
       gateway.grpcRoute.enabled: true
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1002,7 +1002,7 @@ tests:
         - gateway.networking.k8s.io/v1/GRPCRoute
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
       gateway.grpcRoute.enabled: true
       gateway.grpcRoute.extraRoutes:
@@ -1043,7 +1043,7 @@ tests:
   - it: should not render TCPRoute by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1081,7 +1081,7 @@ tests:
     set:
       gateway.tcpRoute.enabled: true
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1251,7 +1251,7 @@ tests:
   - it: should not render TLSRoute by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1289,7 +1289,7 @@ tests:
     set:
       gateway.tlsRoute.enabled: true
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1479,7 +1479,7 @@ tests:
   - it: should not render UDPRoute by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1517,7 +1517,7 @@ tests:
     set:
       gateway.udpRoute.enabled: true
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1692,7 +1692,7 @@ tests:
   - it: should not render LoadBalancerConfiguration by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1727,7 +1727,7 @@ tests:
     set:
       gateway.loadBalancerConfiguration.enabled: true
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1879,7 +1879,7 @@ tests:
   - it: should not render TargetGroupConfiguration by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -1914,7 +1914,7 @@ tests:
     set:
       gateway.targetGroupConfiguration.enabled: true
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -2016,7 +2016,7 @@ tests:
   - it: should not render ListenerRuleConfiguration by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -2053,7 +2053,7 @@ tests:
     set:
       gateway.listenerRuleConfiguration.enabled: true
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -2153,7 +2153,7 @@ tests:
   - it: should not render ReferenceGrant by default
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -2218,7 +2218,7 @@ tests:
       gateway.referenceGrant.to:
         - kind: Service
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
     asserts:
       - hasDocuments:
@@ -2259,7 +2259,7 @@ tests:
         - gateway.networking.k8s.io/v1beta1/ReferenceGrant
     set:
       service.enabled: false
-      deploymentEnabled: false
+      workload.type: none
       serviceAccount.enabled: false
       gateway.referenceGrant.enabled: true
       gateway.referenceGrant.from:

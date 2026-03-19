@@ -1,0 +1,19 @@
+# CI test values for mysql chart - Deployment mode (default)
+# Uses MYSQL_ALLOW_EMPTY_PASSWORD for faster startup in CI
+
+image:
+  repository: mysql
+  tag: "8.0"
+
+secret:
+  enabled: true
+  envFrom: true
+  stringData:
+    MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    memory: 512Mi

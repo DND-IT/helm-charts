@@ -4,7 +4,7 @@ Usage: {{- include "common.deployment" . }}
 */}}
 {{- define "common.deployment" -}}
 {{- include "common.validateValues" . -}}
-{{- if .Values.deploymentEnabled }}
+{{- if eq (.Values.workload.type | default "deployment") "deployment" }}
 apiVersion: apps/v1
 kind: Deployment
 metadata:

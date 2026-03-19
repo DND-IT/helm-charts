@@ -1,0 +1,287 @@
+suite: test mysql chart defaults
+templates:
+  - common.yaml
+tests:
+  # ==========================================================================
+  # Deployment mode (default)
+  # ==========================================================================
+  - it: should create a Deployment by default
+    asserts:
+      - isKind:
+          of: Deployment
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have 1 replica by default
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 1
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have MySQL container port 3306
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].name
+          value: mysql
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].ports[0].containerPort
+          value: 3306
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have data volume mount in deployment mode
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: data
+            mountPath: /var/lib/mysql
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should create a PVC for deployment mode
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+        documentSelector:
+          path: kind
+          value: PersistentVolumeClaim
+
+  - it: should have liveness probe on port 3306
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].livenessProbe.tcpSocket.port
+          value: 3306
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have readiness probe on port 3306
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].readinessProbe.tcpSocket.port
+          value: 3306
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should run as MySQL user 999
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 999
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 999
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should have termination grace period of 60s
+    asserts:
+      - equal:
+          path: spec.template.spec.terminationGracePeriodSeconds
+          value: 60
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ==========================================================================
+  # StatefulSet mode
+  # ==========================================================================
+  - it: should create a StatefulSet when workload.type is statefulset
+    set:
+      workload.type: statefulset
+      volumes.persistent: {}
+      statefulset.volumeClaimTemplates.data:
+        mountPath: /var/lib/mysql
+        size: 10Gi
+        accessModes:
+          - ReadWriteOnce
+    asserts:
+      - isKind:
+          of: StatefulSet
+        documentSelector:
+          path: kind
+          value: StatefulSet
+
+  - it: should set correct serviceName in statefulset mode
+    set:
+      workload.type: statefulset
+      volumes.persistent: {}
+      statefulset.volumeClaimTemplates.data:
+        mountPath: /var/lib/mysql
+        size: 10Gi
+    asserts:
+      - equal:
+          path: spec.serviceName
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: StatefulSet
+
+  - it: should have volumeClaimTemplate in statefulset mode
+    set:
+      workload.type: statefulset
+      volumes.persistent: {}
+      statefulset.volumeClaimTemplates.data:
+        mountPath: /var/lib/mysql
+        size: 10Gi
+        accessModes:
+          - ReadWriteOnce
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].metadata.name
+          value: data
+        documentSelector:
+          path: kind
+          value: StatefulSet
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.resources.requests.storage
+          value: 10Gi
+        documentSelector:
+          path: kind
+          value: StatefulSet
+
+  - it: should have data volume mount in statefulset mode
+    set:
+      workload.type: statefulset
+      volumes.persistent: {}
+      statefulset.volumeClaimTemplates.data:
+        mountPath: /var/lib/mysql
+        size: 10Gi
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            name: data
+            mountPath: /var/lib/mysql
+        documentSelector:
+          path: kind
+          value: StatefulSet
+
+  - it: should have persistentVolumeClaimRetentionPolicy in statefulset mode
+    set:
+      workload.type: statefulset
+      volumes.persistent: {}
+      statefulset.volumeClaimTemplates.data:
+        mountPath: /var/lib/mysql
+        size: 10Gi
+    asserts:
+      - equal:
+          path: spec.persistentVolumeClaimRetentionPolicy.whenDeleted
+          value: Retain
+        documentSelector:
+          path: kind
+          value: StatefulSet
+
+  - it: should allow setting storage class in statefulset mode
+    set:
+      workload.type: statefulset
+      volumes.persistent: {}
+      statefulset.volumeClaimTemplates.data:
+        mountPath: /var/lib/mysql
+        size: 10Gi
+        storageClass: gp3
+    asserts:
+      - equal:
+          path: spec.volumeClaimTemplates[0].spec.storageClassName
+          value: gp3
+        documentSelector:
+          path: kind
+          value: StatefulSet
+
+  # ==========================================================================
+  # Service
+  # ==========================================================================
+  - it: should create a service
+    asserts:
+      - isKind:
+          of: Service
+        documentSelector:
+          path: kind
+          value: Service
+
+  - it: should have service port 3306
+    asserts:
+      - equal:
+          path: spec.ports[0].port
+          value: 3306
+        documentSelector:
+          path: kind
+          value: Service
+
+  - it: should support headless service for statefulset mode
+    set:
+      service.clusterIP: None
+    asserts:
+      - equal:
+          path: spec.clusterIP
+          value: None
+        documentSelector:
+          path: kind
+          value: Service
+
+  # ==========================================================================
+  # ConfigMap
+  # ==========================================================================
+  - it: should create ConfigMap with MySQL configuration
+    asserts:
+      - isKind:
+          of: ConfigMap
+        documentSelector:
+          path: kind
+          value: ConfigMap
+      - isNotEmpty:
+          path: data["custom.cnf"]
+        documentSelector:
+          path: kind
+          value: ConfigMap
+
+  # ==========================================================================
+  # Secret
+  # ==========================================================================
+  - it: should create Secret for MySQL credentials
+    asserts:
+      - isKind:
+          of: Secret
+        documentSelector:
+          path: kind
+          value: Secret
+
+  # ==========================================================================
+  # Overrides
+  # ==========================================================================
+  - it: should allow overriding replicas
+    set:
+      replicas: 3
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 3
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should allow overriding storage size
+    set:
+      volumes.persistent.data.size: 50Gi
+    asserts:
+      - equal:
+          path: spec.resources.requests.storage
+          value: 50Gi
+        documentSelector:
+          path: kind
+          value: PersistentVolumeClaim

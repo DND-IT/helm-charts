@@ -1,0 +1,168 @@
+# MySQL Chart - Opinionated defaults for MySQL 8.0
+# Only overrides from common library defaults are defined here
+# All other values are inherited from the common library chart
+#
+# Defaults to Deployment mode (suitable for feature branches / ephemeral envs).
+# Set workload.type=statefulset for persistent environments (see below).
+
+# =============================================================================
+# REQUIRED
+# =============================================================================
+
+image:
+  repository: mysql
+  tag: "8.0"
+
+# =============================================================================
+# WORKLOAD MODE
+# =============================================================================
+
+# Default: Deployment with a standalone PVC
+# Set workload.type=statefulset for persistent environments
+workload:
+  type: deployment
+
+# Persistent storage for Deployment mode
+volumes:
+  persistent:
+    data:
+      mountPath: /var/lib/mysql
+      size: 10Gi
+      accessModes:
+        - ReadWriteOnce
+  emptyDir:
+    tmp:
+      mountPath: /tmp
+    mysql-run:
+      mountPath: /var/run/mysqld
+
+# To switch to StatefulSet mode, override these values:
+#   workload:
+#     type: statefulset
+#   volumes:
+#     persistent:
+#       data:
+#         enabled: false   # disable standalone PVC
+#   service:
+#     clusterIP: None      # headless service for StatefulSet
+#   statefulset:
+#     volumeClaimTemplates:
+#       data:
+#         mountPath: /var/lib/mysql
+#         size: 10Gi
+#         accessModes:
+#           - ReadWriteOnce
+
+# StatefulSet configuration (only used when workload.type is "statefulset")
+statefulset:
+  podManagementPolicy: OrderedReady
+  updateStrategy:
+    type: RollingUpdate
+  persistentVolumeClaimRetentionPolicy:
+    whenDeleted: Retain
+    whenScaled: Retain
+  volumeClaimTemplates: {}
+
+# =============================================================================
+# OPINIONATED DEFAULTS
+# =============================================================================
+
+# MySQL port
+ports:
+  - name: mysql
+    containerPort: 3306
+    protocol: TCP
+
+# Pod-level resource defaults (Kubernetes 1.32+)
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    memory: 1Gi
+
+# Health probes
+# Uses tcpSocket for all probes — mysqladmin requires a fully initialized server
+# which isn't available during first-boot init (timezone loading, init scripts, etc.)
+livenessProbe:
+  tcpSocket:
+    port: 3306
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+
+readinessProbe:
+  tcpSocket:
+    port: 3306
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+startupProbe:
+  tcpSocket:
+    port: 3306
+  initialDelaySeconds: 30
+  periodSeconds: 5
+  timeoutSeconds: 3
+  failureThreshold: 30
+
+# Security context - MySQL runs as UID 999 (mysql user)
+security:
+  defaultPodSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    runAsGroup: 999
+    fsGroup: 999
+    fsGroupChangePolicy: OnRootMismatch
+    seccompProfile:
+      type: RuntimeDefault
+  defaultContainerSecurityContext:
+    runAsNonRoot: true
+    runAsUser: 999
+    allowPrivilegeEscalation: false
+    readOnlyRootFilesystem: false  # MySQL needs write access to data/tmp dirs
+    capabilities:
+      drop:
+        - ALL
+    seccompProfile:
+      type: RuntimeDefault
+
+# Service (headless when StatefulSet, ClusterIP when Deployment)
+service:
+  enabled: true
+  type: ClusterIP
+  publishNotReadyAddresses: true
+
+# ConfigMap for custom MySQL configuration
+configMap:
+  enabled: true
+  mountPath: /etc/mysql/conf.d
+  data:
+    custom.cnf: |
+      [mysqld]
+      default-authentication-plugin=caching_sha2_password
+      max_connections=200
+      innodb_buffer_pool_size=256M
+
+# Secret for MySQL root password
+secret:
+  enabled: true
+  envFrom: true
+  stringData:
+    MYSQL_ROOT_PASSWORD: ""  # REQUIRED: Must be overridden
+
+# No HPA for databases
+hpa:
+  enabled: false
+
+# No PDB by default for single-instance databases
+podDisruptionBudget:
+  enabled: false
+
+# Pod termination grace period (allow time for graceful shutdown)
+pod:
+  terminationGracePeriodSeconds: 60
+
+# No topology spread
+scheduling:
+  topologySpreadConstraints: []

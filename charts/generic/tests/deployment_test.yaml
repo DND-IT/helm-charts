@@ -44,8 +44,6 @@ tests:
           value: Deployment
 
   - it: should create deployment when enabled
-    set:
-      deploymentEnabled: true
     asserts:
       - isKind:
           of: Deployment
@@ -55,7 +53,7 @@ tests:
 
   - it: should not create deployment when disabled
     set:
-      deploymentEnabled: false
+      workload.type: none
       service.enabled: false
       serviceAccount.enabled: false
     asserts:

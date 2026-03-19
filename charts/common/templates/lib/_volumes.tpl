@@ -51,7 +51,7 @@ Volumes template for workloads
 
 {{/* Persistent volumes */}}
 {{- range $name, $pvc := .Values.volumes.persistent -}}
-  {{- if $pvc.enabled | default true -}}
+  {{- if ne (toString $pvc.enabled) "false" -}}
     {{- $volume := dict "name" $name "persistentVolumeClaim" (dict "claimName" (printf "%s-%s" (include "common.fullname" $root) $name)) -}}
     {{- $volumes = append $volumes $volume -}}
   {{- end -}}
@@ -150,7 +150,7 @@ Volume mounts template
 
 {{/* Persistent volume mounts */}}
 {{- range $name, $pvc := $root.Values.volumes.persistent -}}
-  {{- if $pvc.enabled | default true -}}
+  {{- if ne (toString $pvc.enabled) "false" -}}
     {{- $mount := dict "name" $name "mountPath" $pvc.mountPath -}}
     {{- if $pvc.subPath -}}
       {{- $_ := set $mount "subPath" $pvc.subPath -}}
@@ -160,6 +160,22 @@ Volume mounts template
     {{- end -}}
     {{- $mounts = append $mounts $mount -}}
   {{- end -}}
+{{- end -}}
+
+{{/* StatefulSet volumeClaimTemplate mounts (only when using statefulset workload) */}}
+{{- if and $root.Values.statefulset (eq ($root.Values.workload.type | default "deployment") "statefulset") -}}
+{{- range $name, $vct := $root.Values.statefulset.volumeClaimTemplates -}}
+  {{- if $vct.mountPath -}}
+    {{- $mount := dict "name" $name "mountPath" $vct.mountPath -}}
+    {{- if $vct.subPath -}}
+      {{- $_ := set $mount "subPath" $vct.subPath -}}
+    {{- end -}}
+    {{- if $vct.readOnly -}}
+      {{- $_ := set $mount "readOnly" $vct.readOnly -}}
+    {{- end -}}
+    {{- $mounts = append $mounts $mount -}}
+  {{- end -}}
+{{- end -}}
 {{- end -}}
 
 {{/* EmptyDir mounts */}}
