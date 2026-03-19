@@ -1217,6 +1217,33 @@ entries:
     version: 1.0.0
   web:
   - apiVersion: v2
+    created: "2026-03-19T14:56:23.039693949Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying HTTP-facing web applications to Kubernetes.
+      Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
+      Designed for web applications that need external traffic exposure. '
+    digest: eba60e49e5a6ac795653681402c0259d2243d195a2aab29cbb75cc2efa907367
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - web
+    - application
+    - ingress
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: web
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/web-1.2.2/web-1.2.2.tgz
+    version: 1.2.2
+  - apiVersion: v2
     created: "2026-03-17T11:25:12.844196654Z"
     dependencies:
     - name: common
@@ -1647,4 +1674,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/worker-1.0.0/worker-1.0.0.tgz
     version: 1.0.0
-generated: "2026-03-19T10:45:22.455707689Z"
+generated: "2026-03-19T14:56:23.039880759Z"
