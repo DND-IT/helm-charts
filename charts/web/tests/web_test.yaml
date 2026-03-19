@@ -361,22 +361,19 @@ tests:
           path: kind
           value: TargetGroupConfiguration
 
-  - it: should create LoadBalancerConfiguration with internet-facing scheme
+  - it: should create LoadBalancerConfiguration when enabled
     capabilities:
       apiVersions:
         - gateway.k8s.aws/v1beta1/LoadBalancerConfiguration
     set:
       image.repository: nginx
       image.tag: latest
+      gateway.loadBalancerConfiguration.enabled: true
+      gateway.loadBalancerConfiguration.scheme: internet-facing
+      gateway.loadBalancerConfiguration.ipAddressType: ipv4
     asserts:
       - isKind:
           of: LoadBalancerConfiguration
-        documentSelector:
-          path: kind
-          value: LoadBalancerConfiguration
-      - equal:
-          path: apiVersion
-          value: gateway.k8s.aws/v1beta1
         documentSelector:
           path: kind
           value: LoadBalancerConfiguration
