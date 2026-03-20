@@ -132,13 +132,14 @@ args: []
 
 ports: []
 
-# Pod-level resources (Kubernetes 1.32+) - applied at spec.resources
+# Resources for the main container
+# On K8s >= 1.34: rendered at pod level (spec.resources)
+# On K8s < 1.34: rendered at container level (spec.containers[].resources)
 resources: {}
 
 # Container-level overrides
 container:
-  # Container-level resources - applied at spec.containers[].resources
-  # When set, takes precedence over pod-level resources for the main container
+  # Explicit container-level resources (always renders at container level, overrides top-level)
   resources: {}
 
 # Container-level security context (overrides security.defaultContainerSecurityContext)

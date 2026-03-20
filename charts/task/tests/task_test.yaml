@@ -124,19 +124,19 @@ tests:
   # Container defaults
   # ===========================================================================
 
-  - it: should have default pod-level resource requests
+  - it: should have default resource requests
     set:
       image.repository: mytask
       image.tag: latest
     asserts:
       - equal:
-          path: spec.jobTemplate.spec.template.spec.resources.requests.cpu
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.requests.cpu
           value: 100m
         documentSelector:
           path: kind
           value: CronJob
       - equal:
-          path: spec.jobTemplate.spec.template.spec.resources.requests.memory
+          path: spec.jobTemplate.spec.template.spec.containers[0].resources.requests.memory
           value: 128Mi
         documentSelector:
           path: kind

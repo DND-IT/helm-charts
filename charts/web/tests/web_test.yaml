@@ -118,13 +118,13 @@ tests:
       image.tag: latest
     asserts:
       - equal:
-          path: spec.template.spec.resources.requests.cpu
+          path: spec.template.spec.containers[0].resources.requests.cpu
           value: 100m
         documentSelector:
           path: kind
           value: Deployment
       - equal:
-          path: spec.template.spec.resources.requests.memory
+          path: spec.template.spec.containers[0].resources.requests.memory
           value: 128Mi
         documentSelector:
           path: kind

@@ -83,7 +83,9 @@ gateway:
     # parentRefs REQUIRED: reference to your Gateway resource
     # Example:
     # parentRefs:
-    #   - name: my-gateway
+    #   - group: gateway.networking.k8s.io
+    #     kind: Gateway
+    #     name: my-gateway
     #     namespace: gateway-system
     parentRefs: []
     # hostnames REQUIRED: your application hostname(s)
