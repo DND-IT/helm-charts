@@ -71,6 +71,8 @@ spec:
     {{- range $externalSecret.data }}
     - secretKey: {{ .secretKey }}
       remoteRef:
+        conversionStrategy: {{ .remoteRef.conversionStrategy | default "Default" }}
+        decodingStrategy: {{ .remoteRef.decodingStrategy | default "None" }}
         key: {{ .remoteRef.key }}
         {{- with .remoteRef.property }}
         property: {{ . }}
@@ -78,15 +80,7 @@ spec:
         {{- with .remoteRef.version }}
         version: {{ . }}
         {{- end }}
-        {{- with .remoteRef.decodingStrategy }}
-        decodingStrategy: {{ . }}
-        {{- end }}
-        {{- with .remoteRef.metadataPolicy }}
-        metadataPolicy: {{ . }}
-        {{- end }}
-        {{- with .remoteRef.conversionStrategy }}
-        conversionStrategy: {{ . }}
-        {{- end }}
+        metadataPolicy: {{ .remoteRef.metadataPolicy | default "None" }}
     {{- end }}
   {{- end }}
 
@@ -95,6 +89,8 @@ spec:
     {{- range $externalSecret.dataFrom }}
     - {{- if .extract }}
       extract:
+        conversionStrategy: {{ .extract.conversionStrategy | default "Default" }}
+        decodingStrategy: {{ .extract.decodingStrategy | default "None" }}
         key: {{ .extract.key }}
         {{- with .extract.property }}
         property: {{ . }}
@@ -102,18 +98,12 @@ spec:
         {{- with .extract.version }}
         version: {{ . }}
         {{- end }}
-        {{- with .extract.decodingStrategy }}
-        decodingStrategy: {{ . }}
-        {{- end }}
-        {{- with .extract.metadataPolicy }}
-        metadataPolicy: {{ . }}
-        {{- end }}
-        {{- with .extract.conversionStrategy }}
-        conversionStrategy: {{ . }}
-        {{- end }}
+        metadataPolicy: {{ .extract.metadataPolicy | default "None" }}
       {{- end }}
       {{- if .find }}
       find:
+        conversionStrategy: {{ .find.conversionStrategy | default "Default" }}
+        decodingStrategy: {{ .find.decodingStrategy | default "None" }}
         {{- with .find.path }}
         path: {{ . }}
         {{- end }}
@@ -124,12 +114,6 @@ spec:
         {{- with .find.tags }}
         tags:
           {{- toYaml . | nindent 10 }}
-        {{- end }}
-        {{- with .find.conversionStrategy }}
-        conversionStrategy: {{ . }}
-        {{- end }}
-        {{- with .find.decodingStrategy }}
-        decodingStrategy: {{ . }}
         {{- end }}
       {{- end }}
       {{- if .rewrite }}
