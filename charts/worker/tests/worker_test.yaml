@@ -39,25 +39,25 @@ tests:
           path: kind
           value: Deployment
 
-  - it: should have default pod-level resource requests and limits
+  - it: should have default resource requests and limits
     set:
       image.repository: myworker
       image.tag: latest
     asserts:
       - equal:
-          path: spec.template.spec.resources.requests.cpu
+          path: spec.template.spec.containers[0].resources.requests.cpu
           value: 100m
         documentSelector:
           path: kind
           value: Deployment
       - equal:
-          path: spec.template.spec.resources.requests.memory
+          path: spec.template.spec.containers[0].resources.requests.memory
           value: 128Mi
         documentSelector:
           path: kind
           value: Deployment
       - equal:
-          path: spec.template.spec.resources.limits.memory
+          path: spec.template.spec.containers[0].resources.limits.memory
           value: 256Mi
         documentSelector:
           path: kind

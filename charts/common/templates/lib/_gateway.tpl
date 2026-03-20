@@ -10,12 +10,8 @@ Usage: {{- include "common.gatewayParentRefs" $parentRefsList }}
 */}}
 {{- define "common.gatewayParentRefs" -}}
 {{- range $parentRef := . }}
-- {{- if $parentRef.group }}
-  group: {{ $parentRef.group }}
-  {{- end }}
-  {{- if $parentRef.kind }}
-  kind: {{ $parentRef.kind }}
-  {{- end }}
+- group: {{ $parentRef.group | default "gateway.networking.k8s.io" }}
+  kind: {{ $parentRef.kind | default "Gateway" }}
   {{- if $parentRef.namespace }}
   namespace: {{ $parentRef.namespace }}
   {{- end }}
@@ -36,12 +32,8 @@ Parameters:
 Usage: {{- include "common.gatewayBackendRef" $backendRef }}
 */}}
 {{- define "common.gatewayBackendRef" -}}
-{{- if .group }}
-group: {{ .group }}
-{{- end }}
-{{- if .kind }}
-kind: {{ .kind }}
-{{- end }}
+group: {{ .group | default "" | quote }}
+kind: {{ .kind | default "Service" }}
 {{- if .namespace }}
 namespace: {{ .namespace }}
 {{- end }}
@@ -49,9 +41,7 @@ name: {{ .name }}
 {{- with .port }}
 port: {{ . }}
 {{- end }}
-{{- with .weight }}
-weight: {{ . }}
-{{- end }}
+weight: {{ .weight | default 1 }}
 {{- with .filters }}
 filters:
   {{- toYaml . | nindent 2 }}
@@ -117,12 +107,8 @@ Usage: {{- include "common.gatewayFilters" $rule.filters }}
   {{- with $filter.requestMirror }}
   requestMirror:
     backendRef:
-      {{- if .backendRef.group }}
-      group: {{ .backendRef.group }}
-      {{- end }}
-      {{- if .backendRef.kind }}
-      kind: {{ .backendRef.kind }}
-      {{- end }}
+      group: {{ .backendRef.group | default "" | quote }}
+      kind: {{ .backendRef.kind | default "Service" }}
       {{- if .backendRef.namespace }}
       namespace: {{ .backendRef.namespace }}
       {{- end }}

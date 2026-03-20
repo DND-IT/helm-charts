@@ -95,12 +95,12 @@ spec:
   securityContext:
     {{- $podSecurityContext := $config.podSecurityContext | default ($config.pod).securityContext | default $deployment.pod.securityContext | default $root.Values.security.defaultPodSecurityContext -}}
     {{- include "common.podSecurityContext" (dict "securityContext" $podSecurityContext "defaults" $root.Values.security.defaultPodSecurityContext) | nindent 4 }}
-  {{- /* Pod-level resources (Kubernetes 1.32+) - from top-level resources key */ -}}
+  {{- /* Pod-level resources (Kubernetes 1.34+ where PodLevelResources is enabled by default) */ -}}
   {{- $podResources := $config.podResources | default $deployment.resources -}}
-  {{- if and $podResources (not (empty $podResources)) }}
+  {{- if and $podResources (not (empty $podResources)) (semverCompare ">=1.34-0" $root.Capabilities.KubeVersion.Version) }}
   resources:
     {{- toYaml $podResources | nindent 4 }}
-  {{- end }}
+  {{- end -}}
   {{- /* For extraDeployments, only inherit root initContainers/sidecarContainers if inheritInitContainers is true */ -}}
   {{- $inheritInit := $config.inheritInitContainers | default false -}}
   {{- $initContainers := $config.initContainers | default (ternary $deployment.initContainers list (or (empty $config) $inheritInit)) -}}

@@ -501,7 +501,7 @@ tests:
           path: metadata.name
           value: RELEASE-NAME-worker
 
-  - it: should set pod-level resources from top-level resources key
+  - it: should set resources from top-level resources key
     set:
       resources:
         requests:
@@ -512,43 +512,45 @@ tests:
           memory: "2Gi"
     asserts:
       - equal:
-          path: spec.template.spec.resources.requests.cpu
+          path: spec.template.spec.containers[0].resources.requests.cpu
           value: "1"
         documentSelector:
           path: kind
           value: Deployment
       - equal:
-          path: spec.template.spec.resources.requests.memory
+          path: spec.template.spec.containers[0].resources.requests.memory
           value: "1Gi"
         documentSelector:
           path: kind
           value: Deployment
       - equal:
-          path: spec.template.spec.resources.limits.cpu
+          path: spec.template.spec.containers[0].resources.limits.cpu
           value: "2"
         documentSelector:
           path: kind
           value: Deployment
       - equal:
-          path: spec.template.spec.resources.limits.memory
+          path: spec.template.spec.containers[0].resources.limits.memory
           value: "2Gi"
         documentSelector:
           path: kind
           value: Deployment
 
-  - it: should not set pod-level resources when resources is null
+  - it: should not set resources when resources is null
     set:
       resources: null
     asserts:
       - notExists:
-          path: spec.template.spec.resources
+          path: spec.template.spec.containers[0].resources
         documentSelector:
           path: kind
           value: Deployment
 
-  - it: should set container-level resources from container.resources
+  - it: should prefer container.resources over top-level resources
     set:
-      resources: null
+      resources:
+        requests:
+          cpu: "100m"
       container:
         resources:
           requests:
@@ -567,11 +569,6 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].resources.limits.memory
           value: "512Mi"
-        documentSelector:
-          path: kind
-          value: Deployment
-      - notExists:
-          path: spec.template.spec.resources
         documentSelector:
           path: kind
           value: Deployment

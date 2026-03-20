@@ -95,9 +95,14 @@ Parameters:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- if $mainContainer }}
-  {{- with ($container.container).resources }}
+  {{- /* container.resources always takes precedence; top-level resources falls back to container level on K8s < 1.34 */ -}}
+  {{- $explicitContainerResources := ($container.container).resources -}}
+  {{- $topLevelResources := $container.resources -}}
+  {{- $useContainerLevel := or $explicitContainerResources (and $topLevelResources (not (semverCompare ">=1.34-0" $root.Capabilities.KubeVersion.Version))) -}}
+  {{- $mainResources := $explicitContainerResources | default $topLevelResources -}}
+  {{- if and $useContainerLevel $mainResources }}
   resources:
-    {{- toYaml . | nindent 4 }}
+    {{- toYaml $mainResources | nindent 4 }}
   {{- end }}
   {{- else }}
   {{- $resources := ($container.container).resources | default $container.resources -}}
