@@ -54,19 +54,24 @@ securityContext:
   readOnlyRootFilesystem: true
 ```
 
-Falsy values like `false`, `0`, and empty strings are fully supported. For example, to run a container as root:
+Falsy values like `false`, `0`, and empty strings are fully supported. For example, to run as root:
 
 ```yaml
+# Both levels needed: container-level defaults are applied independently
+# and would override pod-level settings if not explicitly set
+securityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+
 pod:
   securityContext:
     runAsNonRoot: false
     runAsUser: 0
     fsGroup: 0
-
-securityContext:
-  runAsNonRoot: false
-  runAsUser: 0
 ```
+
+!!! note
+    Setting `runAsNonRoot: false` at pod level alone is not enough — the chart applies container-level security defaults independently. Without an explicit container-level override, the container template will still emit `runAsNonRoot: true`. Set both, or use a [global override](#global-override) to change the defaults in one place.
 
 ### Global Override
 
