@@ -6,7 +6,7 @@ description: |
   Secret for credentials, and health checks.
   Designed for stateful MySQL deployments with persistent storage.
 type: application
-version: 0.1.0
+version: 0.1.1
 
 keywords:
   - mysql

@@ -492,9 +492,8 @@ tests:
       image.repository: nginx
       image.tag: latest
     asserts:
-      - equal:
+      - isNull:
           path: spec.template.spec.containers[0].securityContext.runAsNonRoot
-          value: true
         documentSelector:
           path: kind
           value: Deployment

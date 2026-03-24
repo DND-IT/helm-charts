@@ -34,9 +34,9 @@ security:
       type: RuntimeDefault
 
   # Default container security context applied to all containers
+  # Note: runAsNonRoot and runAsUser are inherited from pod security context
+  # via Kubernetes, so they are not duplicated here
   defaultContainerSecurityContext:
-    runAsNonRoot: true
-    runAsUser: 1000
     allowPrivilegeEscalation: false
     readOnlyRootFilesystem: true
     capabilities:
