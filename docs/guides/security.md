@@ -57,12 +57,6 @@ securityContext:
 Falsy values like `false`, `0`, and empty strings are fully supported. For example, to run as root:
 
 ```yaml
-# Both levels needed: container-level defaults are applied independently
-# and would override pod-level settings if not explicitly set
-securityContext:
-  runAsNonRoot: false
-  runAsUser: 0
-
 pod:
   securityContext:
     runAsNonRoot: false
@@ -70,8 +64,13 @@ pod:
     fsGroup: 0
 ```
 
-!!! note
-    Setting `runAsNonRoot: false` at pod level alone is not enough — the chart applies container-level security defaults independently. Without an explicit container-level override, the container template will still emit `runAsNonRoot: true`. Set both, or use a [global override](#global-override) to change the defaults in one place.
+`runAsNonRoot` and `runAsUser` are only set at pod level — Kubernetes inherits them into all containers automatically. The container security context only manages container-specific fields (`allowPrivilegeEscalation`, `readOnlyRootFilesystem`, `capabilities`). You can still override at the container level if needed:
+
+```yaml
+securityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+```
 
 ### Global Override
 
@@ -86,7 +85,7 @@ security:
     readOnlyRootFilesystem: false  # If your app needs to write
 ```
 
-Falsy values work in global defaults too. For example, `runAsUser: 0` in `defaultPodSecurityContext` will be applied correctly and not replaced by the hardcoded fallback of `1000`.
+Falsy values work in global defaults too. For example, `runAsUser: 0` in `defaultPodSecurityContext` will be applied correctly and not replaced by the hardcoded fallback of `1000`. `runAsNonRoot` and `runAsUser` belong in `defaultPodSecurityContext` — they are not needed in `defaultContainerSecurityContext` since Kubernetes inherits them from the pod.
 
 ## Read-only Root Filesystem
 

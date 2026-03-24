@@ -199,10 +199,32 @@ tests:
           value: Deployment
 
   # ===========================================================================
+  # Pod-level overrides must not be fought by container defaults
+  # ===========================================================================
+
+  - it: should not emit container runAsNonRoot when only pod sets it
+    set:
+      pod:
+        securityContext:
+          runAsNonRoot: false
+          runAsUser: 0
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+        documentSelector:
+          path: kind
+          value: Deployment
+      - isNull:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ===========================================================================
   # Sanity: secure defaults still apply when nothing is overridden
   # ===========================================================================
 
-  - it: should apply secure defaults when no overrides
+  - it: should apply secure pod defaults when no overrides
     asserts:
       - equal:
           path: spec.template.spec.securityContext.runAsNonRoot
@@ -222,18 +244,9 @@ tests:
         documentSelector:
           path: kind
           value: Deployment
-      - equal:
-          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
-          value: true
-        documentSelector:
-          path: kind
-          value: Deployment
-      - equal:
-          path: spec.template.spec.containers[0].securityContext.runAsUser
-          value: 1000
-        documentSelector:
-          path: kind
-          value: Deployment
+
+  - it: should apply secure container defaults when no overrides
+    asserts:
       - equal:
           path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
           value: false
@@ -243,6 +256,19 @@ tests:
       - equal:
           path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
           value: true
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should not emit container runAsNonRoot or runAsUser by default
+    asserts:
+      - isNull:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+        documentSelector:
+          path: kind
+          value: Deployment
+      - isNull:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
         documentSelector:
           path: kind
           value: Deployment

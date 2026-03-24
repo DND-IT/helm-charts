@@ -107,11 +107,9 @@ seccompProfile:
   type: RuntimeDefault
 ```
 
-Default container security context:
+Default container security context (container-specific fields only):
 
 ```yaml
-runAsNonRoot: true
-runAsUser: 1000
 allowPrivilegeEscalation: false
 readOnlyRootFilesystem: true
 capabilities:
@@ -120,9 +118,9 @@ seccompProfile:
   type: RuntimeDefault
 ```
 
-Security context templates use `hasKey` checks to correctly handle falsy values. This means you can set fields like `runAsNonRoot: false`, `runAsUser: 0`, or `fsGroup: 0` and they will be rendered as-is — they are not silently dropped or overridden by defaults.
+`runAsNonRoot` and `runAsUser` are set at pod level and inherited by all containers via Kubernetes. They are not duplicated in the container security context to avoid overriding pod-level settings.
 
-The same applies to `security.defaultPodSecurityContext` and `security.defaultContainerSecurityContext`: falsy values in defaults (e.g., `runAsNonRoot: false`) are respected and not replaced by hardcoded fallbacks.
+Security context templates use `hasKey` checks to correctly handle falsy values. This means you can set fields like `runAsNonRoot: false`, `runAsUser: 0`, or `fsGroup: 0` and they will be rendered as-is — they are not silently dropped or overridden by defaults.
 
 ## Composition Hierarchy
 

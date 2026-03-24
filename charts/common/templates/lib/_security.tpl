@@ -68,15 +68,15 @@ Container security context with secure defaults
 {{- $securityContext := .securityContext | default dict -}}
 {{- $root := .root -}}
 {{- $defaults := $root.Values.security.defaultContainerSecurityContext | default dict -}}
-{{- if not (hasKey $securityContext "runAsNonRoot") }}
-runAsNonRoot: {{ hasKey $defaults "runAsNonRoot" | ternary $defaults.runAsNonRoot true }}
-{{- else }}
+{{- if hasKey $securityContext "runAsNonRoot" }}
 runAsNonRoot: {{ $securityContext.runAsNonRoot }}
+{{- else if hasKey $defaults "runAsNonRoot" }}
+runAsNonRoot: {{ $defaults.runAsNonRoot }}
 {{- end }}
-{{- if not (hasKey $securityContext "runAsUser") }}
-runAsUser: {{ hasKey $defaults "runAsUser" | ternary $defaults.runAsUser 1000 }}
-{{- else }}
+{{- if hasKey $securityContext "runAsUser" }}
 runAsUser: {{ $securityContext.runAsUser }}
+{{- else if hasKey $defaults "runAsUser" }}
+runAsUser: {{ $defaults.runAsUser }}
 {{- end }}
 {{- if not (hasKey $securityContext "allowPrivilegeEscalation") }}
 allowPrivilegeEscalation: {{ hasKey $defaults "allowPrivilegeEscalation" | ternary $defaults.allowPrivilegeEscalation false }}
