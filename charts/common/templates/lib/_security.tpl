@@ -5,28 +5,28 @@ Pod security context with secure defaults
 {{- $securityContext := .securityContext | default dict -}}
 {{- $defaults := .defaults | default dict -}}
 {{- if not (hasKey $securityContext "runAsNonRoot") }}
-runAsNonRoot: {{ $defaults.runAsNonRoot | default true }}
-{{- else if $securityContext.runAsNonRoot }}
+runAsNonRoot: {{ hasKey $defaults "runAsNonRoot" | ternary $defaults.runAsNonRoot true }}
+{{- else }}
 runAsNonRoot: {{ $securityContext.runAsNonRoot }}
 {{- end }}
 {{- if not (hasKey $securityContext "runAsUser") }}
-runAsUser: {{ $defaults.runAsUser | default 1000 }}
-{{- else if $securityContext.runAsUser }}
+runAsUser: {{ hasKey $defaults "runAsUser" | ternary $defaults.runAsUser 1000 }}
+{{- else }}
 runAsUser: {{ $securityContext.runAsUser }}
 {{- end }}
 {{- if not (hasKey $securityContext "runAsGroup") }}
-runAsGroup: {{ $defaults.runAsGroup | default 1000 }}
-{{- else if $securityContext.runAsGroup }}
+runAsGroup: {{ hasKey $defaults "runAsGroup" | ternary $defaults.runAsGroup 1000 }}
+{{- else }}
 runAsGroup: {{ $securityContext.runAsGroup }}
 {{- end }}
 {{- if not (hasKey $securityContext "fsGroup") }}
-fsGroup: {{ $defaults.fsGroup | default 1000 }}
-{{- else if $securityContext.fsGroup }}
+fsGroup: {{ hasKey $defaults "fsGroup" | ternary $defaults.fsGroup 1000 }}
+{{- else }}
 fsGroup: {{ $securityContext.fsGroup }}
 {{- end }}
 {{- if not (hasKey $securityContext "fsGroupChangePolicy") }}
-fsGroupChangePolicy: {{ $defaults.fsGroupChangePolicy | default "OnRootMismatch" }}
-{{- else if $securityContext.fsGroupChangePolicy }}
+fsGroupChangePolicy: {{ hasKey $defaults "fsGroupChangePolicy" | ternary $defaults.fsGroupChangePolicy "OnRootMismatch" }}
+{{- else }}
 fsGroupChangePolicy: {{ $securityContext.fsGroupChangePolicy }}
 {{- end }}
 {{- with $securityContext.supplementalGroups }}
@@ -69,17 +69,17 @@ Container security context with secure defaults
 {{- $root := .root -}}
 {{- $defaults := $root.Values.security.defaultContainerSecurityContext | default dict -}}
 {{- if not (hasKey $securityContext "runAsNonRoot") }}
-runAsNonRoot: {{ $defaults.runAsNonRoot | default true }}
-{{- else if $securityContext.runAsNonRoot }}
+runAsNonRoot: {{ hasKey $defaults "runAsNonRoot" | ternary $defaults.runAsNonRoot true }}
+{{- else }}
 runAsNonRoot: {{ $securityContext.runAsNonRoot }}
 {{- end }}
 {{- if not (hasKey $securityContext "runAsUser") }}
-runAsUser: {{ $defaults.runAsUser | default 1000 }}
-{{- else if $securityContext.runAsUser }}
+runAsUser: {{ hasKey $defaults "runAsUser" | ternary $defaults.runAsUser 1000 }}
+{{- else }}
 runAsUser: {{ $securityContext.runAsUser }}
 {{- end }}
 {{- if not (hasKey $securityContext "allowPrivilegeEscalation") }}
-allowPrivilegeEscalation: {{ $defaults.allowPrivilegeEscalation | default false }}
+allowPrivilegeEscalation: {{ hasKey $defaults "allowPrivilegeEscalation" | ternary $defaults.allowPrivilegeEscalation false }}
 {{- else }}
 allowPrivilegeEscalation: {{ $securityContext.allowPrivilegeEscalation }}
 {{- end }}

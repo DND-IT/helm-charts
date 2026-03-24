@@ -1,0 +1,248 @@
+suite: test security context falsy values
+templates:
+  - common.yaml
+tests:
+  # ===========================================================================
+  # Bug 1: Falsy values in securityContext must not be silently dropped
+  # ===========================================================================
+
+  # --- Pod security context ---
+
+  - it: should render pod runAsNonRoot false
+    set:
+      pod:
+        securityContext:
+          runAsNonRoot: false
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: false
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should render pod runAsUser 0
+    set:
+      pod:
+        securityContext:
+          runAsUser: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should render pod runAsGroup 0
+    set:
+      pod:
+        securityContext:
+          runAsGroup: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should render pod fsGroup 0
+    set:
+      pod:
+        securityContext:
+          fsGroup: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should render pod fsGroupChangePolicy when explicitly set
+    set:
+      pod:
+        securityContext:
+          fsGroupChangePolicy: Always
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroupChangePolicy
+          value: Always
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # --- Container security context ---
+
+  - it: should render container runAsNonRoot false
+    set:
+      securityContext:
+        runAsNonRoot: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: false
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should render container runAsUser 0
+    set:
+      securityContext:
+        runAsUser: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ===========================================================================
+  # Bug 2: Falsy defaults must not be overridden by hardcoded fallback values
+  # ===========================================================================
+
+  # --- Pod defaults ---
+
+  - it: should honour default pod runAsNonRoot false
+    set:
+      security:
+        defaultPodSecurityContext:
+          runAsNonRoot: false
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: false
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should honour default pod runAsUser 0
+    set:
+      security:
+        defaultPodSecurityContext:
+          runAsUser: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should honour default pod runAsGroup 0
+    set:
+      security:
+        defaultPodSecurityContext:
+          runAsGroup: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsGroup
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should honour default pod fsGroup 0
+    set:
+      security:
+        defaultPodSecurityContext:
+          fsGroup: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # --- Container defaults ---
+
+  - it: should honour default container runAsNonRoot false
+    set:
+      security:
+        defaultContainerSecurityContext:
+          runAsNonRoot: false
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: false
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should honour default container runAsUser 0
+    set:
+      security:
+        defaultContainerSecurityContext:
+          runAsUser: 0
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should honour default container allowPrivilegeEscalation true
+    set:
+      security:
+        defaultContainerSecurityContext:
+          allowPrivilegeEscalation: true
+    asserts:
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: true
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ===========================================================================
+  # Sanity: secure defaults still apply when nothing is overridden
+  # ===========================================================================
+
+  - it: should apply secure defaults when no overrides
+    asserts:
+      - equal:
+          path: spec.template.spec.securityContext.runAsNonRoot
+          value: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.securityContext.runAsUser
+          value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.securityContext.fsGroup
+          value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsNonRoot
+          value: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.runAsUser
+          value: 1000
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.allowPrivilegeEscalation
+          value: false
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.spec.containers[0].securityContext.readOnlyRootFilesystem
+          value: true
+        documentSelector:
+          path: kind
+          value: Deployment

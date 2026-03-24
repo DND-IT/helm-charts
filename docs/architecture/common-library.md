@@ -120,6 +120,10 @@ seccompProfile:
   type: RuntimeDefault
 ```
 
+Security context templates use `hasKey` checks to correctly handle falsy values. This means you can set fields like `runAsNonRoot: false`, `runAsUser: 0`, or `fsGroup: 0` and they will be rendered as-is — they are not silently dropped or overridden by defaults.
+
+The same applies to `security.defaultPodSecurityContext` and `security.defaultContainerSecurityContext`: falsy values in defaults (e.g., `runAsNonRoot: false`) are respected and not replaced by hardcoded fallbacks.
+
 ## Composition Hierarchy
 
 All workload types share the same composition chain:

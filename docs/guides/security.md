@@ -54,6 +54,20 @@ securityContext:
   readOnlyRootFilesystem: true
 ```
 
+Falsy values like `false`, `0`, and empty strings are fully supported. For example, to run a container as root:
+
+```yaml
+pod:
+  securityContext:
+    runAsNonRoot: false
+    runAsUser: 0
+    fsGroup: 0
+
+securityContext:
+  runAsNonRoot: false
+  runAsUser: 0
+```
+
 ### Global Override
 
 Override the defaults for all workloads in the chart:
@@ -66,6 +80,8 @@ security:
   defaultContainerSecurityContext:
     readOnlyRootFilesystem: false  # If your app needs to write
 ```
+
+Falsy values work in global defaults too. For example, `runAsUser: 0` in `defaultPodSecurityContext` will be applied correctly and not replaced by the hardcoded fallback of `1000`.
 
 ## Read-only Root Filesystem
 
