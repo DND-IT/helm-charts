@@ -52,12 +52,17 @@ Includes: runtime defaults, Kubernetes downward API, and Datadog unified service
 {{- define "common.commonEnvVars" -}}
 {{- $root := . -}}
 {{- $commonEnv := list -}}
-{{/* Runtime defaults */}}
-{{- $commonEnv = append $commonEnv (dict "name" "TZ" "value" "UTC") -}}
-{{- $commonEnv = append $commonEnv (dict "name" "LOG_FORMAT" "value" "json") -}}
+{{/* Runtime defaults from values */}}
+{{- range $key, $value := $root.Values.envDefaults }}
+{{- if not (kindIs "invalid" $value) }}
+{{- $commonEnv = append $commonEnv (dict "name" $key "value" ($value | toString)) -}}
+{{- end }}
+{{- end -}}
 {{- if $root.Values.ports -}}
   {{- $firstPort := index $root.Values.ports 0 -}}
   {{- $commonEnv = append $commonEnv (dict "name" "PORT" "value" ($firstPort.containerPort | toString)) -}}
+{{- else if $root.Values.port -}}
+  {{- $commonEnv = append $commonEnv (dict "name" "PORT" "value" ($root.Values.port | toString)) -}}
 {{- end -}}
 {{/* Kubernetes downward API */}}
 {{- $commonEnv = append $commonEnv (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name"))) -}}

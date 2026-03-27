@@ -107,6 +107,11 @@ spec:
       appProtocol: {{ .appProtocol }}
       {{- end }}
     {{- end }}
+    {{- else if .Values.port }}
+    - name: http
+      port: {{ .Values.service.port | default .Values.port }}
+      targetPort: {{ .Values.port }}
+      protocol: TCP
     {{- else }}
     - name: http
       port: {{ .Values.service.port | default 80 }}

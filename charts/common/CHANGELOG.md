@@ -5,6 +5,22 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2026-03-27
+
+### Added
+
+- **`port` value** — single source of truth for the container port. Automatically flows to container port, service targetPort, and TargetGroupConfiguration healthCheckPort. Set `port: 3001` and everything updates. `ports` array still works for advanced multi-port setups
+- **`envDefaults` map** — configurable default environment variables injected into all containers. Replaces hardcoded `TZ=UTC` and `LOG_FORMAT=json`. Override with `envDefaults.TZ: "Europe/Zurich"` or disable with `envDefaults.LOG_FORMAT: null`
+- **`secret.defaultMode`** — configurable file permissions for mounted secret volumes (default: `420`/`0644`). Previously hardcoded in templates
+- `PORT` env var now picks up the `port` value (previously only read from `ports` array)
+
+### Changed
+
+- Service port defaults to `port` value when `service.port` is not set (wrapper charts like `web` set their own `service.port` default)
+- TargetGroupConfiguration `healthCheckPort` is now auto-derived from `port` value when not explicitly set in `healthCheckConfig`
+- Secret volume `defaultMode` for `extraSecrets` falls back to `secret.defaultMode` from values, with per-secret override support
+- Hardcoded env vars (`TZ`, `LOG_FORMAT`) moved from templates to `envDefaults` in values.yaml
+
 ## [1.4.2] - 2026-03-24
 
 ### Fixed

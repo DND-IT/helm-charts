@@ -55,6 +55,11 @@ Parameters:
       containerPort: {{ .containerPort }}
       protocol: {{ .protocol | default "TCP" }}
     {{- end }}
+  {{- else if $root.Values.port }}
+  ports:
+    - name: http
+      containerPort: {{ $root.Values.port }}
+      protocol: TCP
   {{- else if $root.Values.service.enabled }}
   ports:
     - name: http
