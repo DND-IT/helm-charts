@@ -268,12 +268,13 @@ Kubernetes: `>=1.32.0-0`
 | configMap.mountPath | string | `""` |  |
 | configMap.subPath | string | `""` |  |
 | cronjobs | object | `{}` |  |
-| env | list | `[]` |  |
+| env | object | `{}` |  |
 | envFrom | list | `[]` |  |
 | externalSecrets | object | `{}` |  |
 | extraConfigMaps | object | `{}` |  |
 | extraContainers | list | `[]` |  |
 | extraDeployments | object | `{}` |  |
+| extraEnv | list | `[]` |  |
 | extraEnvFrom | list | `[]` |  |
 | extraIngresses | object | `{}` |  |
 | extraObjects | list | `[]` |  |

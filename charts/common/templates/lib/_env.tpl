@@ -1,5 +1,5 @@
 {{/*
-Environment variables template
+Environment variables template (list format: [{name, value/valueFrom}])
 */}}
 {{- define "common.envVars" -}}
 {{- $envVars := .envVars -}}
@@ -47,13 +47,13 @@ Environment variables template
 
 {{/*
 Common environment variables injected into all containers when commonEnvVars is enabled.
-Includes: runtime defaults, Kubernetes downward API, and Datadog unified service tagging.
+Includes: env map values, PORT, Kubernetes downward API, and Datadog unified service tagging.
 */}}
 {{- define "common.commonEnvVars" -}}
 {{- $root := . -}}
 {{- $commonEnv := list -}}
-{{/* Runtime defaults from values */}}
-{{- range $key, $value := $root.Values.envDefaults }}
+{{/* User env map (KEY: value) */}}
+{{- range $key, $value := $root.Values.env }}
 {{- if not (kindIs "invalid" $value) }}
 {{- $commonEnv = append $commonEnv (dict "name" $key "value" ($value | toString)) -}}
 {{- end }}

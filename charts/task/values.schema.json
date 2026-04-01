@@ -1,0 +1,91 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "concurrencyPolicy": {
+            "type": "string"
+        },
+        "failedJobsHistoryLimit": {
+            "type": "integer"
+        },
+        "image": {
+            "type": "object",
+            "properties": {
+                "repository": {
+                    "type": "string"
+                },
+                "tag": {
+                    "type": "string"
+                }
+            }
+        },
+        "job": {
+            "type": "object",
+            "properties": {
+                "backoffLimit": {
+                    "type": "integer"
+                },
+                "ttlSecondsAfterFinished": {
+                    "type": "integer"
+                }
+            }
+        },
+        "pod": {
+            "type": "object",
+            "properties": {
+                "restartPolicy": {
+                    "type": "string"
+                }
+            }
+        },
+        "resources": {
+            "type": "object",
+            "properties": {
+                "requests": {
+                    "type": "object",
+                    "properties": {
+                        "cpu": {
+                            "type": "string"
+                        },
+                        "memory": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "schedule": {
+            "type": "string"
+        },
+        "scheduling": {
+            "type": "object",
+            "properties": {
+                "topologySpreadConstraints": {
+                    "type": "array"
+                }
+            }
+        },
+        "service": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
+        "successfulJobsHistoryLimit": {
+            "type": "integer"
+        },
+        "suspend": {
+            "type": "boolean"
+        },
+        "workload": {
+            "type": "object",
+            "properties": {
+                "type": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

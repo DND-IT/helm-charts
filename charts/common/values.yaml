@@ -7,9 +7,10 @@ global:
   image:
     registry: ""
 
-# Default environment variables injected into all containers when commonEnvVars is true
-# Set a value to null to disable it, or add new keys to inject additional env vars
-envDefaults:
+# Environment variables as a map (KEY: value), injected into all containers when commonEnvVars is true
+# These merge with consuming chart values via Helm deep merge
+# Set a value to null to disable it
+env:
   TZ: "UTC"
   LOG_FORMAT: "json"
 
@@ -172,7 +173,8 @@ lifecycle: {}
 # ENVIRONMENT CONFIGURATION
 # =============================================================================
 
-env: []
+# Extra environment variables as a list (for valueFrom, secretKeyRef, etc.)
+extraEnv: []
 envFrom: []
 extraEnvFrom: []
 commonEnvVars: true

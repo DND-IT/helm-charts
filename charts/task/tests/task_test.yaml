@@ -217,10 +217,8 @@ tests:
       image.repository: mytask
       image.tag: latest
       env:
-        - name: MY_VAR
-          value: my-value
-        - name: ANOTHER_VAR
-          value: another-value
+        MY_VAR: my-value
+        ANOTHER_VAR: another-value
     asserts:
       - contains:
           path: spec.jobTemplate.spec.template.spec.containers[0].env

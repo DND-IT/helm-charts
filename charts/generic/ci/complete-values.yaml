@@ -41,12 +41,13 @@ readinessProbe:
   initialDelaySeconds: 5
   periodSeconds: 5
 
-# Environment variables
+# Environment variables (map style)
 env:
-  - name: ENV
-    value: "production"
-  - name: LOG_LEVEL
-    value: "info"
+  ENV: "production"
+  LOG_LEVEL: "info"
+
+# Extra env vars (list style, for valueFrom)
+extraEnv:
   - name: DB_PASSWORD
     valueFrom:
       secretKeyRef:

@@ -207,10 +207,10 @@ tests:
     asserts:
       - failedTemplate: {}
 
-  - it: should handle template values in env
+  - it: should handle template values in extraEnv
     set:
       nameOverride: myapp
-      env:
+      extraEnv:
         - name: APP_NAME
           value: "{{ .Values.nameOverride }}"
     asserts:
