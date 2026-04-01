@@ -1,5 +1,5 @@
 {{/*
-Environment variables template
+Environment variables template (list format: [{name, value/valueFrom}])
 */}}
 {{- define "common.envVars" -}}
 {{- $envVars := .envVars -}}
@@ -47,17 +47,22 @@ Environment variables template
 
 {{/*
 Common environment variables injected into all containers when commonEnvVars is enabled.
-Includes: runtime defaults, Kubernetes downward API, and Datadog unified service tagging.
+Includes: env map values, PORT, Kubernetes downward API, and Datadog unified service tagging.
 */}}
 {{- define "common.commonEnvVars" -}}
 {{- $root := . -}}
 {{- $commonEnv := list -}}
-{{/* Runtime defaults */}}
-{{- $commonEnv = append $commonEnv (dict "name" "TZ" "value" "UTC") -}}
-{{- $commonEnv = append $commonEnv (dict "name" "LOG_FORMAT" "value" "json") -}}
+{{/* User env map (KEY: value) */}}
+{{- range $key, $value := $root.Values.env }}
+{{- if not (kindIs "invalid" $value) }}
+{{- $commonEnv = append $commonEnv (dict "name" $key "value" ($value | toString)) -}}
+{{- end }}
+{{- end -}}
 {{- if $root.Values.ports -}}
   {{- $firstPort := index $root.Values.ports 0 -}}
   {{- $commonEnv = append $commonEnv (dict "name" "PORT" "value" ($firstPort.containerPort | toString)) -}}
+{{- else if $root.Values.port -}}
+  {{- $commonEnv = append $commonEnv (dict "name" "PORT" "value" ($root.Values.port | toString)) -}}
 {{- end -}}
 {{/* Kubernetes downward API */}}
 {{- $commonEnv = append $commonEnv (dict "name" "POD_NAME" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.name"))) -}}

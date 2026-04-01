@@ -34,17 +34,17 @@ Parameters:
     {{- toYaml . | nindent 4 }}
   {{- end }}
   {{- if $mainContainer }}
-  {{/* Main container: merge commonEnvVars, use envFrom/volumeMounts helpers */}}
-  {{- if or $container.env $container.commonEnvVars }}
+  {{/* Main container: merge commonEnvVars (includes env map), then extraEnv list */}}
+  {{- if or $container.extraEnv $container.commonEnvVars }}
   {{- if $container.commonEnvVars }}
   env:
     {{- include "common.commonEnvVars" $root | nindent 4 }}
-    {{- with $container.env }}
+    {{- with $container.extraEnv }}
     {{- include "common.envVars" (dict "envVars" . "root" $root) | nindent 4 }}
     {{- end }}
-  {{- else if $container.env }}
+  {{- else if $container.extraEnv }}
   env:
-    {{- include "common.envVars" (dict "envVars" $container.env "root" $root) | nindent 4 }}
+    {{- include "common.envVars" (dict "envVars" $container.extraEnv "root" $root) | nindent 4 }}
   {{- end }}
   {{- end }}
   {{- include "common.envFrom" $root | nindent 2 }}
@@ -55,6 +55,11 @@ Parameters:
       containerPort: {{ .containerPort }}
       protocol: {{ .protocol | default "TCP" }}
     {{- end }}
+  {{- else if $root.Values.port }}
+  ports:
+    - name: http
+      containerPort: {{ $root.Values.port }}
+      protocol: TCP
   {{- else if $root.Values.service.enabled }}
   ports:
     - name: http
@@ -62,7 +67,7 @@ Parameters:
       protocol: TCP
   {{- end }}
   {{- else }}
-  {{/* Non-main container: simple env/envFrom/ports */}}
+  {{/* Non-main container: simple env list/envFrom/ports */}}
   {{- if or $container.env $container.envFrom }}
   {{- with $container.env }}
   env:

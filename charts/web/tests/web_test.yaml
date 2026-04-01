@@ -150,7 +150,7 @@ tests:
           path: kind
           value: Service
 
-  - it: should have service port matching container port 8080
+  - it: should have service port and targetPort from port value
     set:
       image.repository: nginx
       image.tag: latest

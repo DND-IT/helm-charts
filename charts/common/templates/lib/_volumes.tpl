@@ -16,7 +16,7 @@ Volumes template for workloads
 {{/* Secret volumes */}}
 {{- if .Values.secret.enabled -}}
   {{- if .Values.secret.mountPath -}}
-    {{- $volume := dict "name" "secret" "secret" (dict "secretName" (include "common.secretName" .) "defaultMode" 420) -}}
+    {{- $volume := dict "name" "secret" "secret" (dict "secretName" (include "common.secretName" .) "defaultMode" (.Values.secret.defaultMode | int)) -}}
     {{- $volumes = append $volumes $volume -}}
   {{- end -}}
 {{- end -}}
@@ -38,7 +38,7 @@ Volumes template for workloads
 {{/* Extra Secret volumes */}}
 {{- range $name, $config := .Values.extraSecrets -}}
   {{- if $config.mountPath -}}
-    {{- $volume := dict "name" (printf "secret-%s" $name) "secret" (dict "secretName" $name "defaultMode" 420) -}}
+    {{- $volume := dict "name" (printf "secret-%s" $name) "secret" (dict "secretName" $name "defaultMode" ($config.defaultMode | default $.Values.secret.defaultMode | int)) -}}
     {{- if $config.items -}}
       {{- $_ := set $volume.secret "items" $config.items -}}
     {{- end -}}

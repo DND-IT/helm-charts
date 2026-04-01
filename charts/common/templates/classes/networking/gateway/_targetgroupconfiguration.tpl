@@ -26,7 +26,14 @@ spec:
     {{- end }}
   {{- with .Values.gateway.targetGroupConfiguration.defaultConfiguration }}
   defaultConfiguration:
-    {{- toYaml . | nindent 4 }}
+    {{- $config := deepCopy . }}
+    {{- if and (hasKey $config "healthCheckConfig") $.Values.port }}
+      {{- $hc := $config.healthCheckConfig }}
+      {{- if not (hasKey $hc "healthCheckPort") }}
+        {{- $_ := set $hc "healthCheckPort" (printf "%v" $.Values.port) }}
+      {{- end }}
+    {{- end }}
+    {{- toYaml $config | nindent 4 }}
   {{- end }}
   {{- with .Values.gateway.targetGroupConfiguration.routeConfigurations }}
   routeConfigurations:

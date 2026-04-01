@@ -7,6 +7,13 @@ global:
   image:
     registry: ""
 
+# Environment variables as a map (KEY: value), injected into all containers when commonEnvVars is true
+# These merge with consuming chart values via Helm deep merge
+# Set a value to null to disable it
+env:
+  TZ: "UTC"
+  LOG_FORMAT: "json"
+
 # Common labels and annotations applied to all resources
 commonLabels: {}
 commonAnnotations: {}
@@ -130,6 +137,15 @@ imagePullSecrets: []
 command: []
 args: []
 
+# Container port for the main application
+# When set, automatically configures:
+#   - Container port (name: http, containerPort: <port>)
+#   - Service targetPort
+#   - TargetGroupConfiguration healthCheckPort
+# For advanced multi-port setups, use the `ports` array instead
+port: null  # @schema type:[integer, null]
+
+# Advanced: explicit container ports array (overrides `port` when set)
 ports: []
 
 # Resources for the main container
@@ -157,7 +173,8 @@ lifecycle: {}
 # ENVIRONMENT CONFIGURATION
 # =============================================================================
 
-env: []
+# Extra environment variables as a list (for valueFrom, secretKeyRef, etc.)
+extraEnv: []
 envFrom: []
 extraEnvFrom: []
 commonEnvVars: true
@@ -428,6 +445,7 @@ secret:
   envFrom: false
   mountPath: ""
   subPath: ""
+  defaultMode: 420  # 0644 — file permissions for mounted secret volumes
 
 extraConfigMaps: {}
   # nginx-config:

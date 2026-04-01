@@ -228,10 +228,8 @@ tests:
       image.repository: myworker
       image.tag: latest
       env:
-        - name: QUEUE_NAME
-          value: high-priority
-        - name: CONCURRENCY
-          value: "10"
+        QUEUE_NAME: high-priority
+        CONCURRENCY: "10"
     asserts:
       - contains:
           path: spec.template.spec.containers[0].env

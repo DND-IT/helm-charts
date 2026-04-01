@@ -14,11 +14,10 @@ image:
 # OPINIONATED DEFAULTS
 # =============================================================================
 
-# Default port for web applications
-ports:
-  - name: http
-    containerPort: 8080
-    protocol: TCP
+# Default container port for web applications
+# Automatically flows to: container port, service targetPort, healthCheckPort
+# Service port stays 80 (static) — only the target port is dynamic
+port: 8080
 
 # Pod-level resource defaults (Kubernetes 1.32+)
 resources:
@@ -70,6 +69,7 @@ scheduling:
 service:
   enabled: true
   type: ClusterIP
+  port: 8080
 
 # =============================================================================
 # GATEWAY API (replaces Ingress)
@@ -103,7 +103,7 @@ gateway:
       protocolVersion: HTTP1
       healthCheckConfig:
         healthCheckPath: /readyz
-        healthCheckPort: "8080"
+        # healthCheckPort is derived from `port` automatically
         healthCheckProtocol: HTTP
         healthCheckInterval: 15
         healthyThresholdCount: 2

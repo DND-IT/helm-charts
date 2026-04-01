@@ -87,7 +87,8 @@ lifecycle: {}
 # ENVIRONMENT CONFIGURATION
 # ============================================================================
 
-env: []
+env: {}
+extraEnv: []
 envFrom: []
 extraEnvFrom: []
 commonEnvVars: true

@@ -6,7 +6,7 @@ description: |
   Designed for background processing workloads that don't expose HTTP endpoints.
   No service or ingress by default.
 type: application
-version: 1.2.2
+version: 1.3.0
 
 keywords:
   - worker

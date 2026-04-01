@@ -5,6 +5,14 @@ All notable changes to the task Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0] - 2026-04-01
+
+### Changed
+
+- `env` changed from list to map format — merges with common defaults via Helm deep merge
+- Added `extraEnv` list for `valueFrom`/`secretKeyRef` cases
+- Updated to common library 1.5.0
+
 ## [1.2.0] - 2026-03-18
 
 ### Changed
