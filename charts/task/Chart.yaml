@@ -6,7 +6,7 @@ description: |
   Designed for scheduled tasks with configurable concurrency, history limits, and job settings.
   No HPA, PDB, service, or ingress - focused purely on scheduled job execution.
 type: application
-version: 1.3.0
+version: 1.3.1
 
 keywords:
   - task

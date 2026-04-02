@@ -69,6 +69,18 @@ Volumes template for workloads
   {{- $volumes = append $volumes $volume -}}
 {{- end -}}
 
+{{/* Secret volumes */}}
+{{- range $name, $config := .Values.volumes.secret -}}
+  {{- $volume := dict "name" $name "secret" (dict "secretName" ($config.secretName | default $name)) -}}
+  {{- if $config.items -}}
+    {{- $_ := set $volume.secret "items" $config.items -}}
+  {{- end -}}
+  {{- if $config.defaultMode -}}
+    {{- $_ := set $volume.secret "defaultMode" ($config.defaultMode | int) -}}
+  {{- end -}}
+  {{- $volumes = append $volumes $volume -}}
+{{- end -}}
+
 {{/* HostPath volumes */}}
 {{- range $name, $config := .Values.volumes.hostPath -}}
   {{- $volume := dict "name" $name "hostPath" (dict "path" $config.path) -}}
@@ -188,6 +200,20 @@ Volume mounts template
     {{- $_ := set $mount "readOnly" $config.readOnly -}}
   {{- end -}}
   {{- $mounts = append $mounts $mount -}}
+{{- end -}}
+
+{{/* Secret volume mounts */}}
+{{- range $name, $config := $root.Values.volumes.secret -}}
+  {{- if $config.mountPath -}}
+  {{- $mount := dict "name" $name "mountPath" $config.mountPath -}}
+  {{- if $config.subPath -}}
+    {{- $_ := set $mount "subPath" $config.subPath -}}
+  {{- end -}}
+  {{- if $config.readOnly -}}
+    {{- $_ := set $mount "readOnly" $config.readOnly -}}
+  {{- end -}}
+  {{- $mounts = append $mounts $mount -}}
+  {{- end -}}
 {{- end -}}
 
 {{/* HostPath mounts */}}
