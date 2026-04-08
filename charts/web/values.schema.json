@@ -111,7 +111,10 @@
                             "type": "string"
                         },
                         "port": {
-                            "type": "string"
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
                         }
                     }
                 },
@@ -142,7 +145,10 @@
                             "type": "string"
                         },
                         "port": {
-                            "type": "string"
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
                         }
                     }
                 },
@@ -230,7 +236,10 @@
                             "type": "string"
                         },
                         "port": {
-                            "type": "string"
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
                         }
                     }
                 },
