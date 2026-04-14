@@ -5,6 +5,12 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.2] - 2026-04-14
+
+### Fixed
+
+- `datadog.env` no longer silently falls back to the release namespace. When unset, the `tags.datadoghq.com/env` pod label and the `DD_ENV` downward-API env var are omitted entirely, so pods no longer get `DD_ENV` values like `titan-dev-titan-api`. Teams should set `datadog.env` explicitly (e.g., `dev-titan`, `prod-titan`).
+
 ## [1.5.1] - 2026-04-02
 
 ### Added

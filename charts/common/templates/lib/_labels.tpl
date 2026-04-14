@@ -56,11 +56,13 @@ Parameters:
 {{- $context := .context | default . -}}
 {{- if $context.Values.datadog.enabled -}}
 {{- $ddService := $context.Values.datadog.service | default (include "common.fullname" $context) -}}
-{{- $ddEnv := $context.Values.datadog.env | default $context.Release.Namespace -}}
+{{- $ddEnv := $context.Values.datadog.env -}}
 {{- $ddVersion := $context.Values.datadog.version | default ($context.Values.image.tag | default "latest") -}}
 admission.datadoghq.com/enabled: "true"
 tags.datadoghq.com/service: {{ $ddService }}
+{{- if $ddEnv }}
 tags.datadoghq.com/env: {{ $ddEnv }}
+{{- end }}
 tags.datadoghq.com/version: {{ $ddVersion | quote }}
 {{- end -}}
 {{- end }}

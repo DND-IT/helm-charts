@@ -29,7 +29,7 @@ Injected when `datadog.enabled: true` (default). These are read from pod labels 
 | Variable | Source Label | Description |
 |----------|-------------|-------------|
 | `DD_SERVICE` | `tags.datadoghq.com/service` | Datadog service name |
-| `DD_ENV` | `tags.datadoghq.com/env` | Datadog environment |
+| `DD_ENV` | `tags.datadoghq.com/env` | Datadog environment. Only injected when `datadog.env` is set — no namespace fallback. |
 | `DD_VERSION` | `tags.datadoghq.com/version` | Datadog version |
 | `DD_AGENT_HOST` | `status.hostIP` | Datadog agent host (node IP) |
 | `DD_ENTITY_ID` | `metadata.uid` | Datadog entity ID (pod UID) |

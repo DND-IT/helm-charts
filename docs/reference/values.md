@@ -178,7 +178,7 @@ Complete reference for all configuration values available in the common library.
 |-----|------|---------|-------------|
 | `datadog.enabled` | bool | `true` | Enable Datadog unified service tagging |
 | `datadog.service` | string | chart fullname | Service name |
-| `datadog.env` | string | release namespace | Environment |
+| `datadog.env` | string | `""` | Environment (e.g. `dev-titan`, `prod-titan`). No default — when empty, the `tags.datadoghq.com/env` label and `DD_ENV` env var are omitted. |
 | `datadog.version` | string | `image.tag` | Version |
 
 ## CronJob (singular)

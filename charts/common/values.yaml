@@ -956,7 +956,9 @@ datadog:
   enabled: true
   # Service name (defaults to chart fullname)
   service: ""
-  # Environment (defaults to release namespace)
+  # Environment (e.g. dev-titan, prod-titan). Must be set explicitly per team;
+  # when empty, the tags.datadoghq.com/env label and DD_ENV env var are omitted
+  # rather than falling back to the release namespace.
   env: ""
   # Version (defaults to image.tag)
   version: ""
