@@ -73,7 +73,9 @@ Includes: env map values, PORT, Kubernetes downward API, and Datadog unified ser
 {{/* Datadog unified service tagging (from pod labels via downward API) */}}
 {{- if $root.Values.datadog.enabled -}}
 {{- $commonEnv = append $commonEnv (dict "name" "DD_SERVICE" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.labels['tags.datadoghq.com/service']"))) -}}
+{{- if $root.Values.datadog.env -}}
 {{- $commonEnv = append $commonEnv (dict "name" "DD_ENV" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.labels['tags.datadoghq.com/env']"))) -}}
+{{- end -}}
 {{- $commonEnv = append $commonEnv (dict "name" "DD_VERSION" "valueFrom" (dict "fieldRef" (dict "fieldPath" "metadata.labels['tags.datadoghq.com/version']"))) -}}
 {{/* Datadog agent connection */}}
 {{- $commonEnv = append $commonEnv (dict "name" "DD_AGENT_HOST" "valueFrom" (dict "fieldRef" (dict "fieldPath" "status.hostIP"))) -}}

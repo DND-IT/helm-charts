@@ -29,7 +29,8 @@ Datadog is **enabled by default**. The values with their fallback defaults:
 datadog:
   enabled: true
   service: ""    # Defaults to chart fullname (e.g., my-app)
-  env: ""        # Defaults to release namespace (e.g., production)
+  env: ""        # No default. Set explicitly (e.g., dev-titan, prod-titan). When empty,
+                 # the tags.datadoghq.com/env label and DD_ENV env var are omitted.
   version: ""    # Defaults to image.tag (e.g., 1.0.0)
 ```
 
@@ -50,11 +51,11 @@ When `datadog.enabled: true`, these labels are automatically added to **pod temp
 labels:
   admission.datadoghq.com/enabled: "true"
   tags.datadoghq.com/service: my-app
-  tags.datadoghq.com/env: production
+  tags.datadoghq.com/env: prod-titan     # only emitted when datadog.env is set
   tags.datadoghq.com/version: "1.0.0"
 ```
 
-The labels are rendered via the `common.labels` helper with a `pod: true` parameter, ensuring they only appear on pod templates and not on parent resources.
+The labels are rendered via the `common.labels` helper with a `pod: true` parameter, ensuring they only appear on pod templates and not on parent resources. The `tags.datadoghq.com/env` label is omitted when `datadog.env` is empty, so pods do not silently inherit the release namespace as their environment tag.
 
 ## Environment Variables
 
@@ -66,6 +67,7 @@ env:
     valueFrom:
       fieldRef:
         fieldPath: metadata.labels['tags.datadoghq.com/service']
+  # DD_ENV is only injected when datadog.env is set
   - name: DD_ENV
     valueFrom:
       fieldRef:
