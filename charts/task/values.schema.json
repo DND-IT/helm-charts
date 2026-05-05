@@ -79,6 +79,9 @@
         "suspend": {
             "type": "boolean"
         },
+        "timeZone": {
+            "type": "string"
+        },
         "workload": {
             "type": "object",
             "properties": {

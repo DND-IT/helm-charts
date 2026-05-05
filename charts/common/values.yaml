@@ -403,6 +403,7 @@ extraDeployments: {}
 # =============================================================================
 
 # schedule: ""  # When set, renders a single CronJob instead of Deployment
+# timeZone: "Europe/Zurich"  # IANA TZ; requires Kubernetes 1.27+
 concurrencyPolicy: Forbid
 successfulJobsHistoryLimit: 3
 failedJobsHistoryLimit: 1

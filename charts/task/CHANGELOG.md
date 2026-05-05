@@ -5,6 +5,13 @@ All notable changes to the task Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-05-05
+
+### Added
+
+- **`timeZone` value** — set `timeZone: "Europe/Zurich"` (or any IANA TZ) to render `spec.timeZone` on the CronJob, keeping schedules stable across DST transitions. Requires Kubernetes 1.27+.
+- Updated to common library 1.6.0
+
 ## [1.3.2] - 2026-04-14
 
 ### Fixed

@@ -17,6 +17,9 @@ metadata:
   {{- end }}
 spec:
   schedule: {{ .Values.schedule | quote }}
+  {{- with .Values.timeZone }}
+  timeZone: {{ . | quote }}
+  {{- end }}
   concurrencyPolicy: {{ .Values.concurrencyPolicy | default "Forbid" }}
   successfulJobsHistoryLimit: {{ .Values.successfulJobsHistoryLimit | default 3 }}
   failedJobsHistoryLimit: {{ .Values.failedJobsHistoryLimit | default 1 }}
