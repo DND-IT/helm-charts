@@ -199,6 +199,30 @@ tests:
           path: kind
           value: CronJob
 
+  - it: should not render timeZone by default
+    set:
+      image.repository: mytask
+      image.tag: latest
+    asserts:
+      - notExists:
+          path: spec.timeZone
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should render timeZone when set
+    set:
+      image.repository: mytask
+      image.tag: latest
+      timeZone: Europe/Zurich
+    asserts:
+      - equal:
+          path: spec.timeZone
+          value: Europe/Zurich
+        documentSelector:
+          path: kind
+          value: CronJob
+
   - it: should allow overriding concurrencyPolicy
     set:
       image.repository: mytask

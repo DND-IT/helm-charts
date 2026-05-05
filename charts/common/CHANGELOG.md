@@ -5,6 +5,12 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-05-05
+
+### Added
+
+- **`timeZone` support in the single-cronjob template** — `_cronjob.tpl` now renders `spec.timeZone` when `.Values.timeZone` is set, matching the behavior already present in the multi-cronjob template (`_cronjobs.tpl`). Use any IANA timezone (e.g. `Europe/Zurich`) to keep schedules stable across DST transitions. Requires Kubernetes 1.27+.
+
 ## [1.5.2] - 2026-04-14
 
 ### Fixed
