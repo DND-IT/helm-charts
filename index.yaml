@@ -80,6 +80,30 @@ entries:
     version: 0.1.0
   common:
   - apiVersion: v2
+    created: "2026-05-05T14:17:25.788700409Z"
+    description: 'A Helm library chart containing shared templates and helpers for
+      Kubernetes workloads. Provides common functionality for naming, labels, security
+      contexts, containers, pods, and volumes. Designed to be used as a dependency
+      by application charts (web, worker, task). '
+    digest: 90398434c275e44c3d7a76f531de827a2fc5fdcaff4b41c7d3f8b14e5847f170
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - library
+    - common
+    - helpers
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: common
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: library
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/common-1.6.0/common-1.6.0.tgz
+    version: 1.6.0
+  - apiVersion: v2
     created: "2026-04-14T10:52:34.488415128Z"
     description: 'A Helm library chart containing shared templates and helpers for
       Kubernetes workloads. Provides common functionality for naming, labels, security
@@ -1496,6 +1520,35 @@ entries:
     version: 0.1.0
   task:
   - apiVersion: v2
+    created: "2026-05-05T14:17:25.979355382Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying scheduled CronJob workloads to Kubernetes.
+      Includes CronJob and ServiceAccount. Designed for scheduled tasks with configurable
+      concurrency, history limits, and job settings. No HPA, PDB, service, or ingress
+      - focused purely on scheduled job execution. '
+    digest: ae798ba5fcac7d3048fc6f50ce6cbc59d1af7d8c3d09771fea92dc789c988429
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - task
+    - cronjob
+    - scheduled
+    - job
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: task
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/task-1.4.0/task-1.4.0.tgz
+    version: 1.4.0
+  - apiVersion: v2
     created: "2026-04-14T10:52:34.931084107Z"
     dependencies:
     - name: common
@@ -2483,4 +2536,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/worker-1.0.0/worker-1.0.0.tgz
     version: 1.0.0
-generated: "2026-04-14T10:52:35.282358635Z"
+generated: "2026-05-05T14:17:25.979606099Z"
