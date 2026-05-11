@@ -18,29 +18,26 @@ image:
 workload:
   type: none
 
-# Cron schedule (required for task charts)
-schedule: "0 * * * *"
-
-# CronJob defaults
-concurrencyPolicy: Forbid
-successfulJobsHistoryLimit: 3
-failedJobsHistoryLimit: 1
-suspend: false
-
-# Job defaults
-job:
-  backoffLimit: 6
-  ttlSecondsAfterFinished: 300
+# Declare one or more scheduled tasks under cronjobs.
+# Each entry inherits root configMap/secret/volumes/commonEnvVars; per-entry
+# fields (command, args, env, image, etc.) override root values.
+cronjobs: {}
+  # default:
+  #   enabled: true
+  #   schedule: "0 * * * *"
+  #   concurrencyPolicy: Forbid
+  #   successfulJobsHistoryLimit: 3
+  #   failedJobsHistoryLimit: 1
+  #   suspend: false
+  #   backoffLimit: 6
+  #   ttlSecondsAfterFinished: 300
+  #   command: ["echo", "hello"]
 
 # Pod-level resource defaults for tasks (Kubernetes 1.32+)
 resources:
   requests:
     cpu: "100m"
     memory: "128Mi"
-
-# Pod configuration
-pod:
-  restartPolicy: OnFailure
 
 # No topology spread for CronJobs
 scheduling:

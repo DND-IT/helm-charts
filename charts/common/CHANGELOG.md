@@ -5,6 +5,38 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.7.0] - 2026-05-11
+
+### Changed
+
+- **BREAKING:** `common.cronjob` is no longer a root-values renderer — it is now a parameterized helper that renders a single CronJob from `(name, config, root)`. The loader no longer calls it directly. Declare CronJobs through the `cronjobs:` map; `common.cronjobs` is the only entry point.
+- **BREAKING:** Removed root-level singular CronJob keys (`schedule`, `job`, `concurrencyPolicy`, `successfulJobsHistoryLimit`, `failedJobsHistoryLimit`, `startingDeadlineSeconds`, `suspend`) from the common library defaults. Move these onto entries under `cronjobs:`. `backoffLimit`/`ttlSecondsAfterFinished` now live directly on the entry (no nested `job:` key).
+- `common.job` extracted as a parameterized helper alongside `common.jobs`; same shape as `common.cronjob`/`common.cronjobs`.
+- Plural `cronjobs:` and `jobs:` map entries now inherit root defaults — `configMap.envFrom`, `volumes.secret.*`/`volumes.emptyDir.*`, `commonEnvVars`, `extraEnv`, `resources`, `image` — same as the old singular path used to.
+- `common.labels` now emits the Datadog tagging labels (`tags.datadoghq.com/*` via `common.datadogLabels`) *before* `commonLabels` and `pod.labels`. YAML last-key-wins means values set in `commonLabels` or `pod.labels` now override the chart's auto-injected defaults — letting consumers tag the Deployment (for kube-state-metrics) and the Pod template from a single `commonLabels` block. No behavior change when nothing is overridden.
+
+### Migration
+
+Before:
+
+```yaml
+schedule: "0 * * * *"
+command: ["bin/run", "thing"]
+job:
+  backoffLimit: 1
+```
+
+After:
+
+```yaml
+cronjobs:
+  thing:
+    enabled: true
+    schedule: "0 * * * *"
+    command: ["bin/run", "thing"]
+    backoffLimit: 1
+```
+
 ## [1.6.0] - 2026-05-05
 
 ### Added

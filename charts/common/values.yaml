@@ -399,35 +399,22 @@ extraDeployments: {}
   #   args: ["--queue=default"]
 
 # =============================================================================
-# CRONJOB CONFIGURATION (singular - legacy)
+# CRONJOBS (map-based)
 # =============================================================================
-
-# schedule: ""  # When set, renders a single CronJob instead of Deployment
-# timeZone: "Europe/Zurich"  # IANA TZ; requires Kubernetes 1.27+
-concurrencyPolicy: Forbid
-successfulJobsHistoryLimit: 3
-failedJobsHistoryLimit: 1
-startingDeadlineSeconds: ""
-suspend: false
-job:
-  backoffLimit: 6
-  ttlSecondsAfterFinished: 300
-  completions: 1
-  parallelism: 1
-  activeDeadlineSeconds: ""
-  completionMode: ""
-
-# =============================================================================
-# CRONJOBS (plural - map-based)
-# =============================================================================
+# Declare CronJobs via the cronjobs map (one entry = one CronJob).
+# Each entry inherits root configMap/secret/volumes/commonEnvVars; per-entry
+# fields (command, args, env, etc.) override root values.
 
 cronjobs: {}
   # cleanup:
   #   enabled: true
   #   schedule: "0 2 * * *"
+  #   timeZone: "Europe/Zurich"   # IANA TZ; requires Kubernetes 1.27+
   #   concurrencyPolicy: Forbid
   #   successfulJobsHistoryLimit: 3
   #   failedJobsHistoryLimit: 1
+  #   suspend: false
+  #   startingDeadlineSeconds: 300
   #   backoffLimit: 3
   #   ttlSecondsAfterFinished: 300
   #   image:
@@ -955,7 +942,8 @@ hooks:
 
 datadog:
   enabled: true
-  # Service name (defaults to chart fullname)
+  # Service name (defaults to chart fullname). Override via commonLabels or
+  # pod.labels (those win) to also tag the Deployment for kube-state-metrics.
   service: ""
   # Environment (e.g. dev-titan, prod-titan). Must be set explicitly per team;
   # when empty, the tags.datadoghq.com/env label and DD_ENV env var are omitted

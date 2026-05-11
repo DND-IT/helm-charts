@@ -5,20 +5,20 @@ image:
   repository: busybox
   tag: "1.36"
 
-schedule: "*/5 * * * *"
-concurrencyPolicy: Forbid
-successfulJobsHistoryLimit: 3
-failedJobsHistoryLimit: 1
-
-job:
-  backoffLimit: 3
-  ttlSecondsAfterFinished: 300
-
-command:
-  - /bin/sh
-  - -c
-args:
-  - "echo 'Running scheduled task'; date"
+cronjobs:
+  default:
+    enabled: true
+    schedule: "*/5 * * * *"
+    concurrencyPolicy: Forbid
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 1
+    backoffLimit: 3
+    ttlSecondsAfterFinished: 300
+    command:
+      - /bin/sh
+      - -c
+    args:
+      - "echo 'Running scheduled task'; date"
 
 resources:
   limits:

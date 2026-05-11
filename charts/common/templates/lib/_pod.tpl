@@ -11,6 +11,7 @@ Parameters:
 {{- $config := .config | default dict -}}
 {{- $componentName := .componentName | default "main" -}}
 {{- $defaultRestartPolicy := .defaultRestartPolicy | default "" -}}
+{{- $mainContainer := .mainContainer | default false -}}
 {{- $deployment := $root.Values -}}
 metadata:
   labels:
@@ -119,7 +120,7 @@ spec:
     {{- if and (not (empty $config)) $config }}
     {{/* Handle extra deployments / component containers - prefer config.name for container name */}}
     {{- $resolvedContainerName := $config.name | default ($componentName | default "main") -}}
-    {{- include "common.container" (dict "container" $config "root" $root "containerName" $resolvedContainerName) | nindent 4 }}
+    {{- include "common.container" (dict "container" $config "root" $root "containerName" $resolvedContainerName "mainContainer" $mainContainer) | nindent 4 }}
     {{- else if $deployment.extraContainers }}
     {{- range $container := $deployment.extraContainers }}
     {{- include "common.container" (dict "container" $container "root" $root) | nindent 4 }}

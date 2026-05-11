@@ -3,13 +3,17 @@ templates:
   - common.yaml
 tests:
   # ===========================================================================
-  # CronJob defaults
+  # CronJob rendering
   # ===========================================================================
 
   - it: should create a CronJob (not a Deployment)
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
     asserts:
       - isKind:
           of: CronJob
@@ -20,10 +24,14 @@ tests:
         isKind:
           of: Deployment
 
-  - it: should have default schedule of hourly
+  - it: should set the schedule from the entry
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
     asserts:
       - equal:
           path: spec.schedule
@@ -32,10 +40,15 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should have default concurrencyPolicy Forbid
+  - it: should allow setting concurrencyPolicy per entry
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          concurrencyPolicy: Forbid
     asserts:
       - equal:
           path: spec.concurrencyPolicy
@@ -44,10 +57,15 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should have default successfulJobsHistoryLimit of 3
+  - it: should allow setting successfulJobsHistoryLimit per entry
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          successfulJobsHistoryLimit: 3
     asserts:
       - equal:
           path: spec.successfulJobsHistoryLimit
@@ -56,10 +74,15 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should have default failedJobsHistoryLimit of 1
+  - it: should allow setting failedJobsHistoryLimit per entry
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          failedJobsHistoryLimit: 1
     asserts:
       - equal:
           path: spec.failedJobsHistoryLimit
@@ -68,26 +91,36 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should have suspend set to false by default
+  - it: should allow setting suspend per entry
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          suspend: true
     asserts:
       - equal:
           path: spec.suspend
-          value: false
+          value: true
         documentSelector:
           path: kind
           value: CronJob
 
   # ===========================================================================
-  # Job spec defaults
+  # Job spec - backoffLimit / ttl read directly from the entry (no nested job:)
   # ===========================================================================
 
-  - it: should have default backoffLimit of 6
+  - it: should read backoffLimit directly from the entry
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          backoffLimit: 6
     asserts:
       - equal:
           path: spec.jobTemplate.spec.backoffLimit
@@ -96,10 +129,15 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should have default ttlSecondsAfterFinished of 300
+  - it: should read ttlSecondsAfterFinished directly from the entry
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          ttlSecondsAfterFinished: 300
     asserts:
       - equal:
           path: spec.jobTemplate.spec.ttlSecondsAfterFinished
@@ -108,10 +146,14 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should have default restartPolicy OnFailure
+  - it: should default to OnFailure restartPolicy
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
     asserts:
       - equal:
           path: spec.jobTemplate.spec.template.spec.restartPolicy
@@ -124,10 +166,14 @@ tests:
   # Container defaults
   # ===========================================================================
 
-  - it: should have default resource requests
+  - it: should have default pod-level resource requests
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
     asserts:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].resources.requests.cpu
@@ -142,14 +188,37 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should set the container image correctly
+  - it: should set the container image from root image
     set:
       image.repository: my-custom-task
       image.tag: v2.0.0
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
     asserts:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].image
           value: "my-custom-task:v2.0.0"
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should override root image with per-entry image
+    set:
+      image.repository: my-custom-task
+      image.tag: v2.0.0
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          image:
+            repository: cleanup
+            tag: v3.0.0
+    asserts:
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].image
+          value: "cleanup:v3.0.0"
         documentSelector:
           path: kind
           value: CronJob
@@ -162,47 +231,40 @@ tests:
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
     asserts:
       - not: true
         isKind:
           of: Deployment
-        documentSelector:
-          path: kind
-          value: CronJob
 
   - it: should not create a Service
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
     asserts:
       - not: true
         isKind:
           of: Service
-        documentSelector:
-          path: kind
-          value: CronJob
 
   # ===========================================================================
   # Overrides
   # ===========================================================================
 
-  - it: should allow overriding the schedule
-    set:
-      image.repository: mytask
-      image.tag: latest
-      schedule: "*/15 * * * *"
-    asserts:
-      - equal:
-          path: spec.schedule
-          value: "*/15 * * * *"
-        documentSelector:
-          path: kind
-          value: CronJob
-
   - it: should not render timeZone by default
     set:
       image.repository: mytask
       image.tag: latest
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
     asserts:
       - notExists:
           path: spec.timeZone
@@ -210,11 +272,15 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should render timeZone when set
+  - it: should render timeZone when set on the entry
     set:
       image.repository: mytask
       image.tag: latest
-      timeZone: Europe/Zurich
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          timeZone: Europe/Zurich
     asserts:
       - equal:
           path: spec.timeZone
@@ -223,59 +289,156 @@ tests:
           path: kind
           value: CronJob
 
-  - it: should allow overriding concurrencyPolicy
+  - it: should set per-entry command and args
     set:
       image.repository: mytask
       image.tag: latest
-      concurrencyPolicy: Allow
-    asserts:
-      - equal:
-          path: spec.concurrencyPolicy
-          value: Allow
-        documentSelector:
-          path: kind
-          value: CronJob
-
-  - it: should allow setting environment variables
-    set:
-      image.repository: mytask
-      image.tag: latest
-      env:
-        MY_VAR: my-value
-        ANOTHER_VAR: another-value
-    asserts:
-      - contains:
-          path: spec.jobTemplate.spec.template.spec.containers[0].env
-          content:
-            name: MY_VAR
-            value: my-value
-        documentSelector:
-          path: kind
-          value: CronJob
-      - contains:
-          path: spec.jobTemplate.spec.template.spec.containers[0].env
-          content:
-            name: ANOTHER_VAR
-            value: another-value
-        documentSelector:
-          path: kind
-          value: CronJob
-
-  - it: should allow setting a custom command
-    set:
-      image.repository: mytask
-      image.tag: latest
-      command:
-        - /bin/sh
-        - -c
-        - echo hello
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          command:
+            - /bin/sh
+            - -c
+          args:
+            - echo hello
     asserts:
       - equal:
           path: spec.jobTemplate.spec.template.spec.containers[0].command
           value:
             - /bin/sh
             - -c
+        documentSelector:
+          path: kind
+          value: CronJob
+      - equal:
+          path: spec.jobTemplate.spec.template.spec.containers[0].args
+          value:
             - echo hello
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should render two CronJobs when two entries are declared
+    set:
+      image.repository: mytask
+      image.tag: latest
+      cronjobs:
+        backup:
+          enabled: true
+          schedule: "0 2 * * *"
+        cleanup:
+          enabled: true
+          schedule: "0 3 * * *"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-backup
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-backup
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-cleanup
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-cleanup
+
+  - it: should skip disabled entries
+    set:
+      image.repository: mytask
+      image.tag: latest
+      cronjobs:
+        active:
+          enabled: true
+          schedule: "0 2 * * *"
+        inactive:
+          enabled: false
+          schedule: "0 3 * * *"
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-active
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  # ===========================================================================
+  # Root defaults injection (the main reason for the refactor)
+  # ===========================================================================
+
+  - it: should auto-inject root configMap.envFrom into plural-map cronjobs
+    set:
+      image.repository: mytask
+      image.tag: latest
+      configMap:
+        enabled: true
+        envFrom: true
+        data:
+          FOO: bar
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+    asserts:
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-config
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should auto-mount root volumes.secret entries on plural-map cronjobs
+    set:
+      image.repository: mytask
+      image.tag: latest
+      volumes:
+        secret:
+          mysecret:
+            secretName: my-secret
+            mountPath: /etc/secrets
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+    asserts:
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.volumes
+          content:
+            name: mysecret
+            secret:
+              secretName: my-secret
+        documentSelector:
+          path: kind
+          value: CronJob
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].volumeMounts
+          content:
+            name: mysecret
+            mountPath: /etc/secrets
+        documentSelector:
+          path: kind
+          value: CronJob
+
+  - it: should merge commonEnvVars into the container env
+    set:
+      image.repository: mytask
+      image.tag: latest
+      env:
+        FOO: bar
+      cronjobs:
+        default:
+          enabled: true
+          schedule: "0 * * * *"
+          commonEnvVars: true
+    asserts:
+      - contains:
+          path: spec.jobTemplate.spec.template.spec.containers[0].env
+          content:
+            name: FOO
+            value: bar
         documentSelector:
           path: kind
           value: CronJob
