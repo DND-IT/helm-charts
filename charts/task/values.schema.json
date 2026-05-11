@@ -2,11 +2,8 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "properties": {
-        "concurrencyPolicy": {
-            "type": "string"
-        },
-        "failedJobsHistoryLimit": {
-            "type": "integer"
+        "cronjobs": {
+            "type": "object"
         },
         "image": {
             "type": "object",
@@ -15,25 +12,6 @@
                     "type": "string"
                 },
                 "tag": {
-                    "type": "string"
-                }
-            }
-        },
-        "job": {
-            "type": "object",
-            "properties": {
-                "backoffLimit": {
-                    "type": "integer"
-                },
-                "ttlSecondsAfterFinished": {
-                    "type": "integer"
-                }
-            }
-        },
-        "pod": {
-            "type": "object",
-            "properties": {
-                "restartPolicy": {
                     "type": "string"
                 }
             }
@@ -54,9 +32,6 @@
                 }
             }
         },
-        "schedule": {
-            "type": "string"
-        },
         "scheduling": {
             "type": "object",
             "properties": {
@@ -72,15 +47,6 @@
                     "type": "boolean"
                 }
             }
-        },
-        "successfulJobsHistoryLimit": {
-            "type": "integer"
-        },
-        "suspend": {
-            "type": "boolean"
-        },
-        "timeZone": {
-            "type": "string"
         },
         "workload": {
             "type": "object",

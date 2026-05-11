@@ -35,16 +35,21 @@ Parameters:
   {{- end }}
   {{- if $mainContainer }}
   {{/* Main container: merge commonEnvVars (includes env map), then extraEnv list */}}
-  {{- if or $container.extraEnv $container.commonEnvVars }}
-  {{- if $container.commonEnvVars }}
+  {{- $commonEnvVars := $container.commonEnvVars -}}
+  {{- if kindIs "invalid" $commonEnvVars -}}
+    {{- $commonEnvVars = $root.Values.commonEnvVars -}}
+  {{- end -}}
+  {{- $extraEnv := $container.extraEnv | default $root.Values.extraEnv -}}
+  {{- if or $extraEnv $commonEnvVars }}
+  {{- if $commonEnvVars }}
   env:
     {{- include "common.commonEnvVars" $root | nindent 4 }}
-    {{- with $container.extraEnv }}
+    {{- with $extraEnv }}
     {{- include "common.envVars" (dict "envVars" . "root" $root) | nindent 4 }}
     {{- end }}
-  {{- else if $container.extraEnv }}
+  {{- else if $extraEnv }}
   env:
-    {{- include "common.envVars" (dict "envVars" $container.extraEnv "root" $root) | nindent 4 }}
+    {{- include "common.envVars" (dict "envVars" $extraEnv "root" $root) | nindent 4 }}
   {{- end }}
   {{- end }}
   {{- include "common.envFrom" $root | nindent 2 }}
@@ -102,7 +107,7 @@ Parameters:
   {{- if $mainContainer }}
   {{- /* container.resources always takes precedence; top-level resources falls back to container level on K8s < 1.34 */ -}}
   {{- $explicitContainerResources := ($container.container).resources -}}
-  {{- $topLevelResources := $container.resources -}}
+  {{- $topLevelResources := $container.resources | default $root.Values.resources -}}
   {{- $useContainerLevel := or $explicitContainerResources (and $topLevelResources (not (semverCompare ">=1.34-0" $root.Capabilities.KubeVersion.Version))) -}}
   {{- $mainResources := $explicitContainerResources | default $topLevelResources -}}
   {{- if and $useContainerLevel $mainResources }}

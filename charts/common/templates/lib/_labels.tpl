@@ -12,14 +12,14 @@ app.kubernetes.io/managed-by: {{ $context.Release.Service }}
 {{- if $context.Values.image }}
 app.kubernetes.io/version: {{ $context.Values.image.tag | quote }}
 {{- end }}
+{{- if $isPod }}
+{{- include "common.datadogLabels" (dict "context" $context) | nindent 0 }}
+{{- end }}
 {{- with $context.Values.commonLabels }}
 {{- include "common.tplYaml" (dict "value" . "context" $context) | nindent 0 }}
 {{- end }}
 {{- with $labels }}
 {{- include "common.tplYaml" (dict "value" . "context" $context) | nindent 0 }}
-{{- end }}
-{{- if $isPod }}
-{{- include "common.datadogLabels" (dict "context" $context) | nindent 0 }}
 {{- end }}
 {{- end }}
 
@@ -48,6 +48,7 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{/*
 Datadog unified service tagging labels for pods.
 Adds admission.datadoghq.com/enabled and tags.datadoghq.com/* labels.
+Note: emitted before commonLabels and pod.labels so the user's values win.
 Parameters:
 - context: The root context
 - labels: Existing pod labels to merge with

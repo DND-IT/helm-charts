@@ -50,7 +50,6 @@ If content already starts with "---", it is used as-is (multi-document output).
   {{- include "common.loader.renderResource" (include "common.daemonset" .) -}}
   {{- include "common.loader.renderResource" (include "common.extraDeployments" .) -}}
   {{- include "common.loader.renderResource" (include "common.jobs" .) -}}
-  {{- include "common.loader.renderResource" (include "common.cronjob" .) -}}
   {{- include "common.loader.renderResource" (include "common.cronjobs" .) -}}
   {{- include "common.loader.renderResource" (include "common.hooks" .) -}}
 

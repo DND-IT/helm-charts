@@ -1,6 +1,6 @@
 # task
 
-![Version: 1.4.0](https://img.shields.io/badge/Version-1.4.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.5.0](https://img.shields.io/badge/Version-1.5.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A Helm chart for deploying scheduled CronJob workloads to Kubernetes.
 Includes CronJob and ServiceAccount.
@@ -9,7 +9,7 @@ No HPA, PDB, service, or ingress - focused purely on scheduled job execution.
 
 ## Overview
 
-The **task** chart is an opinionated Helm chart for deploying scheduled CronJob workloads. It uses the same schema as the `generic` chart but is specifically designed for periodic tasks and batch jobs.
+The **task** chart is an opinionated Helm chart for deploying scheduled CronJob workloads. Declare each scheduled task as an entry under `cronjobs:` — one entry renders one CronJob. The single chart release can host multiple cron entries that share the same ServiceAccount, ConfigMap, Secret, and volume defaults.
 
 ## Use Cases
 
@@ -24,13 +24,13 @@ The **task** chart is an opinionated Helm chart for deploying scheduled CronJob 
 
 | Setting | Default | Description |
 |---------|---------|-------------|
-| `schedule` | `0 * * * *` | Hourly (customize as needed) |
-| `concurrencyPolicy` | `Forbid` | Prevent overlapping runs |
-| `successfulJobsHistoryLimit` | `3` | Keep last 3 successful jobs |
-| `failedJobsHistoryLimit` | `1` | Keep last failed job |
-| `job.backoffLimit` | `6` | Retry failed jobs 6 times |
-| `job.ttlSecondsAfterFinished` | `300` | Cleanup after 5 minutes |
-| `pod.restartPolicy` | `OnFailure` | Restart on failure |
+| `concurrencyPolicy` (per entry) | `Forbid` | Prevent overlapping runs |
+| `successfulJobsHistoryLimit` (per entry) | `3` | Keep last 3 successful jobs |
+| `failedJobsHistoryLimit` (per entry) | `1` | Keep last failed job |
+| `backoffLimit` (per entry) | `6` | Retry failed jobs 6 times |
+| `ttlSecondsAfterFinished` (per entry) | `300` | Cleanup after 5 minutes |
+| `restartPolicy` | `OnFailure` | Restart on failure |
+| `resources.requests` (root) | `100m` / `128Mi` | Inherited by every entry that does not override |
 
 ## Quick Start
 
@@ -41,7 +41,8 @@ helm repo update
 helm install my-backup dnd-it/task \
   --set image.repository=myorg/backup-tool \
   --set image.tag=v1.0.0 \
-  --set schedule="0 2 * * *"
+  --set cronjobs.backup.enabled=true \
+  --set cronjobs.backup.schedule="0 2 * * *"
 ```
 
 ## Examples
@@ -53,12 +54,14 @@ image:
   repository: myorg/pg-backup
   tag: "v1.0.0"
 
-schedule: "0 2 * * *"  # Daily at 2 AM
+cronjobs:
+  backup:
+    enabled: true
+    schedule: "0 2 * * *"  # Daily at 2 AM
+    command: ["pg_dump"]
+    args: ["-h", "$(DB_HOST)", "-U", "$(DB_USER)", "-d", "$(DB_NAME)"]
 
-command: ["pg_dump"]
-args: ["-h", "$(DB_HOST)", "-U", "$(DB_USER)", "-d", "$(DB_NAME)"]
-
-env:
+extraEnv:
   - name: DB_HOST
     value: "postgres.default.svc"
   - name: DB_USER
@@ -87,17 +90,16 @@ image:
   repository: myorg/sync-tool
   tag: "v2.1.0"
 
-schedule: "0 * * * *"  # Every hour
-
-concurrencyPolicy: Replace  # Cancel previous if still running
-
-command: ["python", "sync.py"]
+cronjobs:
+  sync:
+    enabled: true
+    schedule: "0 * * * *"  # Every hour
+    concurrencyPolicy: Replace  # Cancel previous if still running
+    command: ["python", "sync.py"]
 
 env:
-  - name: SOURCE_API
-    value: "https://api.external.com"
-  - name: DEST_BUCKET
-    value: "s3://my-data-lake"
+  SOURCE_API: "https://api.external.com"
+  DEST_BUCKET: "s3://my-data-lake"
 ```
 
 ### Weekly Report Generation
@@ -107,19 +109,17 @@ image:
   repository: myorg/report-generator
   tag: "v1.5.0"
 
-schedule: "0 6 * * 1"  # Monday at 6 AM
-
-job:
-  backoffLimit: 3
-  ttlSecondsAfterFinished: 3600  # Keep for 1 hour
-
-command: ["python", "generate_report.py"]
+cronjobs:
+  report:
+    enabled: true
+    schedule: "0 6 * * 1"  # Monday at 6 AM
+    backoffLimit: 3
+    ttlSecondsAfterFinished: 3600  # Keep for 1 hour
+    command: ["python", "generate_report.py"]
 
 env:
-  - name: REPORT_TYPE
-    value: "weekly-summary"
-  - name: EMAIL_RECIPIENTS
-    value: "team@example.com"
+  REPORT_TYPE: "weekly-summary"
+  EMAIL_RECIPIENTS: "team@example.com"
 
 resources:
   requests:
@@ -129,24 +129,28 @@ resources:
     memory: 4Gi
 ```
 
-### Cleanup Job with Timezone
+### Multiple CronJobs in One Release
 
 ```yaml
 image:
-  repository: myorg/cleanup
+  repository: myorg/maintenance
   tag: "v1.0.0"
 
-schedule: "0 3 * * *"  # 3 AM in specified timezone
-# Note: timeZone requires Kubernetes 1.27+
-# timeZone: "America/New_York"
+cronjobs:
+  cleanup:
+    enabled: true
+    schedule: "0 3 * * *"
+    timeZone: "America/New_York"  # IANA TZ; requires Kubernetes 1.27+
+    command: ["/bin/sh"]
+    args:
+      - -c
+      - find /data -type f -mtime +30 -delete
 
-command: ["/bin/sh"]
-args:
-  - -c
-  - |
-    echo "Starting cleanup..."
-    find /data -type f -mtime +30 -delete
-    echo "Cleanup complete"
+  rotate-logs:
+    enabled: true
+    schedule: "0 0 * * 0"
+    command: ["/bin/sh"]
+    args: ["-c", "logrotate /etc/logrotate.conf"]
 
 volumes:
   persistent:
@@ -163,22 +167,23 @@ image:
   repository: myorg/processor
   tag: "v1.0.0"
 
-schedule: "*/30 * * * *"  # Every 30 minutes
-
-initContainers:
-  - name: download-data
-    image: amazon/aws-cli:latest
-    command: ["aws", "s3", "cp", "s3://bucket/data.csv", "/shared/"]
-    volumeMounts:
-      - name: shared
-        mountPath: /shared
+cronjobs:
+  process:
+    enabled: true
+    schedule: "*/30 * * * *"  # Every 30 minutes
+    command: ["python", "process.py", "/shared/data.csv"]
+    initContainers:
+      - name: download-data
+        image: amazon/aws-cli:latest
+        command: ["aws", "s3", "cp", "s3://bucket/data.csv", "/shared/"]
+        volumeMounts:
+          - name: shared
+            mountPath: /shared
 
 volumes:
   emptyDir:
     shared:
       mountPath: /shared
-
-command: ["python", "process.py", "/shared/data.csv"]
 ```
 
 ## Cron Schedule Reference
@@ -205,8 +210,8 @@ Common schedules:
 | Feature | task | generic |
 |---------|------|---------|
 | Workload Type | **CronJob** | Deployment |
-| Schedule | Configured | N/A |
-| Concurrency Policy | Forbid | N/A |
+| Declaration | `cronjobs:` map (required) | `replicas` etc. |
+| Concurrency Policy | per-entry, default `Forbid` | N/A |
 | Service | Disabled | Disabled |
 | Health Probes | N/A | Empty |
 
@@ -234,21 +239,14 @@ Kubernetes: `>=1.32.0-0`
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| concurrencyPolicy | string | `"Forbid"` |  |
-| failedJobsHistoryLimit | int | `1` |  |
+| cronjobs | object | `{}` |  |
 | image.repository | string | `""` |  |
 | image.tag | string | `""` |  |
-| job.backoffLimit | int | `6` |  |
-| job.ttlSecondsAfterFinished | int | `300` |  |
-| pod.restartPolicy | string | `"OnFailure"` |  |
 | resources.requests.cpu | string | `"100m"` |  |
 | resources.requests.memory | string | `"128Mi"` |  |
-| schedule | string | `"0 * * * *"` |  |
 | scheduling.topologySpreadConstraints | list | `[]` |  |
 | service.enabled | bool | `false` |  |
-| successfulJobsHistoryLimit | int | `3` |  |
-| suspend | bool | `false` |  |
 | workload.type | string | `"none"` |  |
 
 ----------------------------------------------
-Autogenerated from chart metadata using [helm-docs v1.4.0](https://github.com/norwoodj/helm-docs/releases/v1.4.0)
+Autogenerated from chart metadata using [helm-docs v1.5.0](https://github.com/norwoodj/helm-docs/releases/v1.5.0)
