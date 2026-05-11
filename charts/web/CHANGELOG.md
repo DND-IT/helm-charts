@@ -5,6 +5,12 @@ All notable changes to the web Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-05-11
+
+### Changed
+
+- Updated to common library 1.7.0. Cronjob/job rendering was refactored (see common CHANGELOG); web chart does not declare cronjobs so no values changes are required.
+
 ## [1.3.3] - 2026-04-14
 
 ### Fixed
