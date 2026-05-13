@@ -180,8 +180,9 @@ tests:
       image.tag: latest
       service.enabled: false
     asserts:
+      # ServiceAccount + Deployment + HPA + PDB = 4 (no Service)
       - hasDocuments:
-          count: 2
+          count: 4
 
   # ==========================================================================
   # Scheduling defaults
@@ -403,9 +404,9 @@ tests:
       gateway.targetGroupConfiguration.enabled: false
       gateway.loadBalancerConfiguration.enabled: false
     asserts:
-      # Without gateway resources, only ServiceAccount + Service + Deployment = 3 documents
+      # ServiceAccount + Service + Deployment + HPA + PDB = 5 documents
       - hasDocuments:
-          count: 3
+          count: 5
 
   # ==========================================================================
   # ConfigMap
@@ -517,6 +518,91 @@ tests:
           value: Deployment
 
   # ==========================================================================
+  # Datadog labels (admission controller injects env vars at admission time)
+  # ==========================================================================
+  - it: should set datadog unified service tagging labels on the pod
+    set:
+      image.repository: nginx
+      image.tag: v1.2.3
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["admission.datadoghq.com/enabled"]
+          value: "true"
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.metadata.labels["tags.datadoghq.com/service"]
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.metadata.labels["tags.datadoghq.com/version"]
+          value: v1.2.3
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should also set datadog labels on the Deployment metadata (kube-state-metrics)
+    set:
+      image.repository: nginx
+      image.tag: v1.2.3
+    asserts:
+      - equal:
+          path: metadata.labels["admission.datadoghq.com/enabled"]
+          value: "true"
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should not inject DD_AGENT_HOST into container env (admission controller sets it)
+    set:
+      image.repository: nginx
+      image.tag: v1.2.3
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DD_AGENT_HOST
+          any: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DD_SERVICE
+          any: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DD_ENV
+          any: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DD_VERSION
+          any: true
+        documentSelector:
+          path: kind
+          value: Deployment
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DD_ENTITY_ID
+          any: true
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  # ==========================================================================
   # Overrides
   # ==========================================================================
   - it: should allow overriding the image
@@ -531,10 +617,11 @@ tests:
           path: kind
           value: Deployment
 
-  - it: should allow overriding replicas
+  - it: should allow overriding replicas (HPA disabled so the field renders)
     set:
       image.repository: nginx
       image.tag: latest
+      hpa.enabled: false
       replicas: 5
     asserts:
       - equal:
@@ -543,3 +630,69 @@ tests:
         documentSelector:
           path: kind
           value: Deployment
+
+  # ==========================================================================
+  # HPA / PDB defaults
+  # ==========================================================================
+  - it: should create an HPA by default with CPU @ 80% utilization
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: HorizontalPodAutoscaler
+        documentSelector:
+          path: kind
+          value: HorizontalPodAutoscaler
+      - equal:
+          path: spec.minReplicas
+          value: 2
+        documentSelector:
+          path: kind
+          value: HorizontalPodAutoscaler
+      - equal:
+          path: spec.maxReplicas
+          value: 10
+        documentSelector:
+          path: kind
+          value: HorizontalPodAutoscaler
+      - contains:
+          path: spec.metrics
+          content:
+            type: Resource
+            resource:
+              name: cpu
+              target:
+                type: Utilization
+                averageUtilization: 80
+        documentSelector:
+          path: kind
+          value: HorizontalPodAutoscaler
+
+  - it: should omit Deployment.spec.replicas when HPA is enabled
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - notExists:
+          path: spec.replicas
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should create a PodDisruptionBudget by default with minAvailable 1
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - isKind:
+          of: PodDisruptionBudget
+        documentSelector:
+          path: kind
+          value: PodDisruptionBudget
+      - equal:
+          path: spec.minAvailable
+          value: 1
+        documentSelector:
+          path: kind
+          value: PodDisruptionBudget

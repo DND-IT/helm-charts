@@ -2,6 +2,20 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "properties": {
+        "commonLabels": {
+            "type": "object",
+            "properties": {
+                "admission.datadoghq.com/enabled": {
+                    "type": "string"
+                },
+                "tags.datadoghq.com/service": {
+                    "type": "string"
+                },
+                "tags.datadoghq.com/version": {
+                    "type": "string"
+                }
+            }
+        },
         "cronjobs": {
             "type": "object"
         },

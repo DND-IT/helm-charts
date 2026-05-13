@@ -17,7 +17,7 @@ metadata:
   labels:
     {{- $podLabels := $config.podLabels | default ($config.pod).labels | default $deployment.pod.labels -}}
     {{- $podLabels = merge (dict "app.kubernetes.io/component" $componentName) $podLabels -}}
-    {{- include "common.labels" (dict "context" $root "labels" $podLabels "pod" true) | nindent 4 }}
+    {{- include "common.labels" (dict "context" $root "labels" $podLabels) | nindent 4 }}
   annotations:
     {{- $podAnnotations := $config.podAnnotations | default ($config.pod).annotations | default $deployment.pod.annotations -}}
     {{- include "common.podAnnotations" (dict "root" $root "annotations" $podAnnotations) | nindent 4 }}

@@ -247,3 +247,44 @@ tests:
         documentSelector:
           path: kind
           value: Deployment
+
+  # ==========================================================================
+  # Datadog labels (admission controller injects env vars at admission time)
+  # ==========================================================================
+  - it: should set datadog unified service tagging labels on the pod
+    set:
+      image.repository: myworker
+      image.tag: v1.2.3
+    asserts:
+      - equal:
+          path: spec.template.metadata.labels["admission.datadoghq.com/enabled"]
+          value: "true"
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.metadata.labels["tags.datadoghq.com/service"]
+          value: RELEASE-NAME
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.template.metadata.labels["tags.datadoghq.com/version"]
+          value: v1.2.3
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should not inject DD_AGENT_HOST into container env (admission controller sets it)
+    set:
+      image.repository: myworker
+      image.tag: v1.2.3
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: DD_AGENT_HOST
+          any: true
+        documentSelector:
+          path: kind
+          value: Deployment
