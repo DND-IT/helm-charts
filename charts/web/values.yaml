@@ -14,6 +14,17 @@ image:
 # OPINIONATED DEFAULTS
 # =============================================================================
 
+# Datadog unified service tagging applied to all rendered resources.
+# admission.datadoghq.com/enabled triggers the Datadog admission controller to
+# inject DD_AGENT_HOST and the DD_SERVICE/DD_ENV/DD_VERSION/DD_ENTITY_ID env vars
+# at admission time, so the agent transport (hostPort, Service, or UDS) follows
+# whatever the cluster's admission controller knows is right.
+# Override individual keys (e.g. tags.datadoghq.com/env) via your own commonLabels.
+commonLabels:
+  admission.datadoghq.com/enabled: "true"
+  tags.datadoghq.com/service: '{{ include "common.fullname" . }}'
+  tags.datadoghq.com/version: '{{ .Values.image.tag | default "latest" }}'
+
 # Default container port for web applications
 # Automatically flows to: container port, service targetPort, healthCheckPort
 # Service port stays 80 (static) — only the target port is dynamic
@@ -117,6 +128,24 @@ gateway:
 configMap:
   envFrom: true
 
-# HPA defaults
+# HPA enabled by default for web workloads. CPU-based scaling at 80% utilization
+# works out of the box with the default resources.requests.cpu (100m). Override
+# `hpa.metrics` to add memory or custom metrics, or set `hpa.enabled: false` to
+# opt out.
 hpa:
+  enabled: true
   minReplicas: 2
+  maxReplicas: 10
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 80
+
+# PodDisruptionBudget enabled by default — with minReplicas: 2 and minAvailable: 1
+# this keeps one pod up through voluntary disruptions (node drains, rollouts).
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 1

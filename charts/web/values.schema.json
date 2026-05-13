@@ -2,6 +2,20 @@
     "$schema": "https://json-schema.org/draft/2020-12/schema",
     "type": "object",
     "properties": {
+        "commonLabels": {
+            "type": "object",
+            "properties": {
+                "admission.datadoghq.com/enabled": {
+                    "type": "string"
+                },
+                "tags.datadoghq.com/service": {
+                    "type": "string"
+                },
+                "tags.datadoghq.com/version": {
+                    "type": "string"
+                }
+            }
+        },
         "configMap": {
             "type": "object",
             "properties": {
@@ -82,6 +96,42 @@
         "hpa": {
             "type": "object",
             "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "maxReplicas": {
+                    "type": "integer"
+                },
+                "metrics": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "resource": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "target": {
+                                        "type": "object",
+                                        "properties": {
+                                            "averageUtilization": {
+                                                "type": "integer"
+                                            },
+                                            "type": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            "type": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                },
                 "minReplicas": {
                     "type": "integer"
                 }
@@ -125,6 +175,17 @@
                     "type": "integer"
                 },
                 "timeoutSeconds": {
+                    "type": "integer"
+                }
+            }
+        },
+        "podDisruptionBudget": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                },
+                "minAvailable": {
                     "type": "integer"
                 }
             }

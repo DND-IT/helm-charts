@@ -5,6 +5,27 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-05-13
+
+### Changed
+
+- **BREAKING:** Removed all Datadog-specific behavior from the common library. `common.datadogLabels` is gone; `common.commonEnvVars` no longer appends `DD_AGENT_HOST`, `DD_ENTITY_ID`, `DD_SERVICE`, `DD_ENV`, or `DD_VERSION`; the `datadog:` values block is removed. `common.labels` no longer takes a `pod` flag.
+- Datadog unified service tagging now belongs in the wrapper charts (web/worker/task) — they set `admission.datadoghq.com/enabled` and `tags.datadoghq.com/*` via `commonLabels` defaults, and rely on the Datadog admission controller to inject `DD_AGENT_HOST` and the unified service tagging env vars at admission time. This fixes APM ingest on clusters whose admission controller uses a Service or UDS instead of a node-local `hostIP:8126` (see issue #168).
+
+### Migration
+
+If you were setting `datadog.service`, `datadog.env`, `datadog.version`, or relying on `datadog.enabled`, move those values onto `commonLabels` in your release values:
+
+```yaml
+commonLabels:
+  admission.datadoghq.com/enabled: "true"
+  tags.datadoghq.com/service: my-service
+  tags.datadoghq.com/env: dev-titan
+  tags.datadoghq.com/version: "1.2.3"
+```
+
+To opt out entirely, override `commonLabels` and unset the `admission.datadoghq.com/enabled` key.
+
 ## [1.7.0] - 2026-05-11
 
 ### Changed

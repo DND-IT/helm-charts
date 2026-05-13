@@ -936,23 +936,6 @@ hooks:
   postDelete: []
 
 # =============================================================================
-# DATADOG
-# Unified service tagging: https://docs.datadoghq.com/getting_started/tagging/unified_service_tagging/
-# =============================================================================
-
-datadog:
-  enabled: true
-  # Service name (defaults to chart fullname). Override via commonLabels or
-  # pod.labels (those win) to also tag the Deployment for kube-state-metrics.
-  service: ""
-  # Environment (e.g. dev-titan, prod-titan). Must be set explicitly per team;
-  # when empty, the tags.datadoghq.com/env label and DD_ENV env var are omitted
-  # rather than falling back to the release namespace.
-  env: ""
-  # Version (defaults to image.tag)
-  version: ""
-
-# =============================================================================
 # EXTRA OBJECTS
 # =============================================================================
 

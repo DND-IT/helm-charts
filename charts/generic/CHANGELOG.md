@@ -5,6 +5,22 @@ All notable changes to the generic Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.12.0] - 2026-05-13
+
+### Changed
+
+- **BREAKING:** Picks up `common` 1.8.0, which removed all Datadog-specific behavior from the library. The chart no longer auto-injects `admission.datadoghq.com/enabled`, `tags.datadoghq.com/*` labels, or the `DD_AGENT_HOST` / `DD_SERVICE` / `DD_ENV` / `DD_VERSION` / `DD_ENTITY_ID` env vars. The `datadog:` values block is gone. To restore prior behavior, set the labels under `commonLabels` (the Datadog admission controller then injects the env vars at admission time):
+
+  ```yaml
+  commonLabels:
+    admission.datadoghq.com/enabled: "true"
+    tags.datadoghq.com/service: my-service
+    tags.datadoghq.com/env: dev-titan
+    tags.datadoghq.com/version: "1.2.3"
+  ```
+
+  See common CHANGELOG and issue #168 for context.
+
 ## [0.11.2] - 2026-04-14
 
 ### Fixed
