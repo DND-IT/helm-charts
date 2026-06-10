@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.13.1](https://img.shields.io/badge/Version-1.13.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.14.0](https://img.shields.io/badge/Version-1.14.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -27,6 +27,21 @@ resource "helm_release" "app" {
 ## Upgrading
 
 This section lists major and breaking changes of each Helm Chart version.
+
+<details>
+<summary>1.14.0</summary>
+
+- Add support for gRPC liveness, readiness and startup probes. When `probe.grpc.port` is set, all three probes use a gRPC health check instead of `httpGet` (mutually exclusive with HTTP path probes).
+
+```yaml
+probe:
+  grpc:
+    port: 50051
+  livenessInitialDelaySeconds: 10
+  readinessInitialDelaySeconds: 5
+```
+
+</details>
 
 <details>
 <summary>1.11.0</summary>
@@ -131,6 +146,7 @@ ingress:
 | metadata.podAnnotations | object | `{}` |  |
 | nameOverride | string | `""` |  |
 | nodeSelector | object | `{}` |  |
+| probe.grpc | object | `{}` | gRPC probe port. When set, liveness, readiness and startup probes use a gRPC health check instead of httpGet (mutually exclusive with the HTTP path probes). |
 | probe.liveness | string | `"/"` |  |
 | probe.livenessInitialDelaySeconds | int | `0` |  |
 | probe.livenessPeriodSeconds | int | `10` |  |

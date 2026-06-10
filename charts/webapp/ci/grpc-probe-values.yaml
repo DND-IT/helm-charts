@@ -1,0 +1,5 @@
+probe:
+  grpc:
+    port: 50051
+  livenessInitialDelaySeconds: 10
+  readinessInitialDelaySeconds: 5

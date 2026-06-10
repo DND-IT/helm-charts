@@ -30,6 +30,21 @@ resource "helm_release" "app" {
 This section lists major and breaking changes of each Helm Chart version.
 
 <details>
+<summary>1.14.0</summary>
+
+- Add support for gRPC liveness, readiness and startup probes. When `probe.grpc.port` is set, all three probes use a gRPC health check instead of `httpGet` (mutually exclusive with HTTP path probes).
+
+```yaml
+probe:
+  grpc:
+    port: 50051
+  livenessInitialDelaySeconds: 10
+  readinessInitialDelaySeconds: 5
+```
+
+</details>
+
+<details>
 <summary>1.11.0</summary>
 
 - Updated API version for ExternalSecret to v1
