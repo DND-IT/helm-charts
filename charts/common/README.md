@@ -1,6 +1,6 @@
 # common
 
-![Version: 1.9.0](https://img.shields.io/badge/Version-1.9.0-informational?style=flat-square) ![Type: library](https://img.shields.io/badge/Type-library-informational?style=flat-square)
+![Version: 1.10.0](https://img.shields.io/badge/Version-1.10.0-informational?style=flat-square) ![Type: library](https://img.shields.io/badge/Type-library-informational?style=flat-square)
 
 A Helm library chart containing shared templates and helpers for Kubernetes workloads.
 Provides common functionality for naming, labels, security contexts, containers, pods, and volumes.

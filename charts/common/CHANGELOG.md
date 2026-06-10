@@ -5,6 +5,16 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.10.0] - 2026-07-01
+
+### Added
+
+- `values.schema.json` for the common library, generated with the `helm-values-schema-json` plugin. Helm now validates the `common:` values block (the library defaults and any consumer overrides under that key) against it. Wrapper charts (web/worker/task) render unchanged; their top-level values continue to be validated by their own schemas.
+
+### Changed
+
+- Schema generation is now automated repo-wide via `scripts/gen-helm-schema.sh`, a pre-commit `helm-schema` hook, and a CI `schema-check` drift gate, replacing the manual `make schema` step.
+
 ## [1.9.0] - 2026-06-30
 
 ### Changed

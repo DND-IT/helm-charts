@@ -249,14 +249,7 @@ schema: validate-chart ## Generate JSON schema for specified chart
 
 schema-all: ## Generate JSON schemas for all charts
 	@echo "Generating JSON schemas for all charts..."
-	@if ! helm plugin list | grep -q schema; then \
-		echo "helm-schema plugin not available. Install it with: helm plugin install https://github.com/losisin/helm-values-schema-json"; \
-		exit 1; \
-	fi
-	@for chart in $(CHARTS_AVAILABLE); do \
-		echo "Generating schema for $$chart..."; \
-		$(MAKE) schema CHART=$$chart || exit 1; \
-	done
+	@scripts/gen-helm-schema.sh
 
 # Development
 dev-install: validate-chart ## Install chart in development mode with auto-reload
