@@ -143,27 +143,41 @@ spec:
             - name: {{ .Values.service.portName }}
               containerPort:  {{ default .Values.service.targetPort .Values.port }}
               protocol: TCP
-          {{- if .Values.probe.liveness }}
+          {{- if or .Values.probe.grpc .Values.probe.liveness }}
           livenessProbe:
+            {{- if .Values.probe.grpc }}
+            grpc:
+              port: {{ .Values.probe.grpc.port }}
+            {{- else }}
             httpGet:
               path: {{ .Values.probe.liveness | quote }}
               port: http
+            {{- end }}
             initialDelaySeconds: {{ .Values.probe.livenessInitialDelaySeconds }}
             periodSeconds: {{ .Values.probe.livenessPeriodSeconds }}
             timeoutSeconds: {{ .Values.probe.livenessTimeoutSeconds }}
           {{- end }}
-          {{- if .Values.probe.readiness }}
+          {{- if or .Values.probe.grpc .Values.probe.readiness }}
           readinessProbe:
+            {{- if .Values.probe.grpc }}
+            grpc:
+              port: {{ .Values.probe.grpc.port }}
+            {{- else }}
             httpGet:
               path: {{ .Values.probe.readiness | quote }}
               port: http
+            {{- end }}
             initialDelaySeconds: {{ .Values.probe.readinessInitialDelaySeconds }}
             periodSeconds: {{ .Values.probe.readinessPeriodSeconds }}
             timeoutSeconds: {{ .Values.probe.readinessTimeoutSeconds }}
             failureThreshold: {{ .Values.probe.readinessFailureThreshold }}
           {{- end }}
-          {{- if .Values.probe.liveness }}
+          {{- if or .Values.probe.grpc .Values.probe.liveness }}
           startupProbe:
+            {{- if .Values.probe.grpc }}
+            grpc:
+              port: {{ .Values.probe.grpc.port }}
+            {{- else }}
             httpGet:
               path: {{ coalesce .Values.probe.startup .Values.probe.liveness | quote }}
               port: http
@@ -171,6 +185,7 @@ spec:
               httpHeaders:
                 {{ .Values.probe.startupHttpHeaders | toYaml | nindent 16 }}
               {{- end }}
+            {{- end }}
             failureThreshold: 40
             periodSeconds: 3
             timeoutSeconds: {{ .Values.probe.startupTimeoutSeconds }}

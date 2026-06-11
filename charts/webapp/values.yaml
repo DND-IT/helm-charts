@@ -51,6 +51,9 @@ probe:
   startup:
   startupTimeoutSeconds: 1
   startupHttpHeaders:
+  # -- gRPC probe port. When set, liveness, readiness and startup probes use a gRPC health check instead of httpGet (mutually exclusive with the HTTP path probes).
+  grpc: {}
+  #   port: 50051
 
 service:
   # Enable the service
