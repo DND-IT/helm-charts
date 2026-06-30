@@ -5,6 +5,12 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-06-30
+
+### Changed
+
+- `common.pvc` now renders `volumes.persistent.<name>.storageClass` through the template engine, so it can reference a release-scoped resource created in the same release — e.g. a StorageClass defined via `extraObjects` and named with `common.fullname` (useful for CSI volumes like EFS / S3 Files whose StorageClass embeds infra IDs and must stay unique across PR-preview releases). Plain values such as `gp3` render unchanged, and the `-` sentinel still produces `storageClassName: ""`, so existing releases are unaffected.
+
 ## [1.8.0] - 2026-05-13
 
 ### Changed

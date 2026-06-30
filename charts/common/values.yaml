@@ -350,6 +350,9 @@ volumes:
     #   size: 10Gi
     #   accessModes:
     #     - ReadWriteOnce
+    #   # storageClass is rendered as a template, so it can reference a
+    #   # StorageClass created in the same release via extraObjects (see the
+    #   # extraObjects example). Use "-" to force storageClassName: "".
     #   storageClass: gp3
   emptyDir: {}
     # tmp:
@@ -958,3 +961,19 @@ extraObjects: []
   #   type: Opaque
   #   stringData:
   #     key: value
+  #
+  # Example: a release-scoped StorageClass (e.g. aws-efs-csi-driver S3 Files).
+  # Templating the name with common.fullname keeps it unique across parallel
+  # releases (e.g. PR previews), since StorageClasses are cluster-scoped. A PVC
+  # references it by setting volumes.persistent.<name>.storageClass to the same
+  # templated value.
+  # - |
+  #   apiVersion: storage.k8s.io/v1
+  #   kind: StorageClass
+  #   metadata:
+  #     name: {{ include "common.fullname" . }}-content
+  #   provisioner: efs.csi.aws.com
+  #   parameters:
+  #     provisioningMode: s3files-ap
+  #     fileSystemId: fs-92107410
+  #     directoryPerms: "700"

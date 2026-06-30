@@ -38,7 +38,7 @@ spec:
   {{- if eq "-" $pvc.storageClass }}
   storageClassName: ""
   {{- else }}
-  storageClassName: {{ $pvc.storageClass }}
+  storageClassName: {{ include "common.tplValue" (dict "value" $pvc.storageClass "context" $) }}
   {{- end }}
   {{- end }}
   {{- with $pvc.selector }}

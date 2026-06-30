@@ -696,3 +696,86 @@ tests:
         documentSelector:
           path: kind
           value: PodDisruptionBudget
+
+  # ==========================================================================
+  # PVC storageClass: templating, verbatim, and the "-" sentinel
+  # ==========================================================================
+  - it: should render a templated PVC storageClass to the release-scoped name
+    set:
+      image.repository: nginx
+      image.tag: latest
+      volumes.persistent.content:
+        mountPath: /data
+        accessMode: ReadWriteMany
+        storageClass: '{{ include "common.fullname" . }}-content'
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: RELEASE-NAME-content
+        documentSelector:
+          path: kind
+          value: PersistentVolumeClaim
+
+  - it: should leave a plain PVC storageClass verbatim
+    set:
+      image.repository: nginx
+      image.tag: latest
+      volumes.persistent.data:
+        mountPath: /data
+        storageClass: gp3
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: gp3
+        documentSelector:
+          path: kind
+          value: PersistentVolumeClaim
+
+  - it: should render storageClassName "" for the "-" sentinel
+    set:
+      image.repository: nginx
+      image.tag: latest
+      volumes.persistent.data:
+        mountPath: /data
+        storageClass: "-"
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: ""
+        documentSelector:
+          path: kind
+          value: PersistentVolumeClaim
+
+  - it: should render a release-scoped StorageClass via extraObjects
+    set:
+      image.repository: nginx
+      image.tag: latest
+      extraObjects:
+        - |
+          apiVersion: storage.k8s.io/v1
+          kind: StorageClass
+          metadata:
+            name: {{ include "common.fullname" . }}-content
+          provisioner: efs.csi.aws.com
+          parameters:
+            provisioningMode: s3files-ap
+            fileSystemId: fs-0123456789abcdef0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-content
+        documentSelector:
+          path: kind
+          value: StorageClass
+      - equal:
+          path: provisioner
+          value: efs.csi.aws.com
+        documentSelector:
+          path: kind
+          value: StorageClass
+      - equal:
+          path: parameters.fileSystemId
+          value: fs-0123456789abcdef0
+        documentSelector:
+          path: kind
+          value: StorageClass
