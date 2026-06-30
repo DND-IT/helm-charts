@@ -5,6 +5,31 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-07-01
+
+### Added
+
+- `common.extraObjects` now accepts a **map keyed by name** in addition to the existing list form. The map form is overlay-friendly: because Helm deep-merges maps but replaces lists wholesale, an additional values file (overlay) can override individual fields of an entry instead of redeclaring the whole list. Each map entry may set `enabled: false` to drop it (the `enabled` key is stripped from the rendered manifest). The list form is unchanged and fully backward compatible. As before, object entries render as-is while string entries are passed through the template engine.
+- The `extraObjects` default is now `null` instead of `[]`. Because Helm warns (`coalesce.go: skipped value ... Not a table`) when a list default is overridden by a map, a null default lets either the list or the map form merge cleanly with no warning. Consuming charts that constrain `extraObjects` in a JSON schema must allow the `null` type alongside `array`/`object`.
+
+  ```yaml
+  # Base values
+  extraObjects:
+    extra-config:
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: my-app-extra
+      data:
+        key: value
+
+  # Overlay (-f overlay.yaml) — overrides just one field
+  extraObjects:
+    extra-config:
+      data:
+        key: overridden
+  ```
+
 ## [1.10.0] - 2026-07-01
 
 ### Added

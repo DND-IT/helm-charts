@@ -942,7 +942,15 @@ hooks:
 # EXTRA OBJECTS
 # =============================================================================
 
-extraObjects: []
+# -- (list/object) Arbitrary extra Kubernetes resources. Accepts a list, or a
+# map keyed by name so an overlay can deep-merge and override individual fields
+# instead of replacing the whole list. Set `enabled: false` on a map entry to
+# drop it. A null default lets either form merge without a Helm coalesce warning.
+# @default -- `[]`
+extraObjects:  # @schema type:[array, object, null]
+  # extraObjects accepts either a list or a map keyed by name.
+  #
+  # List form (order preserved):
   # Example: Add arbitrary Kubernetes resources
   # - apiVersion: v1
   #   kind: ConfigMap
@@ -950,6 +958,24 @@ extraObjects: []
   #     name: '{{ include "common.fullname" . }}-extra'
   #   data:
   #     key: value
+  #
+  # Map form (overlay/merge friendly): keys identify entries so that an
+  # additional values file (overlay) can deep-merge and override individual
+  # fields instead of replacing the whole list. Set `enabled: false` on an
+  # entry to drop it; the `enabled` key is stripped from the rendered manifest.
+  # As with the list form, object entries are rendered as-is (no templating);
+  # use the string form for entries that need template expansion in their name.
+  #   extra-config:
+  #     apiVersion: v1
+  #     kind: ConfigMap
+  #     metadata:
+  #       name: my-app-extra
+  #     data:
+  #       key: value
+  # An overlay (additional -f values file) can then override just one field:
+  #   extra-config:
+  #     data:
+  #       key: overridden
   #
   # Example: String form (supports templating)
   # - |

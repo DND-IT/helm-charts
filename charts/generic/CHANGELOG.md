@@ -5,7 +5,14 @@ All notable changes to the generic Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.12.1] - 2026-06-16
+## [0.13.0] - 2026-07-01
+
+### Added
+
+- Picks up `common` 1.11.0: `extraObjects` now accepts a **map keyed by name** in addition to the existing list form, so an overlay (additional `-f` values file) can deep-merge and override individual fields of an entry instead of replacing the whole list. Entries can be disabled with `enabled: false`. The list form is unchanged and backward compatible.
+- The `extraObjects` default is now `null` (was `[]`) so that either the list or the map form merges without a Helm coalesce warning, and `values.schema.json` for `extraObjects` now allows `array`, `object`, or `null`.
+
+## [0.12.1] - 2026-07-01
 
 ### Changed
 

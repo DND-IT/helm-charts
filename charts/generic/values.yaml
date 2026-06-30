@@ -445,4 +445,10 @@ extraTargetGroupBindings: {}
 # EXTRA OBJECTS
 # ============================================================================
 
-extraObjects: []
+# -- (list/object) Arbitrary extra Kubernetes resources. Accepts a list, or a
+# map keyed by name so an overlay (additional `-f` values file) can deep-merge
+# and override individual fields instead of replacing the whole list. Set
+# `enabled: false` on a map entry to drop it. A null default lets either form
+# merge cleanly without a Helm coalesce warning.
+# @default -- `[]`
+extraObjects:  # @schema type:[array, object, null]
