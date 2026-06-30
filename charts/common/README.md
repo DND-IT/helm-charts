@@ -65,7 +65,6 @@ templates/
     │   └── _rbac.tpl              # Role/ClusterRole and bindings
     │
     ├── storage/
-    │   ├── _storageclass.tpl      # StorageClass
     │   └── _pvc.tpl               # PersistentVolumeClaim
     │
     └── _extraobjects.tpl          # Arbitrary custom resources
@@ -135,7 +134,6 @@ Then use the templates in your chart:
 | `common.serviceaccount` | ServiceAccount |
 | `common.rbac` | Role and RoleBinding |
 | `common.extraRbac` | Additional RBAC resources |
-| `common.storageClass` | StorageClasses |
 | `common.pvc` | PersistentVolumeClaims |
 | `common.networkPolicy` | NetworkPolicy |
 | `common.httpRoute` | Gateway API HTTPRoute |

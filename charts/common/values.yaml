@@ -350,28 +350,10 @@ volumes:
     #   size: 10Gi
     #   accessModes:
     #     - ReadWriteOnce
+    #   # storageClass is rendered as a template, so it can reference a
+    #   # StorageClass created in the same release via extraObjects (see the
+    #   # extraObjects example). Use "-" to force storageClassName: "".
     #   storageClass: gp3
-  # StorageClasses created alongside the workload. Each entry renders a
-  # cluster-scoped StorageClass named "<release-fullname>-<key>", so parallel
-  # releases of the same chart (e.g. PR previews) never collide on the name. A
-  # persistent volume whose `storageClass` matches a key here is auto-wired to
-  # that rendered name; any other `storageClass` value is used verbatim.
-  storageClasses: {}
-    # content:
-    #   provisioner: efs.csi.aws.com
-    #   # parameters are provisioner-specific and passed through verbatim; these
-    #   # are the aws-efs-csi-driver S3 Files dynamic-provisioning parameters.
-    #   parameters:
-    #     provisioningMode: s3files-ap
-    #     fileSystemId: fs-92107410
-    #     directoryPerms: "700"
-    #     gidRangeStart: "1000"                             # optional
-    #     gidRangeEnd: "2000"                               # optional
-    #     basePath: "/dynamic_provisioning"                 # optional
-    #     subPathPattern: "${.PVC.namespace}/${.PVC.name}"  # optional
-    #     ensureUniqueDirectory: "true"                     # optional
-    #   # generic StorageClass fields are also supported:
-    #   reclaimPolicy: Delete  # also: volumeBindingMode, allowVolumeExpansion, mountOptions, allowedTopologies
   emptyDir: {}
     # tmp:
     #   mountPath: /tmp
@@ -979,3 +961,19 @@ extraObjects: []
   #   type: Opaque
   #   stringData:
   #     key: value
+  #
+  # Example: a release-scoped StorageClass (e.g. aws-efs-csi-driver S3 Files).
+  # Templating the name with common.fullname keeps it unique across parallel
+  # releases (e.g. PR previews), since StorageClasses are cluster-scoped. A PVC
+  # references it by setting volumes.persistent.<name>.storageClass to the same
+  # templated value.
+  # - |
+  #   apiVersion: storage.k8s.io/v1
+  #   kind: StorageClass
+  #   metadata:
+  #     name: {{ include "common.fullname" . }}-content
+  #   provisioner: efs.csi.aws.com
+  #   parameters:
+  #     provisioningMode: s3files-ap
+  #     fileSystemId: fs-92107410
+  #     directoryPerms: "700"

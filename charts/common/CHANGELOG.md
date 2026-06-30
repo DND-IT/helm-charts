@@ -7,10 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.9.0] - 2026-06-30
 
-### Added
+### Changed
 
-- `volumes.storageClasses` — render cluster-scoped StorageClasses alongside the workload. Each entry creates a StorageClass named `<release-fullname>-<key>`, so parallel releases of the same chart (e.g. PR previews) never collide on the cluster-scoped name. Supports `provisioner` (required), `parameters`, `reclaimPolicy`, `volumeBindingMode`, `allowVolumeExpansion`, `mountOptions`, `allowedTopologies`, plus per-class `labels`/`annotations`, and the `enabled: false` opt-out.
-- `common.pvc` now auto-wires `storageClassName`: when a persistent volume's `storageClass` matches a key in `volumes.storageClasses`, it resolves to that release-scoped name (`<release-fullname>-<key>`). Any other `storageClass` value (e.g. `gp3`, or `-` for `""`) is used verbatim, so existing releases are unaffected.
+- `common.pvc` now renders `volumes.persistent.<name>.storageClass` through the template engine, so it can reference a release-scoped resource created in the same release — e.g. a StorageClass defined via `extraObjects` and named with `common.fullname` (useful for CSI volumes like EFS / S3 Files whose StorageClass embeds infra IDs and must stay unique across PR-preview releases). Plain values such as `gp3` render unchanged, and the `-` sentinel still produces `storageClassName: ""`, so existing releases are unaffected.
 
 ## [1.8.0] - 2026-05-13
 

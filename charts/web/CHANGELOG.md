@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.0] - 2026-06-30
 
-### Added
+### Changed
 
-- Picks up `common` 1.9.0: `volumes.storageClasses` lets a release create its own cluster-scoped StorageClass(es), and `common.pvc` auto-wires a persistent volume's `storageClassName` to a matching `volumes.storageClasses` key (named `<release-fullname>-<key>`). Useful for CSI volumes (e.g. EFS / S3 Files) where the StorageClass embeds infra IDs and must not collide across PR-preview releases. No changes required for releases that don't set `volumes.storageClasses`.
+- Picks up `common` 1.9.0: a persistent volume's `storageClass` is now rendered as a template, so a PVC can point at a release-scoped StorageClass created via `extraObjects` (useful for CSI volumes like EFS / S3 Files whose StorageClass embeds infra IDs and must stay unique across PR-preview releases). Existing plain `storageClass` values (e.g. `gp3`) are unaffected.
 
 ## [1.5.0] - 2026-05-13
 
