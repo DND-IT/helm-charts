@@ -5,6 +5,13 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.9.0] - 2026-06-30
+
+### Added
+
+- `volumes.storageClasses` — render cluster-scoped StorageClasses alongside the workload. Each entry creates a StorageClass named `<release-fullname>-<key>`, so parallel releases of the same chart (e.g. PR previews) never collide on the cluster-scoped name. Supports `provisioner` (required), `parameters`, `reclaimPolicy`, `volumeBindingMode`, `allowVolumeExpansion`, `mountOptions`, `allowedTopologies`, plus per-class `labels`/`annotations`, and the `enabled: false` opt-out.
+- `common.pvc` now auto-wires `storageClassName`: when a persistent volume's `storageClass` matches a key in `volumes.storageClasses`, it resolves to that release-scoped name (`<release-fullname>-<key>`). Any other `storageClass` value (e.g. `gp3`, or `-` for `""`) is used verbatim, so existing releases are unaffected.
+
 ## [1.8.0] - 2026-05-13
 
 ### Changed

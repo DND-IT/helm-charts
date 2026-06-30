@@ -351,6 +351,27 @@ volumes:
     #   accessModes:
     #     - ReadWriteOnce
     #   storageClass: gp3
+  # StorageClasses created alongside the workload. Each entry renders a
+  # cluster-scoped StorageClass named "<release-fullname>-<key>", so parallel
+  # releases of the same chart (e.g. PR previews) never collide on the name. A
+  # persistent volume whose `storageClass` matches a key here is auto-wired to
+  # that rendered name; any other `storageClass` value is used verbatim.
+  storageClasses: {}
+    # content:
+    #   provisioner: efs.csi.aws.com
+    #   # parameters are provisioner-specific and passed through verbatim; these
+    #   # are the aws-efs-csi-driver S3 Files dynamic-provisioning parameters.
+    #   parameters:
+    #     provisioningMode: s3files-ap
+    #     fileSystemId: fs-92107410
+    #     directoryPerms: "700"
+    #     gidRangeStart: "1000"                             # optional
+    #     gidRangeEnd: "2000"                               # optional
+    #     basePath: "/dynamic_provisioning"                 # optional
+    #     subPathPattern: "${.PVC.namespace}/${.PVC.name}"  # optional
+    #     ensureUniqueDirectory: "true"                     # optional
+    #   # generic StorageClass fields are also supported:
+    #   reclaimPolicy: Delete  # also: volumeBindingMode, allowVolumeExpansion, mountOptions, allowedTopologies
   emptyDir: {}
     # tmp:
     #   mountPath: /tmp

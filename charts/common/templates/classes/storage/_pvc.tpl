@@ -37,6 +37,8 @@ spec:
   {{- if $pvc.storageClass }}
   {{- if eq "-" $pvc.storageClass }}
   storageClassName: ""
+  {{- else if hasKey (default (dict) $.Values.volumes.storageClasses) $pvc.storageClass }}
+  storageClassName: {{ printf "%s-%s" (include "common.fullname" $) $pvc.storageClass }}
   {{- else }}
   storageClassName: {{ $pvc.storageClass }}
   {{- end }}

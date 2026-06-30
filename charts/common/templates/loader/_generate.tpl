@@ -42,6 +42,7 @@ If content already starts with "---", it is used as-is (multi-document output).
   {{- include "common.loader.renderResource" (include "common.externalSecrets" .) -}}
 
   {{- /* Storage */ -}}
+  {{- include "common.loader.renderResource" (include "common.storageClass" .) -}}
   {{- include "common.loader.renderResource" (include "common.pvc" .) -}}
 
   {{- /* Workloads */ -}}

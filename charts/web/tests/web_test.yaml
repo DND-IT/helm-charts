@@ -696,3 +696,103 @@ tests:
         documentSelector:
           path: kind
           value: PodDisruptionBudget
+
+  # ==========================================================================
+  # StorageClass (volumes.storageClasses) + PVC auto-wiring
+  # ==========================================================================
+  - it: should not create a StorageClass by default
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - hasDocuments:
+          count: 5  # ServiceAccount + Service + Deployment + HPA + PDB
+
+  - it: should render a release-scoped StorageClass from volumes.storageClasses
+    set:
+      image.repository: nginx
+      image.tag: latest
+      volumes.storageClasses.content:
+        provisioner: efs.csi.aws.com
+        parameters:
+          provisioningMode: s3files-ap
+          fileSystemId: fs-0123456789abcdef0
+          directoryPerms: "700"
+        reclaimPolicy: Delete
+        volumeBindingMode: Immediate
+        allowVolumeExpansion: true
+    asserts:
+      - isKind:
+          of: StorageClass
+        documentSelector:
+          path: kind
+          value: StorageClass
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-content
+        documentSelector:
+          path: kind
+          value: StorageClass
+      - equal:
+          path: provisioner
+          value: efs.csi.aws.com
+        documentSelector:
+          path: kind
+          value: StorageClass
+      - equal:
+          path: parameters.fileSystemId
+          value: fs-0123456789abcdef0
+        documentSelector:
+          path: kind
+          value: StorageClass
+      - equal:
+          path: parameters.directoryPerms
+          value: "700"
+        documentSelector:
+          path: kind
+          value: StorageClass
+      - equal:
+          path: reclaimPolicy
+          value: Delete
+        documentSelector:
+          path: kind
+          value: StorageClass
+      - equal:
+          path: allowVolumeExpansion
+          value: true
+        documentSelector:
+          path: kind
+          value: StorageClass
+
+  - it: should auto-wire a PVC storageClassName to a matching storageClasses key
+    set:
+      image.repository: nginx
+      image.tag: latest
+      volumes.storageClasses.content:
+        provisioner: efs.csi.aws.com
+      volumes.persistent.content:
+        mountPath: /data
+        accessMode: ReadWriteMany
+        storageClass: content
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: RELEASE-NAME-content
+        documentSelector:
+          path: kind
+          value: PersistentVolumeClaim
+
+  - it: should leave an unmatched PVC storageClass verbatim
+    set:
+      image.repository: nginx
+      image.tag: latest
+      volumes.persistent.data:
+        mountPath: /data
+        storageClass: gp3
+    asserts:
+      - equal:
+          path: spec.storageClassName
+          value: gp3
+        documentSelector:
+          path: kind
+          value: PersistentVolumeClaim

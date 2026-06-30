@@ -5,6 +5,12 @@ All notable changes to the web Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-06-30
+
+### Added
+
+- Picks up `common` 1.9.0: `volumes.storageClasses` lets a release create its own cluster-scoped StorageClass(es), and `common.pvc` auto-wires a persistent volume's `storageClassName` to a matching `volumes.storageClasses` key (named `<release-fullname>-<key>`). Useful for CSI volumes (e.g. EFS / S3 Files) where the StorageClass embeds infra IDs and must not collide across PR-preview releases. No changes required for releases that don't set `volumes.storageClasses`.
+
 ## [1.5.0] - 2026-05-13
 
 ### Changed
