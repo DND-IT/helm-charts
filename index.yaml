@@ -80,6 +80,30 @@ entries:
     version: 0.1.0
   common:
   - apiVersion: v2
+    created: "2026-06-30T13:11:11.8096545Z"
+    description: 'A Helm library chart containing shared templates and helpers for
+      Kubernetes workloads. Provides common functionality for naming, labels, security
+      contexts, containers, pods, and volumes. Designed to be used as a dependency
+      by application charts (web, worker, task). '
+    digest: e2922b15ce9eb2c038fd892a1c4649a6f41d9bd63fe065ce7b648408a87117b5
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - library
+    - common
+    - helpers
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: common
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: library
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/common-1.9.0/common-1.9.0.tgz
+    version: 1.9.0
+  - apiVersion: v2
     created: "2026-05-13T07:41:01.677806655Z"
     description: 'A Helm library chart containing shared templates and helpers for
       Kubernetes workloads. Provides common functionality for naming, labels, security
@@ -1915,6 +1939,33 @@ entries:
     version: 1.0.0
   web:
   - apiVersion: v2
+    created: "2026-06-30T13:11:12.016587382Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying HTTP-facing web applications to Kubernetes.
+      Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
+      Designed for web applications that need external traffic exposure. '
+    digest: b2d24e6173d89a41061498af0b07974e33b9b1d91f1b6dd883fa9ef9122a6949
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - web
+    - application
+    - ingress
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: web
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/web-1.6.0/web-1.6.0.tgz
+    version: 1.6.0
+  - apiVersion: v2
     created: "2026-05-13T07:41:02.408489777Z"
     dependencies:
     - name: common
@@ -2762,4 +2813,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/worker-1.0.0/worker-1.0.0.tgz
     version: 1.0.0
-generated: "2026-06-11T13:02:52.967941648Z"
+generated: "2026-06-30T13:11:12.016890051Z"
