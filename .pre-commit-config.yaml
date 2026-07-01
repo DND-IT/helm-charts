@@ -11,4 +11,12 @@ repos:
     hooks:
       - id: helm-docs
         args:
-          - --chart-search-root=charts
+          - --chart-search-root=.
+  - repo: local
+    hooks:
+      - id: helm-schema
+        name: Generate Helm values.schema.json
+        entry: scripts/gen-helm-schema.sh
+        language: script
+        files: ^charts/.*/(values\.yaml|Chart\.yaml)$
+        pass_filenames: true

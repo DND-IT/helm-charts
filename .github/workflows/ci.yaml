@@ -152,6 +152,30 @@ jobs:
       - name: Run chart install
         run: ct install --config ct.yaml --excluded-charts common
 
+  schema-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Install Helm
+        uses: azure/setup-helm@dda3372f752e03dde6b3237bc9431cdc2f7a02a2 # v5
+        with:
+          version: v3.17.2  # renovate: datasource=github-releases depName=helm packageName=helm/helm
+
+      - name: Install helm-values-schema-json plugin
+        run: helm plugin install https://github.com/losisin/helm-values-schema-json --version v2.2.0  # renovate: datasource=github-releases depName=helm-values-schema-json packageName=losisin/helm-values-schema-json
+
+      - name: Regenerate schemas
+        run: ./scripts/gen-helm-schema.sh
+
+      - name: Check for drift
+        run: |
+          if ! git diff --exit-code -- ':(glob)**/values.schema.json'; then
+            echo "::error::values.schema.json is out of date. Run scripts/gen-helm-schema.sh and commit the result." >&2
+            exit 1
+          fi
+
   # Catch-all required check for test matrix
   test-success:
     needs:
@@ -160,6 +184,7 @@ jobs:
       - unit-test
       - kubeconform-chart
       - install-chart
+      - schema-check
     runs-on: ubuntu-latest
     timeout-minutes: 1
     if: always()
@@ -188,4 +213,9 @@ jobs:
         if: |
           needs.install-chart.result == 'failure' ||
           needs.install-chart.result == 'cancelled'
+        run: exit 1
+      - name: Fail for failed or cancelled schema-check
+        if: |
+          needs.schema-check.result == 'failure' ||
+          needs.schema-check.result == 'cancelled'
         run: exit 1
