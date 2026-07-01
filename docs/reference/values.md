@@ -203,4 +203,4 @@ Complete reference for all configuration values available in the common library.
 | `jobs` | object | `{}` | One-off Jobs |
 | `cronjobs` | object | `{}` | Additional CronJobs |
 | `hooks.enabled` | bool | `false` | Enable Helm hooks |
-| `extraObjects` | list | `[]` | Arbitrary extra resources |
+| `extraObjects` | list/object | `[]` | Arbitrary extra resources (list, or map keyed by name for overlay-friendly merging) |

@@ -5,7 +5,13 @@ All notable changes to the mysql Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.2.3] - 2026-06-16
+## [0.3.0] - 2026-07-01
+
+### Added
+
+- Picks up `common` 1.11.0: `extraObjects` now accepts a **map keyed by name** in addition to the existing list form, so an overlay (additional `-f` values file) can deep-merge and override individual fields of an entry instead of replacing the whole list. Map entries can be disabled with `enabled: false`. The default is now `null` so either form merges without a Helm coalesce warning. The list form is unchanged and backward compatible.
+
+## [0.2.3] - 2026-07-01
 
 ### Changed
 

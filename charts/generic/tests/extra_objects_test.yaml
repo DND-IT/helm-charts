@@ -1,0 +1,127 @@
+suite: test extraObjects
+templates:
+  - common.yaml
+tests:
+  - it: should render nothing by default
+    set:
+      service.enabled: false
+      workload.type: none
+      serviceAccount.enabled: false
+      extraObjects: []
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render extraObjects in list form (backward compatible)
+    set:
+      service.enabled: false
+      workload.type: none
+      serviceAccount.enabled: false
+      extraObjects:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: list-cm
+          data:
+            key: value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentSelector:
+          path: metadata.name
+          value: list-cm
+      - equal:
+          path: data.key
+          value: value
+        documentSelector:
+          path: metadata.name
+          value: list-cm
+
+  - it: should render extraObjects in map form keyed by name
+    set:
+      service.enabled: false
+      workload.type: none
+      serviceAccount.enabled: false
+      extraObjects:
+        my-config:
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: map-cm
+          data:
+            key: value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentSelector:
+          path: metadata.name
+          value: map-cm
+      - equal:
+          path: data.key
+          value: value
+        documentSelector:
+          path: metadata.name
+          value: map-cm
+
+  - it: should skip map entries with enabled false and strip the enabled key
+    set:
+      service.enabled: false
+      workload.type: none
+      serviceAccount.enabled: false
+      extraObjects:
+        enabled-cm:
+          enabled: true
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: enabled-cm
+          data:
+            key: value
+        disabled-cm:
+          enabled: false
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: disabled-cm
+          data:
+            key: value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentSelector:
+          path: metadata.name
+          value: enabled-cm
+      - notExists:
+          path: enabled
+        documentSelector:
+          path: metadata.name
+          value: enabled-cm
+
+  - it: should template string-form entries in map form
+    set:
+      service.enabled: false
+      workload.type: none
+      serviceAccount.enabled: false
+      extraObjects:
+        secret: |
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: {{ .Release.Name }}-extra
+          type: Opaque
+          stringData:
+            key: value
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Secret
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-extra
