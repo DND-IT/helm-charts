@@ -40,7 +40,7 @@ chart_root_for() {
 
 if ! helm plugin list 2>/dev/null | grep -q '^schema'; then
   echo "helm 'schema' plugin not installed." >&2
-  echo "Install it with: helm plugin install https://github.com/losisin/helm-values-schema-json" >&2
+  echo "Install it with: helm plugin install --verify=false https://github.com/losisin/helm-values-schema-json" >&2
   exit 1
 fi
 
