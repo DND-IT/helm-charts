@@ -52,7 +52,7 @@ jobs:
           version: v4.2.2  # renovate: datasource=github-releases depName=helm packageName=helm/helm
 
       - name: Install helm-unittest plugin
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --version v0.7.2  # renovate: datasource=github-releases depName=helm-unittest packageName=helm-unittest/helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest.git --verify=false --version v0.7.2  # renovate: datasource=github-releases depName=helm-unittest packageName=helm-unittest/helm-unittest
 
       - name: Build chart dependencies
         run: |
@@ -164,7 +164,7 @@ jobs:
           version: v4.2.2  # renovate: datasource=github-releases depName=helm packageName=helm/helm
 
       - name: Install helm-values-schema-json plugin
-        run: helm plugin install https://github.com/losisin/helm-values-schema-json --version v2.2.0  # renovate: datasource=github-releases depName=helm-values-schema-json packageName=losisin/helm-values-schema-json
+        run: helm plugin install https://github.com/losisin/helm-values-schema-json --verify=false --version v2.2.0  # renovate: datasource=github-releases depName=helm-values-schema-json packageName=losisin/helm-values-schema-json
 
       - name: Regenerate schemas
         run: ./scripts/gen-helm-schema.sh
