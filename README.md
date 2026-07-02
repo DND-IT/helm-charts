@@ -106,7 +106,7 @@ Each chart includes a `values.schema.json` file that provides JSON Schema valida
 ### Installing the Plugin
 
 ```bash
-helm plugin install https://github.com/losisin/helm-values-schema-json
+helm plugin install --verify=false https://github.com/losisin/helm-values-schema-json
 ```
 
 ### Generating Schemas

@@ -243,7 +243,7 @@ schema: validate-chart ## Generate JSON schema for specified chart
 		cd $(CHART_PATH) && helm schema; \
 		echo "Schema generated at $(CHART_PATH)/values.schema.json"; \
 	else \
-		echo "helm-schema plugin not available. Install it with: helm plugin install https://github.com/losisin/helm-values-schema-json"; \
+		echo "helm-schema plugin not available. Install it with: helm plugin install --verify=false https://github.com/losisin/helm-values-schema-json"; \
 		exit 1; \
 	fi
 
@@ -479,7 +479,7 @@ version-all: ## Show versions for all charts
 # CI/CD helpers
 ci-setup: check-tools ## Setup CI environment
 	@echo "Setting up CI environment..."
-	@helm plugin list | grep -q unittest || helm plugin install https://github.com/helm-unittest/helm-unittest
+	@helm plugin list | grep -q unittest || helm plugin install --verify=false https://github.com/helm-unittest/helm-unittest
 
 ci-test: ci-setup lint-all test-all ## Run CI tests
 	@echo "CI tests completed successfully"

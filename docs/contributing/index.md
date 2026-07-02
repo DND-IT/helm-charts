@@ -17,7 +17,7 @@ cd helm-charts
 
 ```bash
 # Install Helm plugins
-helm plugin install https://github.com/helm-unittest/helm-unittest.git
+helm plugin install --verify=false https://github.com/helm-unittest/helm-unittest.git
 
 # Install pre-commit hooks
 pre-commit install
