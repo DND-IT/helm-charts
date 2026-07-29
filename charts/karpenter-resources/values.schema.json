@@ -144,12 +144,35 @@
                 "default": {
                     "type": "object",
                     "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "nodeClassRef": {
+                            "type": "object",
+                            "properties": {
+                                "name": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                },
+                "defaults": {
+                    "type": "object",
+                    "properties": {
                         "annotations": {
                             "type": "object"
                         },
                         "disruption": {
                             "type": "object",
                             "properties": {
+                                "budgets": {
+                                    "type": [
+                                        "array",
+                                        "object",
+                                        "null"
+                                    ]
+                                },
                                 "consolidateAfter": {
                                     "type": "string"
                                 },
@@ -157,9 +180,6 @@
                                     "type": "string"
                                 }
                             }
-                        },
-                        "enabled": {
-                            "type": "boolean"
                         },
                         "expireAfter": {
                             "type": "string"
@@ -186,37 +206,133 @@
                                 },
                                 "kind": {
                                     "type": "string"
-                                },
-                                "name": {
-                                    "type": "string"
                                 }
                             }
                         },
                         "requirements": {
-                            "type": "array",
-                            "items": {
-                                "type": "object",
-                                "properties": {
-                                    "key": {
-                                        "type": "string"
-                                    },
-                                    "operator": {
-                                        "type": "string"
-                                    },
-                                    "values": {
-                                        "type": "array",
-                                        "items": {
+                            "type": [
+                                "array",
+                                "object",
+                                "null"
+                            ],
+                            "properties": {
+                                "capacity-type": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
                                             "type": "string"
+                                        },
+                                        "operator": {
+                                            "type": "string"
+                                        },
+                                        "values": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                },
+                                "instance-category": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "operator": {
+                                            "type": "string"
+                                        },
+                                        "values": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                },
+                                "instance-cpu": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "operator": {
+                                            "type": "string"
+                                        },
+                                        "values": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                },
+                                "instance-generation": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "operator": {
+                                            "type": "string"
+                                        },
+                                        "values": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                },
+                                "instance-hypervisor": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "operator": {
+                                            "type": "string"
+                                        },
+                                        "values": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    }
+                                },
+                                "instance-memory": {
+                                    "type": "object",
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "operator": {
+                                            "type": "string"
+                                        },
+                                        "values": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
                                         }
                                     }
                                 }
                             }
                         },
                         "startupTaints": {
-                            "type": "array"
+                            "type": [
+                                "array",
+                                "object",
+                                "null"
+                            ]
                         },
                         "taints": {
-                            "type": "array"
+                            "type": [
+                                "array",
+                                "object",
+                                "null"
+                            ]
                         }
                     }
                 }

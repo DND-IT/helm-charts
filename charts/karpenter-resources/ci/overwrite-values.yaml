@@ -11,13 +11,15 @@ ec2NodeClasses:
 nodePools:
   default:
     enabled: true
+    # Map form: narrow one requirement, drop another, add a new one -- the
+    # remaining defaults (instance-hypervisor, instance-generation,
+    # capacity-type) are inherited rather than silently dropped.
     requirements:
-      - key: "karpenter.k8s.aws/instance-category"
+      instance-cpu:
+        values: ["8", "16", "32"]      # narrowed; key/operator inherited
+      instance-memory:
+        enabled: false                 # dropped
+      instance-family:                 # new entry
+        key: karpenter.k8s.aws/instance-family
         operator: In
-        values: ["c"]
-      - key: "karpenter.k8s.aws/instance-family"
-        operator: In
-        values: ["c5", "c5d", "c5a", "c5ad", "c5n", "c5na"]
-      - key: "karpenter.k8s.aws/instance-cpu"
-        operator: In
-        values: ["8", "16", "32"]
+        values: ["c5", "c5d", "c5a", "c5n"]
