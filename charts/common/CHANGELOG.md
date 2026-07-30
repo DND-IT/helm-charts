@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- `common.service` now supports `service.trafficDistribution`. Setting it to `PreferSameZone` makes kube-proxy favor endpoints in the same zone as the client, reducing cross-AZ data transfer costs, with best-effort fallback to other zones when the local zone lacks endpoint capacity. Empty by default (no change to existing behavior).
+- `common.service` now supports `service.trafficDistribution`. Setting it to `PreferSameZone` makes kube-proxy favor endpoints in the same zone as the client, reducing cross-AZ data transfer costs, with best-effort fallback to other zones when the local zone lacks endpoint capacity. Empty by default (no change to existing behavior). Requires Kubernetes >= 1.34 (beta, enabled by default); on 1.33 it's alpha and needs the `ServiceTrafficDistribution` feature gate enabled.
 
 ## [1.11.0] - 2026-07-01
 

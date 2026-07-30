@@ -31,7 +31,7 @@ This section lists major and breaking changes of each Helm Chart version.
 <details>
 <summary>1.15.0</summary>
 
-- Add `service.trafficDistribution`. Set it to `PreferSameZone` to keep traffic within the client's zone where possible, reducing cross-AZ data transfer costs. Empty by default (no change to existing behavior).
+- Add `service.trafficDistribution`. Set it to `PreferSameZone` to keep traffic within the client's zone where possible, reducing cross-AZ data transfer costs. Empty by default (no change to existing behavior). Requires Kubernetes >= 1.34 (beta, enabled by default); on 1.33 it's alpha and needs the `ServiceTrafficDistribution` feature gate enabled.
 
 ```yaml
 service:

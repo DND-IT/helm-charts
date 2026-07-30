@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Picks up `common` 1.12.0: new `service.trafficDistribution` value. Set it to `PreferSameZone` to keep traffic within the client's zone where possible, reducing cross-AZ data transfer costs. Empty by default (no change to existing behavior). Best effective when combined with the existing zone `topologySpreadConstraints`.
+- Picks up `common` 1.12.0: new `service.trafficDistribution` value. Set it to `PreferSameZone` to keep traffic within the client's zone where possible, reducing cross-AZ data transfer costs. Empty by default (no change to existing behavior). Best effective when combined with the existing zone `topologySpreadConstraints`. Requires Kubernetes >= 1.34 (beta, enabled by default); on 1.33 it's alpha and needs the `ServiceTrafficDistribution` feature gate enabled.
 
 ## [1.7.0] - 2026-07-01
 
