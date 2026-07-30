@@ -1,7 +1,29 @@
 {{- if .Values.nodePools }}
-{{- $clusterName := .Values.global.eksDiscovery.clusterName }}
-{{- range $name, $nodePool := .Values.nodePools }}
+{{- /* `nodePools.defaults` is a reserved key: shared values deep-merged
+       underneath every pool. It never renders a NodePool of its own. */ -}}
+{{- $defaults := dict }}
+{{- if kindIs "map" .Values.nodePools.defaults }}
+{{- $defaults = .Values.nodePools.defaults }}
+{{- end }}
+{{- if hasKey $defaults "enabled" }}
+{{- fail "nodePools.defaults is a reserved key holding shared defaults merged underneath every NodePool; it never renders a NodePool of its own and must not set `enabled`. Rename your pool if you meant to declare one." }}
+{{- end }}
+{{- range $name, $pool := omit .Values.nodePools "defaults" }}
+{{- /* Strip the list-or-map fields from the defaults copy before merging:
+       mergo would otherwise be handed a map (defaults) and a list (a pool
+       still using the legacy list form) for the same key. They are resolved
+       explicitly by karpenter-resources.nodePoolEntries instead. */ -}}
+{{- $base := omit (deepCopy $defaults) "requirements" "taints" "startupTaints" }}
+{{- if kindIs "map" (index $base "disruption") }}
+{{- $base = set $base "disruption" (omit (index $base "disruption") "budgets") }}
+{{- end }}
+{{- $nodePool := mustMergeOverwrite $base (deepCopy $pool) }}
 {{- if $nodePool.enabled }}
+{{- $taints := include "karpenter-resources.nodePoolEntries" (dict "defaults" $defaults "override" $pool "key" "taints") }}
+{{- $startupTaints := include "karpenter-resources.nodePoolEntries" (dict "defaults" $defaults "override" $pool "key" "startupTaints") }}
+{{- $requirements := include "karpenter-resources.nodePoolEntries" (dict "defaults" $defaults "override" $pool "key" "requirements") }}
+{{- $disruption := default (dict) $nodePool.disruption }}
+{{- $budgets := include "karpenter-resources.nodePoolEntries" (dict "defaults" (index $defaults "disruption") "override" (index $pool "disruption") "key" "budgets") }}
 ---
 apiVersion: karpenter.sh/v1
 kind: NodePool
@@ -18,6 +40,9 @@ metadata:
   {{- end }}
 spec:
   template:
+    {{- /* Guarded: a bare `metadata:` with no children renders as null, which
+           the NodePool CRD rejects (`want object`). */ -}}
+    {{- if or $nodePool.labels $nodePool.annotations }}
     metadata:
       {{- with $nodePool.labels }}
       labels:
@@ -27,20 +52,21 @@ spec:
       annotations:
         {{- toYaml . | nindent 8 }}
       {{- end }}
+    {{- end }}
     spec:
       {{- with $nodePool.nodeClassRef }}
       nodeClassRef:
         {{- toYaml . | nindent 8 }}
       {{- end }}
 
-      {{- with $nodePool.taints }}
+      {{- if $taints }}
       taints:
-        {{- toYaml . | nindent 8 }}
+        {{- $taints | nindent 8 }}
       {{- end }}
 
-      {{- with $nodePool.startupTaints }}
+      {{- if $startupTaints }}
       startupTaints:
-        {{- toYaml . | nindent 8 }}
+        {{- $startupTaints | nindent 8 }}
       {{- end }}
 
       {{- if hasKey $nodePool "expireAfter" }}
@@ -51,24 +77,24 @@ spec:
       terminationGracePeriod: {{ $nodePool.terminationGracePeriod }}
       {{- end }}
 
-      {{- with $nodePool.requirements }}
+      {{- if $requirements }}
       requirements:
-        {{- toYaml . | nindent 8 }}
+        {{- $requirements | nindent 8 }}
       {{- end }}
 
-  {{- with $nodePool.disruption }}
+  {{- if or $disruption $budgets }}
   disruption:
-    {{- if hasKey . "consolidationPolicy" }}
-    consolidationPolicy: {{ .consolidationPolicy }}
+    {{- if hasKey $disruption "consolidationPolicy" }}
+    consolidationPolicy: {{ $disruption.consolidationPolicy }}
     {{- end }}
 
-    {{- if hasKey . "consolidateAfter" }}
-    consolidateAfter: {{ .consolidateAfter }}
+    {{- if hasKey $disruption "consolidateAfter" }}
+    consolidateAfter: {{ $disruption.consolidateAfter }}
     {{- end }}
 
-    {{- with .budgets }}
+    {{- if $budgets }}
     budgets:
-      {{- toYaml . | nindent 6 }}
+      {{- $budgets | nindent 6 }}
     {{- end }}
   {{- end }}
 

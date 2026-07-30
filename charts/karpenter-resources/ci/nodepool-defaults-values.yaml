@@ -1,0 +1,44 @@
+# Demonstrates `nodePools.defaults`: shared values deep-merged underneath every
+# NodePool, with per-pool values winning.
+global:
+  role: KarpenterNodeRole-BasicCluster
+  eksDiscovery:
+    enabled: true
+    clusterName: basic-cluster
+
+nodePools:
+  defaults:
+    requirements:
+      instance-cpu:
+        values: ["8", "16"]                 # narrowed for every pool
+      instance-memory:
+        enabled: false                      # dropped for every pool
+    disruption:
+      budgets:
+        empty-and-drifted:
+          nodes: "20%"
+          reasons: ["Empty", "Drifted"]
+    taints:
+      managed:
+        key: example.com/managed
+        value: "true"
+        effect: NoSchedule
+
+  default:
+    enabled: true
+
+  batch:
+    enabled: true
+    nodeClassRef:
+      group: karpenter.k8s.aws
+      kind: EC2NodeClass
+      name: default
+    weight: 10
+    requirements:
+      capacity-type:
+        values: ["spot"]                    # per-pool override
+    taints: []                              # opt-out; taints are optional
+
+ec2NodeClasses:
+  default:
+    enabled: true

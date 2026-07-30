@@ -1,0 +1,311 @@
+# Covers `nodePools.defaults` inheritance and the list-or-map form of
+# `requirements`, `taints`, `startupTaints` and `disruption.budgets`.
+# The legacy list-form behaviour lives in tests/nodepool_test.yaml.
+suite: test nodepool defaults and list-or-map fields
+templates:
+  - nodepool.yaml
+tests:
+  # 1. Map form renders, in sorted alias order (pins the ordering contract).
+  - it: should render map-form requirements in sorted alias order
+    set:
+      nodePools:
+        default:
+          enabled: true
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.requirements
+          count: 6
+      - equal:
+          path: spec.template.spec.requirements[0].key
+          value: karpenter.sh/capacity-type
+      - equal:
+          path: spec.template.spec.requirements[1].key
+          value: karpenter.k8s.aws/instance-category
+      - equal:
+          path: spec.template.spec.requirements[2].key
+          value: karpenter.k8s.aws/instance-cpu
+      - equal:
+          path: spec.template.spec.requirements[3].key
+          value: karpenter.k8s.aws/instance-generation
+      - equal:
+          path: spec.template.spec.requirements[4].key
+          value: karpenter.k8s.aws/instance-hypervisor
+      - equal:
+          path: spec.template.spec.requirements[5].key
+          value: karpenter.k8s.aws/instance-memory
+
+  # 2. Partial override preserves siblings AND inherited fields of the entry.
+  - it: should preserve sibling requirements when overriding one entry
+    set:
+      nodePools:
+        default:
+          enabled: true
+          requirements:
+            instance-cpu:
+              values: ["8"]
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.requirements
+          count: 6
+      - equal:
+          path: spec.template.spec.requirements[2]
+          value:
+            key: karpenter.k8s.aws/instance-cpu
+            operator: In
+            values: ["8"]
+      - equal:
+          path: spec.template.spec.requirements[4].values[0]
+          value: nitro
+
+  # 3. `enabled: false` drops an entry, and `enabled` never leaks.
+  - it: should drop entries marked enabled false without leaking the key
+    set:
+      nodePools:
+        defaults:
+          taints:
+            managed:
+              key: example.com/managed
+              value: "true"
+              effect: NoSchedule
+            legacy:
+              key: example.com/legacy
+              value: "true"
+              effect: NoSchedule
+              enabled: false
+        default:
+          enabled: true
+          requirements:
+            instance-memory:
+              enabled: false
+            instance-hypervisor:
+              enabled: false
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.requirements
+          count: 4
+      - notContains:
+          path: spec.template.spec.requirements
+          content:
+            key: karpenter.k8s.aws/instance-memory
+            operator: Gt
+            values: ["2048"]
+      - lengthEqual:
+          path: spec.template.spec.taints
+          count: 1
+      - equal:
+          path: spec.template.spec.taints[0]
+          value:
+            key: example.com/managed
+            value: "true"
+            effect: NoSchedule
+
+  # 4. Type-mismatch canary: a list overrides the map default wholesale.
+  - it: should let a list-form override replace the map defaults wholesale
+    set:
+      nodePools:
+        default:
+          enabled: true
+          requirements:
+            - key: karpenter.k8s.aws/instance-cpu
+              operator: In
+              values: ["64"]
+    asserts:
+      - lengthEqual:
+          path: spec.template.spec.requirements
+          count: 1
+      - equal:
+          path: spec.template.spec.requirements[0].values[0]
+          value: "64"
+
+  # 5. A custom pool inherits the shared defaults.
+  - it: should make a custom pool inherit nodePools.defaults
+    set:
+      nodePools:
+        production:
+          enabled: true
+          nodeClassRef:
+            name: production
+    asserts:
+      - equal:
+          path: metadata.name
+          value: production
+      - lengthEqual:
+          path: spec.template.spec.requirements
+          count: 6
+      - equal:
+          path: spec.template.spec.expireAfter
+          value: 720h
+      - equal:
+          path: spec.limits.cpu
+          value: 1000
+      - equal:
+          path: spec.disruption.consolidateAfter
+          value: 1h
+      - equal:
+          path: spec.template.spec.nodeClassRef
+          value:
+            group: karpenter.k8s.aws
+            kind: EC2NodeClass
+            name: production
+
+  # 6. Per-pool values beat `defaults`, scalar and nested.
+  - it: should let per-pool values win over defaults
+    set:
+      nodePools:
+        defaults:
+          expireAfter: "100h"
+          requirements:
+            instance-cpu:
+              values: ["2"]
+        default:
+          enabled: true
+          expireAfter: "24h"
+          requirements:
+            instance-cpu:
+              values: ["64"]
+    asserts:
+      - equal:
+          path: spec.template.spec.expireAfter
+          value: 24h
+      - equal:
+          path: spec.template.spec.requirements[2].values
+          value: ["64"]
+
+  # 7. `defaults` itself renders no NodePool.
+  - it: should not render a NodePool for the reserved defaults key
+    set:
+      nodePools:
+        defaults:
+          labels:
+            shared: "yes"
+        default:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: metadata.name
+          value: default
+      - equal:
+          path: metadata.labels.shared
+          value: "yes"
+
+  # 8. Reserved-key guard.
+  - it: should fail when nodePools.defaults sets enabled
+    set:
+      nodePools:
+        defaults:
+          enabled: true
+    asserts:
+      - failedTemplate:
+          errorMessage: nodePools.defaults is a reserved key holding shared defaults merged underneath every NodePool; it never renders a NodePool of its own and must not set `enabled`. Rename your pool if you meant to declare one.
+
+  # 9. `[]` empties an optional field while siblings still inherit.
+  - it: should treat an empty list as an opt-out for optional fields
+    set:
+      nodePools:
+        defaults:
+          taints:
+            managed:
+              key: example.com/managed
+              effect: NoSchedule
+          startupTaints:
+            managed:
+              key: example.com/managed
+              effect: NoSchedule
+          disruption:
+            budgets:
+              all:
+                nodes: "20%"
+        default:
+          enabled: true
+          taints: []
+          startupTaints: []
+          disruption:
+            budgets: []
+    asserts:
+      - notExists:
+          path: spec.template.spec.taints
+      - notExists:
+          path: spec.template.spec.startupTaints
+      - notExists:
+          path: spec.disruption.budgets
+      - equal:
+          path: spec.template.spec.expireAfter
+          value: 720h
+
+  # 10. minValues survives the map form.
+  - it: should pass minValues through the map form
+    set:
+      nodePools:
+        default:
+          enabled: true
+          requirements:
+            instance-category:
+              minValues: 2
+    asserts:
+      - equal:
+          path: spec.template.spec.requirements[1].minValues
+          value: 2
+
+  # 11. Budgets in map form, plus the "defaults supply only budgets" branch.
+  - it: should render map-form disruption budgets
+    set:
+      nodePools:
+        default:
+          enabled: true
+          disruption:
+            budgets:
+              empty-and-drifted:
+                nodes: "20%"
+                reasons: ["Empty", "Drifted"]
+              nightly-freeze:
+                nodes: "0"
+                schedule: "@daily"
+                enabled: false
+    asserts:
+      - lengthEqual:
+          path: spec.disruption.budgets
+          count: 1
+      - equal:
+          path: spec.disruption.budgets[0]
+          value:
+            nodes: "20%"
+            reasons: ["Empty", "Drifted"]
+
+  - it: should render budgets inherited from defaults when the pool has no disruption block
+    set:
+      nodePools:
+        defaults:
+          disruption:
+            budgets:
+              all:
+                nodes: "10%"
+        default:
+          enabled: true
+    asserts:
+      - lengthEqual:
+          path: spec.disruption.budgets
+          count: 1
+      - equal:
+          path: spec.disruption.budgets[0].nodes
+          value: 10%
+
+  # 12. Opting out of inheritance entirely. Renders a CRD-invalid NodePool
+  #     (no requirements), so this must never become a ci/ fixture.
+  - it: should disable inheritance when nodePools.defaults is null
+    set:
+      nodePools:
+        defaults: null
+        default:
+          enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - notExists:
+          path: spec.template.spec.requirements
+      - notExists:
+          path: spec.template.spec.expireAfter
+      - equal:
+          path: spec.template.spec.nodeClassRef.name
+          value: default
