@@ -81,7 +81,7 @@ service:
   enabled: true
   type: ClusterIP
   port: 8080
-  # Zone-aware routing: set to "PreferClose" to keep traffic within the client's zone
+  # Zone-aware routing: set to "PreferSameZone" to keep traffic within the client's zone
   # where possible, reducing cross-AZ data transfer costs. Requires pods spread across
   # zones (see scheduling.topologySpreadConstraints above) to be effective.
   trafficDistribution: ""

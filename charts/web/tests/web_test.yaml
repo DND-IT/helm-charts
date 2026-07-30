@@ -195,15 +195,15 @@ tests:
           path: kind
           value: Service
 
-  - it: should set trafficDistribution to PreferClose when configured
+  - it: should set trafficDistribution to PreferSameZone when configured
     set:
       image.repository: nginx
       image.tag: latest
-      service.trafficDistribution: PreferClose
+      service.trafficDistribution: PreferSameZone
     asserts:
       - equal:
           path: spec.trafficDistribution
-          value: PreferClose
+          value: PreferSameZone
         documentSelector:
           path: kind
           value: Service

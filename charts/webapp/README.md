@@ -31,11 +31,11 @@ This section lists major and breaking changes of each Helm Chart version.
 <details>
 <summary>1.15.0</summary>
 
-- Add `service.trafficDistribution`. Set it to `PreferClose` to keep traffic within the client's zone where possible, reducing cross-AZ data transfer costs. Empty by default (no change to existing behavior).
+- Add `service.trafficDistribution`. Set it to `PreferSameZone` to keep traffic within the client's zone where possible, reducing cross-AZ data transfer costs. Empty by default (no change to existing behavior).
 
 ```yaml
 service:
-  trafficDistribution: PreferClose
+  trafficDistribution: PreferSameZone
 ```
 
 </details>
