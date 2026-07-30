@@ -73,6 +73,9 @@ spec:
   {{- if .Values.service.publishNotReadyAddresses }}
   publishNotReadyAddresses: true
   {{- end }}
+  {{- with .Values.service.trafficDistribution }}
+  trafficDistribution: {{ . }}
+  {{- end }}
   {{- if ne $serviceType "ExternalName" }}
   ports:
     {{- if .Values.service.ports }}

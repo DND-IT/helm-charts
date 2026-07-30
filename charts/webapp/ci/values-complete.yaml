@@ -21,6 +21,7 @@ service:
   portName: foo
   targetPort: 9001
   type: ClusterIP
+  trafficDistribution: PreferSameZone
 ingress:
   enabled: true
   className: alb

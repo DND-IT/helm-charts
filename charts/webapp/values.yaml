@@ -70,6 +70,10 @@ service:
   targetPort: 80
   # Name of the port that the service is exposed on
   portName: http
+  # Zone-aware routing: set to "PreferSameZone" to keep traffic within the client's zone
+  # where possible, reducing cross-AZ data transfer costs. Requires pods spread across
+  # zones (see topologySpreadConstraints below) to be effective.
+  trafficDistribution: ""
 
 ingress:
   enabled: false

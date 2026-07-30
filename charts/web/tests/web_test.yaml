@@ -184,6 +184,30 @@ tests:
       - hasDocuments:
           count: 4
 
+  - it: should omit trafficDistribution by default
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+        documentSelector:
+          path: kind
+          value: Service
+
+  - it: should set trafficDistribution to PreferSameZone when configured
+    set:
+      image.repository: nginx
+      image.tag: latest
+      service.trafficDistribution: PreferSameZone
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferSameZone
+        documentSelector:
+          path: kind
+          value: Service
+
   # ==========================================================================
   # Scheduling defaults
   # ==========================================================================
