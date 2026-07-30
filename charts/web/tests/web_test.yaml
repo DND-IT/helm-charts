@@ -184,6 +184,30 @@ tests:
       - hasDocuments:
           count: 4
 
+  - it: should omit trafficDistribution by default
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - notExists:
+          path: spec.trafficDistribution
+        documentSelector:
+          path: kind
+          value: Service
+
+  - it: should set trafficDistribution to PreferClose when configured
+    set:
+      image.repository: nginx
+      image.tag: latest
+      service.trafficDistribution: PreferClose
+    asserts:
+      - equal:
+          path: spec.trafficDistribution
+          value: PreferClose
+        documentSelector:
+          path: kind
+          value: Service
+
   # ==========================================================================
   # Scheduling defaults
   # ==========================================================================

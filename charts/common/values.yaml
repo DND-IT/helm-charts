@@ -474,6 +474,10 @@ service:
   ipFamilyPolicy: ""
   ipFamilies: []
   publishNotReadyAddresses: false
+  # "PreferClose" traffic to endpoints in the same zone as the client to avoid cross-AZ data transfer costs.
+  # It is best-effort: it falls back to other zones when the local zone
+  # doesn't have enough endpoint capacity.
+  trafficDistribution: ""
 
 extraServices: {}
   # metrics:

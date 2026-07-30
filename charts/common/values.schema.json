@@ -861,6 +861,9 @@
                 "sessionAffinityConfig": {
                     "type": "object"
                 },
+                "trafficDistribution": {
+                    "type": "string"
+                },
                 "type": {
                     "type": "string"
                 }

@@ -5,6 +5,12 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-07-30
+
+### Added
+
+- `common.service` now supports `service.trafficDistribution`. Setting it to `PreferClose` makes kube-proxy favor endpoints in the same zone as the client, reducing cross-AZ data transfer costs, with best-effort fallback to other zones when the local zone lacks endpoint capacity. Empty by default (no change to existing behavior).
+
 ## [1.11.0] - 2026-07-01
 
 ### Added

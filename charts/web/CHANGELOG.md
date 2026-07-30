@@ -5,6 +5,12 @@ All notable changes to the web Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.8.0] - 2026-07-30
+
+### Added
+
+- Picks up `common` 1.12.0: new `service.trafficDistribution` value. Set it to `PreferClose` to keep traffic within the client's zone where possible, reducing cross-AZ data transfer costs. Empty by default (no change to existing behavior). Best effective when combined with the existing zone `topologySpreadConstraints`.
+
 ## [1.7.0] - 2026-07-01
 
 ### Added

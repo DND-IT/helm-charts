@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.14.0](https://img.shields.io/badge/Version-1.14.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.15.0](https://img.shields.io/badge/Version-1.15.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -27,6 +27,18 @@ resource "helm_release" "app" {
 ## Upgrading
 
 This section lists major and breaking changes of each Helm Chart version.
+
+<details>
+<summary>1.15.0</summary>
+
+- Add `service.trafficDistribution`. Set it to `PreferClose` to keep traffic within the client's zone where possible, reducing cross-AZ data transfer costs. Empty by default (no change to existing behavior).
+
+```yaml
+service:
+  trafficDistribution: PreferClose
+```
+
+</details>
 
 <details>
 <summary>1.14.0</summary>
@@ -173,6 +185,7 @@ ingress:
 | service.port | int | `80` |  |
 | service.portName | string | `"http"` |  |
 | service.targetPort | int | `80` |  |
+| service.trafficDistribution | string | `""` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccountName | string | `""` |  |
 | targetGroupBinding.annotations | object | `{}` |  |
