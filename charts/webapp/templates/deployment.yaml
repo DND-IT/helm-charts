@@ -204,15 +204,6 @@ spec:
       tolerations:
         {{- toYaml . | nindent 8 }}
     {{- end }}
-    {{- if .Values.topologySpreadConstraints.enabled }}
-      topologySpreadConstraints:
-        {{- range .Values.topologySpreadConstraints.topologyKeys }}
-        - topologyKey: {{ . | quote }}
-          labelSelector:
-            matchLabels:
-              app: {{ include "webapp.name" $ }}
-              type: {{ $.Chart.Name }}
-          maxSkew: {{ $.Values.topologySpreadConstraints.maxSkew }}
-          whenUnsatisfiable: {{ $.Values.topologySpreadConstraints.whenUnsatisfiable }}
-        {{- end }}
+    {{- if .Values.topologySpreadConstraints }}
+      topologySpreadConstraints: {{ toYaml .Values.topologySpreadConstraints | nindent 8 }}
     {{- end }}

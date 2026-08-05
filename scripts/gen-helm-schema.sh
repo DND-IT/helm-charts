@@ -44,21 +44,25 @@ if ! helm plugin list 2>/dev/null | grep -q '^schema'; then
   exit 1
 fi
 
-declare -A charts=()
+# Collect chart dirs as a newline-delimited list (bash 3.2 has no associative arrays).
+charts=""
 if [ "$#" -eq 0 ]; then
   while IFS= read -r chart_yaml; do
-    charts["$(dirname "$chart_yaml")"]=1
+    charts="$charts$(dirname "$chart_yaml")
+"
   done < <(find "$CHART_ROOT" -name Chart.yaml -not -path '*/charts/*')
 else
   for f in "$@"; do
     if root="$(chart_root_for "$f")"; then
-      charts["$root"]=1
+      charts="$charts$root
+"
     fi
   done
 fi
 
 status=0
-for dir in "${!charts[@]}"; do
+while IFS= read -r dir; do
+  [ -n "$dir" ] || continue
   name="$(basename "$dir")"
   if is_skipped "$name"; then
     echo "Skipping schema for deprecated chart: $name"
@@ -69,6 +73,6 @@ for dir in "${!charts[@]}"; do
     echo "FAILED to generate schema for: $name" >&2
     status=1
   fi
-done
+done <<< "$(printf '%s' "$charts" | sort -u)"
 
 exit "$status"

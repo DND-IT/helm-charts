@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 1.15.0](https://img.shields.io/badge/Version-1.15.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -27,6 +27,41 @@ resource "helm_release" "app" {
 ## Upgrading
 
 This section lists major and breaking changes of each Helm Chart version.
+
+<details>
+<summary>2.0.0</summary>
+
+**Breaking:** `topologySpreadConstraints` is now a plain list of Kubernetes [topology spread constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/) instead of a wrapper object. The keys `enabled`, `topologyKeys`, `maxSkew` and `whenUnsatisfiable` no longer exist — each constraint is now configured individually, so different keys can use different `maxSkew` / `whenUnsatisfiable` values.
+
+The default constraints are unchanged (zone and hostname, `maxSkew: 1`, `whenUnsatisfiable: ScheduleAnyway`), so if you did not override this value there is nothing to do. Set it to `[]` to disable spreading entirely (the cluster default applies).
+
+The chart no longer injects a `labelSelector`; Kubernetes falls back to the pod's own labels, which matches the previous behavior. Add an explicit `labelSelector` per constraint if you need something else.
+
+before
+
+```yaml
+topologySpreadConstraints:
+  enabled: true
+  maxSkew: 1
+  whenUnsatisfiable: ScheduleAnyway
+  topologyKeys:
+    - topology.kubernetes.io/zone
+    - kubernetes.io/hostname
+```
+
+after
+
+```yaml
+topologySpreadConstraints:
+  - topologyKey: topology.kubernetes.io/zone
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
+  - topologyKey: kubernetes.io/hostname
+    maxSkew: 1
+    whenUnsatisfiable: ScheduleAnyway
+```
+
+</details>
 
 <details>
 <summary>1.15.0</summary>
@@ -192,9 +227,9 @@ ingress:
 | targetGroupBinding.enabled | bool | `false` |  |
 | targetGroupBinding.targetGroupARN | string | `""` |  |
 | tolerations | list | `[]` |  |
-| topologySpreadConstraints.enabled | bool | `true` |  |
-| topologySpreadConstraints.maxSkew | int | `1` | Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/workloads/pods/pod-topology-spread-constraints/). |
-| topologySpreadConstraints.topologyKeys | list | `["topology.kubernetes.io/zone","kubernetes.io/hostname"]` | The key of node labels. See https://kubernetes.io/docs/reference/kubernetes-api/labels-annotations-taints/ All the labels will be considered to try to find the best match |
-| topologySpreadConstraints.whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
+| topologySpreadConstraints[0] | object | `{"maxSkew":1,"topologyKey":"topology.kubernetes.io/zone","whenUnsatisfiable":"ScheduleAnyway"}` | Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/). If no constraints are defined, the cluster default is used. - topologyKey: topology.kubernetes.io/zone   maxSkew: 5   whenUnsatisfiable: ScheduleAnyway - topologyKey: kubernetes.io/hostname   maxSkew: 3   whenUnsatisfiable: ScheduleAnyway |
+| topologySpreadConstraints[1].maxSkew | int | `1` |  |
+| topologySpreadConstraints[1].topologyKey | string | `"kubernetes.io/hostname"` |  |
+| topologySpreadConstraints[1].whenUnsatisfiable | string | `"ScheduleAnyway"` |  |
 | update.maxSurge | string | `"25%"` |  |
 | update.maxUnavailable | string | `"0%"` |  |
