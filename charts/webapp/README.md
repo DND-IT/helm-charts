@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.0.1](https://img.shields.io/badge/Version-2.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -29,11 +29,32 @@ resource "helm_release" "app" {
 This section lists major and breaking changes of each Helm Chart version.
 
 <details>
+<summary>2.0.1</summary>
+
+Bugfix: the chart now injects a default `labelSelector` on any topology spread constraint that does not define one. The selector matches the labels the chart puts on the pod template:
+
+```yaml
+labelSelector:
+  matchLabels:
+    app: <release name>   # or .Values.nameOverride, if set
+    type: webapp
+```
+
+This restores the pre-2.0.0 behaviour: constraints without an explicit selector no longer resolve to "match nothing" and are no longer silently ignored (see the 2.0.0 notes below and kubernetes/kubernetes#135797).
+
+A constraint that *does* define a `labelSelector` is passed through untouched, so existing overrides keep working — the explicit selector always wins. The chart defaults (zone and hostname, `maxSkew: 1`, `whenUnsatisfiable: ScheduleAnyway`) now spread pods as documented without any extra configuration. Set the value to `[]` to disable spreading and fall back to the cluster-level default constraints.
+
+If you added an explicit `labelSelector` when upgrading to 2.0.0 purely to work around this, you can now drop it — provided it matched the chart's own pod labels.
+
+</details>
+
 <details>
 <summary>2.0.0</summary>
 
 Breaking: topologySpreadConstraints is now a plain list of Kubernetes topology spread constraints instead of a wrapper object. The keys enabled, topologyKeys, maxSkew and whenUnsatisfiable no longer exist — each constraint is configured individually,
 so different topology keys can now use different maxSkew / whenUnsatisfiable values.
+
+Note: the labelSelector caveat below applies to 2.0.0 only — it is fixed in 2.0.1, which reinstates the default selector. Upgrading straight to 2.0.1 requires no labelSelector changes.
 
 Breaking — action required for every consumer that overrides this value: the chart no longer injects a labelSelector. A constraint without a labelSelector is not an error and does not fall back to the pod's own labels — Kubernetes converts a nil
 selector to "match nothing", so every topology domain counts zero pods, the skew is always zero, and the constraint is silently ignored. See kubernetes/kubernetes#135797.
