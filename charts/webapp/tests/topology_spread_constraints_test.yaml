@@ -1,0 +1,197 @@
+suite: test webapp topology spread constraints
+templates:
+  - deployment.yaml
+tests:
+  # ==========================================================================
+  # Default labelSelector injection
+  # ==========================================================================
+  - it: should inject the pod labels as labelSelector on the chart defaults
+    release:
+      name: my-app
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0]
+          value:
+            topologyKey: topology.kubernetes.io/zone
+            maxSkew: 1
+            whenUnsatisfiable: ScheduleAnyway
+            labelSelector:
+              matchLabels:
+                app: my-app
+                type: webapp
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[1]
+          value:
+            topologyKey: kubernetes.io/hostname
+            maxSkew: 1
+            whenUnsatisfiable: ScheduleAnyway
+            labelSelector:
+              matchLabels:
+                app: my-app
+                type: webapp
+
+  - it: should inject a labelSelector matching the deployment pod selector
+    release:
+      name: my-app
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].labelSelector.matchLabels
+          value:
+            app: my-app
+            type: webapp
+      - equal:
+          path: spec.selector.matchLabels
+          value:
+            app: my-app
+            type: webapp
+
+  - it: should use nameOverride in the injected labelSelector
+    release:
+      name: my-app
+    set:
+      nameOverride: custom-name
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].labelSelector.matchLabels
+          value:
+            app: custom-name
+            type: webapp
+      # still matches the pods the deployment actually creates
+      - equal:
+          path: spec.template.metadata.labels.app
+          value: custom-name
+
+  - it: should inject a labelSelector on user-defined constraints that omit one
+    release:
+      name: my-app
+    set:
+      topologySpreadConstraints:
+        - topologyKey: kubernetes.io/hostname
+          maxSkew: 3
+          whenUnsatisfiable: DoNotSchedule
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints
+          value:
+            - topologyKey: kubernetes.io/hostname
+              maxSkew: 3
+              whenUnsatisfiable: DoNotSchedule
+              labelSelector:
+                matchLabels:
+                  app: my-app
+                  type: webapp
+
+  # ==========================================================================
+  # Explicit labelSelector wins
+  # ==========================================================================
+  - it: should not override an explicit labelSelector
+    release:
+      name: my-app
+    set:
+      topologySpreadConstraints:
+        - topologyKey: topology.kubernetes.io/zone
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: other-app
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].labelSelector
+          value:
+            matchLabels:
+              app: other-app
+
+  - it: should preserve a matchExpressions labelSelector
+    release:
+      name: my-app
+    set:
+      topologySpreadConstraints:
+        - topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - my-app
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].labelSelector
+          value:
+            matchExpressions:
+              - key: app
+                operator: In
+                values:
+                  - my-app
+      - notExists:
+          path: spec.template.spec.topologySpreadConstraints[0].labelSelector.matchLabels
+
+  - it: should inject per constraint, leaving explicit selectors untouched
+    release:
+      name: my-app
+    set:
+      topologySpreadConstraints:
+        - topologyKey: topology.kubernetes.io/zone
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+          labelSelector:
+            matchLabels:
+              app: other-app
+        - topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0].labelSelector.matchLabels
+          value:
+            app: other-app
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[1].labelSelector.matchLabels
+          value:
+            app: my-app
+            type: webapp
+
+  # ==========================================================================
+  # Other fields are passed through
+  # ==========================================================================
+  - it: should pass through additional constraint fields
+    release:
+      name: my-app
+    set:
+      topologySpreadConstraints:
+        - topologyKey: kubernetes.io/hostname
+          maxSkew: 1
+          whenUnsatisfiable: ScheduleAnyway
+          minDomains: 2
+          nodeAffinityPolicy: Honor
+          matchLabelKeys:
+            - pod-template-hash
+    asserts:
+      - equal:
+          path: spec.template.spec.topologySpreadConstraints[0]
+          value:
+            topologyKey: kubernetes.io/hostname
+            maxSkew: 1
+            whenUnsatisfiable: ScheduleAnyway
+            minDomains: 2
+            nodeAffinityPolicy: Honor
+            matchLabelKeys:
+              - pod-template-hash
+            labelSelector:
+              matchLabels:
+                app: my-app
+                type: webapp
+
+  # ==========================================================================
+  # Disabling
+  # ==========================================================================
+  - it: should omit topologySpreadConstraints when set to an empty list
+    release:
+      name: my-app
+    set:
+      topologySpreadConstraints: []
+    asserts:
+      - notExists:
+          path: spec.template.spec.topologySpreadConstraints
