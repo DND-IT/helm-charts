@@ -16,7 +16,6 @@ Each chart includes sensible defaults for security contexts, health probes, sche
 | Chart | Description | Documentation |
 |-------|-------------|---------------|
 | [web](./charts/web) | External-facing web applications. Ingress enabled by default with ALB. | [README](./charts/web/README.md) |
-| [api](./charts/api) | Internal API services. Service enabled, ingress disabled by default. | [README](./charts/api/README.md) |
 | [worker](./charts/worker) | Background worker processes. No service or ingress. | [README](./charts/worker/README.md) |
 | [task](./charts/task) | Scheduled CronJob workloads. No service, ingress, or HPA. | [README](./charts/task/README.md) |
 
@@ -35,6 +34,8 @@ Each chart includes sensible defaults for security contexts, health probes, sche
 | [common](./charts/common) | Shared library chart with common templates and helpers. Used as a dependency by the thin wrapper charts. | [README](./charts/common/README.md) |
 | [custom-resources](./charts/custom-resources) | Deploy arbitrary Kubernetes resources | [README](./charts/custom-resources/README.md) |
 | [karpenter-resources](./charts/karpenter-resources) | Karpenter provisioner and node pool configurations | [README](./charts/karpenter-resources/README.md) |
+| [datadog-resources](./charts/datadog-resources) | Manage Datadog custom resources (monitors, dashboards, SLOs) | [README](./charts/datadog-resources/README.md) |
+| [mysql](./charts/mysql) | MySQL 8.0 StatefulSet with persistent storage | [README](./charts/mysql/README.md) |
 
 ### Deprecated Charts
 
@@ -213,12 +214,13 @@ helm-charts/
 ├── charts/
 │   ├── common/              # Shared library chart (templates & helpers)
 │   ├── web/                 # Opinionated: external web applications
-│   ├── api/                 # Opinionated: internal API services
 │   ├── worker/              # Opinionated: background worker processes
 │   ├── task/                # Opinionated: scheduled CronJob workloads
 │   ├── generic/             # Flexible multi-purpose chart
 │   ├── custom-resources/    # Custom resources chart
 │   ├── karpenter-resources/ # Karpenter configurations
+│   ├── datadog-resources/   # Datadog custom resources chart
+│   ├── mysql/               # MySQL StatefulSet chart
 │   ├── webapp/              # [DEPRECATED] Use web instead
 │   └── cronjob/             # [DEPRECATED] Use task instead
 └── README.md                # This file
