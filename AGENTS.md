@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Repository Overview
 
-This is a Helm charts repository for Kubernetes deployments, primarily targeting Amazon EKS. The repository contains production-ready charts in `/charts` and experimental charts in `/incubating`.
+This is a Helm charts repository for Kubernetes deployments, primarily targeting Amazon EKS. All charts live under `/charts`.
 
 ## Essential Commands
 
@@ -62,9 +62,12 @@ make integration-test CHART=generic
 ## Architecture and Patterns
 
 ### Chart Organization
-- **Production charts** (`/charts`): generic, custom-resources, karpenter-resources
-- **Deprecated charts** (`/charts`): webapp, cronjob (use generic chart instead)
-- **Incubating charts** (`/incubating`): common library chart
+- **Library chart**: `common` — shared templates/helpers, consumed as a dependency by the opinionated wrapper charts
+- **Opinionated wrapper charts** (thin wrappers around `common`): `web` (external-facing, ingress via ALB), `worker` (background processes, no service/ingress), `task` (CronJob workloads, no service/ingress/HPA)
+- **Unopinionated chart**: `generic` — flexible, supports Deployment/StatefulSet/DaemonSet/Job/CronJob directly
+- **Resource charts**: `custom-resources`, `karpenter-resources`, `datadog-resources`
+- **Other**: `mysql`
+- **Deprecated charts**: `webapp` (use `web` instead), `cronjob` (use `task` instead) — skipped from schema generation
 - Each chart follows standard Helm structure with templates/, values.yaml, Chart.yaml
 
 ### Key Design Patterns
@@ -90,14 +93,14 @@ make integration-test CHART=generic
 - **Unit tests**: Located in `charts/*/tests/` using helm-unittest
 - **CI values**: Test configurations in `charts/*/ci/` for different scenarios
 - **Integration tests**: Deploy to Kind clusters via GitHub Actions
-- **Manifest validation**: Kubeconform against multiple K8s versions (1.29-1.32)
+- **Manifest validation**: Kubeconform against multiple K8s versions (currently 1.32-1.35; check `.github/workflows/ci.yaml` for the exact matrix)
 
 ### CI/CD Pipeline
 - GitHub Actions workflow in `.github/workflows/`
 - Triggered on main branch pushes and PRs
 - Tests against multiple Kubernetes versions
 - Automated documentation generation with helm-docs
-- Chart publishing to GitHub Pages
+- Chart publishing to GHCR (OCI, `.github/workflows/oci-publish.yaml`) and a GitHub Pages Helm repo (`.github/workflows/release.yaml`)
 
 ## Development Guidelines
 
@@ -165,9 +168,9 @@ make integration-test CHART=generic
 
 ### Automatic Schema Generation
 The repository uses a pre-commit hook to automatically generate JSON schemas when you modify Helm chart values:
-- Schemas are generated using the `helm schema-gen` plugin
-- Dynamic fields (extraDeployments, extraServices, etc.) are automatically enhanced
-- Pre-commit hook runs on changes to `values.yaml`, CI values files, or `Chart.yaml`
+- Schemas are generated using the `helm schema` plugin ([helm-values-schema-json](https://github.com/losisin/helm-values-schema-json))
+- Pre-commit hook (`scripts/gen-helm-schema.sh`) runs on changes to `values.yaml` or `Chart.yaml` and regenerates only the owning chart's schema
+- Deprecated charts (`webapp`, `cronjob`) are skipped
 
 ### Manual Schema Generation
 ```bash
@@ -177,14 +180,6 @@ make schema CHART=generic
 # Generate schemas for all charts
 make schema-all
 ```
-
-### Schema Enhancement
-The schema generation script automatically enhances schemas for common dynamic patterns:
-- `extraDeployments`, `extraServices`, `extraIngresses`: Additional K8s resources
-- `extraConfigMaps`, `extraSecrets`: Additional configuration objects
-- `jobs`, `cronjobs`: Job configurations
-- `hooks`: Helm hook configurations
-- `extraVolumes`, `extraVolumeMounts`: Additional storage configurations
 
 ## Development Reminders
 - As you make changes be sure to update the changelog
