@@ -5,6 +5,12 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.1] - 2026-08-11
+
+### Fixed
+
+- `common.deployment` and `common.extraDeployments` no longer emit `spec.strategy.rollingUpdate` when `strategy.type` is `Recreate`. Because Helm deep-merges user values over the consuming chart's defaults, a user setting only `strategy.type: Recreate` still inherited the default `rollingUpdate` block, and the API server rejected the manifest with `spec.strategy.rollingUpdate: Forbidden: may not be specified when strategy 'type' is 'Recreate'`. Setting `rollingUpdate: null` was not a workaround, since null-deletion does not apply to a top-level chart's own defaults, so `Recreate` was previously unexpressible. Output is unchanged for the defaults and for any explicit `RollingUpdate` configuration; an unset `type` still keeps `rollingUpdate` (the Kubernetes default type is `RollingUpdate`).
+
 ## [1.12.0] - 2026-07-30
 
 ### Added

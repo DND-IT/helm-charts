@@ -5,6 +5,12 @@ All notable changes to the generic Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.13.1] - 2026-08-11
+
+### Fixed
+
+- Picks up `common` 1.12.1: `strategy.type: Recreate` is now usable. Previously the default `strategy.rollingUpdate` block was deep-merged in and still rendered alongside `type: Recreate`, which the API server rejects, and there was no way to clear it from values. `rollingUpdate` is now omitted whenever `type` is `Recreate`, for both the main Deployment and `extraDeployments`. Rendered output is unchanged for chart defaults and for explicit `RollingUpdate` configurations.
+
 ## [0.13.0] - 2026-07-01
 
 ### Added
