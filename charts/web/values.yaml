@@ -84,7 +84,7 @@ service:
   # Zone-aware routing: set to "PreferSameZone" to keep traffic within the client's zone
   # where possible, reducing cross-AZ data transfer costs. Requires pods spread across
   # zones (see scheduling.topologySpreadConstraints above) to be effective.
-  trafficDistribution: ""
+  trafficDistribution: "PreferSameZone"
 
 # =============================================================================
 # GATEWAY API (replaces Ingress)
