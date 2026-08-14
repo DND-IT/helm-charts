@@ -98,6 +98,68 @@ tests:
           path: kind
           value: Deployment
 
+  - it: should omit rollingUpdate when strategy type is Recreate
+    set:
+      strategy:
+        type: Recreate
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+        documentSelector:
+          path: kind
+          value: Deployment
+      - notExists:
+          path: spec.strategy.rollingUpdate
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should keep rollingUpdate when only its fields are overridden
+    set:
+      strategy:
+        rollingUpdate:
+          maxSurge: 0
+          maxUnavailable: 1
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: RollingUpdate
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.strategy.rollingUpdate.maxSurge
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: spec.strategy.rollingUpdate.maxUnavailable
+          value: 1
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should omit rollingUpdate for extraDeployments with Recreate
+    set:
+      extraDeployments:
+        sidecar:
+          strategy:
+            type: Recreate
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-sidecar
+      - notExists:
+          path: spec.strategy.rollingUpdate
+        documentSelector:
+          path: metadata.name
+          value: RELEASE-NAME-sidecar
+
   - it: should include pod template labels
     asserts:
       - exists:
