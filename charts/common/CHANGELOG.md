@@ -5,6 +5,12 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.13.0] - 2026-08-13
+
+### Changed
+
+- `service.trafficDistribution` now defaults to `"PreferSameZone"` instead of empty (no change to existing behavior). This enables zone-aware routing by default on Kubernetes 1.34+, reducing cross-AZ data transfer costs when pods are spread across zones via `topologySpreadConstraints`.
+
 ## [1.12.1] - 2026-08-11
 
 ### Fixed

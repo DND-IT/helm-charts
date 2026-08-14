@@ -1,6 +1,6 @@
 # webapp
 
-![Version: 2.0.1](https://img.shields.io/badge/Version-2.0.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 2.1.0](https://img.shields.io/badge/Version-2.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
 
@@ -268,7 +268,7 @@ ingress:
 | service.port | int | `80` |  |
 | service.portName | string | `"http"` |  |
 | service.targetPort | int | `80` |  |
-| service.trafficDistribution | string | `""` |  |
+| service.trafficDistribution | string | `"PreferSameZone"` |  |
 | service.type | string | `"ClusterIP"` |  |
 | serviceAccountName | string | `""` |  |
 | targetGroupBinding.annotations | object | `{}` |  |
