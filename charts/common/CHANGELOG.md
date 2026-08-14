@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - `service.trafficDistribution` now defaults to `"PreferSameZone"` instead of empty (no change to existing behavior). This enables zone-aware routing by default on Kubernetes 1.34+, reducing cross-AZ data transfer costs when pods are spread across zones via `topologySpreadConstraints`.
+## [1.12.1] - 2026-08-11
+
+### Fixed
+
+- `common.deployment` and `common.extraDeployments` no longer emit `spec.strategy.rollingUpdate` when `strategy.type` is `Recreate`. Because Helm deep-merges user values over the consuming chart's defaults, a user setting only `strategy.type: Recreate` still inherited the default `rollingUpdate` block, and the API server rejected the manifest with `spec.strategy.rollingUpdate: Forbidden: may not be specified when strategy 'type' is 'Recreate'`. Setting `rollingUpdate: null` was not a workaround, since null-deletion does not apply to a top-level chart's own defaults, so `Recreate` was previously unexpressible. Output is unchanged for the defaults and for any explicit `RollingUpdate` configuration; an unset `type` still keeps `rollingUpdate` (the Kubernetes default type is `RollingUpdate`).
 
 ## [1.12.0] - 2026-07-30
 

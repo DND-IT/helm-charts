@@ -1,4 +1,27 @@
 {{/*
+Renders the body of a Deployment `spec.strategy`.
+
+The `rollingUpdate` block is only emitted when the type allows it: the API server
+rejects `rollingUpdate` alongside `type: Recreate`, and because Helm deep-merges
+user values over the chart defaults a user asking only for `type: Recreate` would
+otherwise still inherit the default `rollingUpdate` block. An unset type means the
+Kubernetes default (RollingUpdate), so `rollingUpdate` is kept in that case.
+
+Usage: {{- include "common.deploymentStrategy" .Values.strategy }}
+*/}}
+{{- define "common.deploymentStrategy" -}}
+{{- if kindIs "map" . }}
+{{- if and (kindIs "map" .rollingUpdate) (ne (.type | toString) "Recreate") }}
+rollingUpdate:
+  {{- toYaml .rollingUpdate | nindent 2 }}
+{{- end }}
+{{- with .type }}
+type: {{ . }}
+{{- end }}
+{{- end }}
+{{- end -}}
+
+{{/*
 Full Deployment resource template.
 Usage: {{- include "common.deployment" . }}
 */}}
@@ -33,9 +56,10 @@ spec:
     matchLabels:
       {{- include "common.selectorLabels" . | nindent 6 }}
       app.kubernetes.io/component: main
-  {{- with .Values.strategy }}
+  {{- $strategy := include "common.deploymentStrategy" .Values.strategy | trim }}
+  {{- with $strategy }}
   strategy:
-    {{- toYaml . | nindent 4 }}
+    {{- . | nindent 4 }}
   {{- end }}
   template:
     {{- include "common.podTemplate" . | nindent 4 }}
@@ -79,9 +103,10 @@ spec:
     matchLabels:
       {{- include "common.selectorLabels" $ | nindent 6 }}
       app.kubernetes.io/component: {{ $name }}
-  {{- with $deployment.strategy }}
+  {{- $strategy := include "common.deploymentStrategy" $deployment.strategy | trim }}
+  {{- with $strategy }}
   strategy:
-    {{- toYaml . | nindent 4 }}
+    {{- . | nindent 4 }}
   {{- end }}
   template:
     {{- include "common.podTemplate" (dict "root" $ "config" $deployment "componentName" $name) | nindent 4 }}
