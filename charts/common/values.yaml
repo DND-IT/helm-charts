@@ -474,9 +474,9 @@ service:
   ipFamilyPolicy: ""
   ipFamilies: []
   publishNotReadyAddresses: false
-  # "PreferSameZone" traffic to endpoints in the same zone as the client to avoid cross-AZ data transfer costs.
+  # "PreferSameZone" routes traffic to endpoints in the same zone as the client to avoid cross-AZ data transfer costs.
   # It is best-effort: it falls back to other zones when the local zone
-  # doesn't have enough endpoint capacity.
+  # doesn't have enough endpoint capacity. Requires Kubernetes >= 1.34.
   trafficDistribution: "PreferSameZone"
 
 extraServices: {}
