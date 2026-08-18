@@ -41,7 +41,7 @@ Each chart includes sensible defaults for security contexts, health probes, sche
 
 | Chart | Description | Documentation |
 |-------|-------------|---------------|
-| [webapp](./charts/webapp) | [DEPRECATED] Use `web` instead | [README](./charts/webapp/README.md) |
+| [webapp](./charts/webapp) | [DEPRECATED] Use `web` instead | [README](./charts/webapp/README.md) \| [Migration Guide](./docs/guides/migration.md#webapp-to-web) |
 | [cronjob](./charts/cronjob) | [DEPRECATED] Use `task` instead | [README](./charts/cronjob/README.md) |
 
 ## Kubernetes Version Support

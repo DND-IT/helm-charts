@@ -1,5 +1,7 @@
 # webapp
 
+**Migration Guide:** See [Migrating from Deprecated Charts](../../docs/guides/migration.md#webapp-to-web) for a detailed step-by-step guide to migrate from `webapp` to `web`, including value mapping, breaking changes, and cutover procedures.
+
 ![Version: 2.1.0](https://img.shields.io/badge/Version-2.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes application
