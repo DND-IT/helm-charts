@@ -31,69 +31,106 @@ global:
   role: ""
 
 # NodePools configuration
-# Each key under nodePools becomes a separate NodePool resource
+# Each key under nodePools becomes a separate NodePool resource, except the
+# reserved key `defaults` (below), which is never rendered as a NodePool.
 nodePools:
-  default:
-    enabled: false
+  # -- Shared values deep-merged **underneath every** NodePool. Per-pool values
+  # always win. `defaults` is reserved and never renders a NodePool of its own;
+  # it must not set `enabled`. Set `nodePools.defaults: null` to opt out of
+  # inheritance entirely and get pre-1.1.0 behaviour.
+  # @default -- see below
+  defaults:
     # --- NodePool metadata ---
     labels: {}
     annotations: {}
 
     # --- NodePool template spec ---
+    # `name` is deliberately not defaulted: every pool must point at its own
+    # EC2NodeClass. Karpenter requires group, kind and name.
     nodeClassRef:
       group: karpenter.k8s.aws
       kind: EC2NodeClass
-      name: default
 
-    # --- Node taints and startup taints ---
-    taints: []
-    startupTaints: []
+    # -- (list/object) Node taints. Either a list (replaced wholesale by an
+    # overlay) or a map keyed by a short alias (deep-merged, so an overlay can
+    # change one entry; `enabled: false` drops an entry). Set to `[]` for none.
+    # @default -- `[]`
+    taints:  # @schema type:[array, object, null]
+      # spot-only:
+      #   key: karpenter.sh/capacity-type
+      #   value: spot
+      #   effect: NoSchedule
+
+    # -- (list/object) Startup taints. Same list-or-map handling as `taints`.
+    # @default -- `[]`
+    startupTaints:  # @schema type:[array, object, null]
 
     # --- Node expiry configuration ---
     # Use "Never" to disable expiry
     expireAfter: "720h"
 
-    # --- Node requirements ---
-    requirements:
-      - key: "karpenter.k8s.aws/instance-category"
+    # -- (list/object) Node requirements, ANDed together by Karpenter. Either a
+    # list (replaced wholesale by an overlay) or a map keyed by a short alias.
+    # The map form lets an overlay narrow ONE requirement without losing the
+    # others, e.g. `nodePools.defaults.requirements.instance-cpu.values`.
+    # Set `enabled: false` on an entry to drop it. Karpenter requires the field
+    # to be present, so `[]` renders an invalid NodePool unless the pool
+    # supplies its own.
+    # @default -- 6 entries keyed by alias, see values.yaml
+    requirements:  # @schema type:[array, object, null]
+      instance-category:
+        key: karpenter.k8s.aws/instance-category
         operator: In
         values: ["c", "m", "r", "t"]
-      - key: "karpenter.k8s.aws/instance-cpu"
+      instance-cpu:
+        key: karpenter.k8s.aws/instance-cpu
         operator: In
         values: ["4", "8", "16", "32"]
-      - key: "karpenter.k8s.aws/instance-hypervisor"
+      instance-hypervisor:
+        key: karpenter.k8s.aws/instance-hypervisor
         operator: In
         values: ["nitro"]
-      - key: "karpenter.k8s.aws/instance-memory"
+      instance-memory:
+        key: karpenter.k8s.aws/instance-memory
         operator: Gt
         values: ["2048"]
-      - key: "karpenter.sh/capacity-type"
-        operator: In
-        values: ["spot", "on-demand"]
-      - key: "karpenter.k8s.aws/instance-generation"
+      instance-generation:
+        key: karpenter.k8s.aws/instance-generation
         operator: Gt
         values: ["2"]
+      capacity-type:
+        key: karpenter.sh/capacity-type
+        operator: In
+        values: ["spot", "on-demand"]
 
     # --- Disruption configuration ---
     disruption:
       consolidationPolicy: "WhenEmptyOrUnderutilized"
       consolidateAfter: "1h"
-      # budgets:
-      #   - nodes: "20%"
-      #     reasons:
-      #       - "Empty"
-      #       - "Drifted"
-      #   - nodes: "5"
-      #   - nodes: "0"
-      #     schedule: "@daily"
-      #     duration: 10m
-      #     reasons:
-      #       - "Underutilized"
+      # -- (list/object) Disruption budgets. Same list-or-map handling as
+      # `requirements`. Karpenter applies the most restrictive matching budget,
+      # so order does not matter. Set to `[]` for none.
+      # @default -- `[]`
+      budgets:  # @schema type:[array, object, null]
+        # empty-and-drifted:
+        #   nodes: "20%"
+        #   reasons: ["Empty", "Drifted"]
+        # nightly-freeze:
+        #   nodes: "0"
+        #   schedule: "@daily"
+        #   duration: 10m
+        #   reasons: ["Underutilized"]
 
     # --- Resource limits ---
     limits:
       cpu: 1000
       memory: 4000Gi
+
+  # The stock pool. Everything else is inherited from `nodePools.defaults`.
+  default:
+    enabled: false
+    nodeClassRef:
+      name: default
 
 # EC2NodeClass configuration
 # Each key under ec2NodeClasses becomes a separate EC2NodeClass resource
