@@ -51,28 +51,31 @@ If you added an explicit `labelSelector` when upgrading to 2.0.0 purely to work 
 <details>
 <summary>2.0.0</summary>
 
-Breaking: topologySpreadConstraints is now a plain list of Kubernetes topology spread constraints instead of a wrapper object. The keys enabled, topologyKeys, maxSkew and whenUnsatisfiable no longer exist — each constraint is configured individually,
-so different topology keys can now use different maxSkew / whenUnsatisfiable values.
+**Breaking**: `topologySpreadConstraints` is now a plain list of Kubernetes topology spread constraints instead of a wrapper object. The keys `enabled`, `topologyKeys`, `maxSkew` and `whenUnsatisfiable` no longer exist — each constraint is configured individually,
+so different topology keys can now use different `maxSkew` / `whenUnsatisfiable` values.
 
-Note: the labelSelector caveat below applies to 2.0.0 only — it is fixed in 2.0.1, which reinstates the default selector. Upgrading straight to 2.0.1 requires no labelSelector changes.
+Note: the `labelSelector` caveat below applies to 2.0.0 only — it is fixed in 2.0.1, which reinstates the default selector. Upgrading straight to 2.0.1 requires no `labelSelector` changes.
 
-Breaking — action required for every consumer that overrides this value: the chart no longer injects a labelSelector. A constraint without a labelSelector is not an error and does not fall back to the pod's own labels — Kubernetes converts a nil
+**Breaking** — action required for every consumer that overrides this value: the chart no longer injects a `labelSelector`. A constraint without a `labelSelector` is not an error and does not fall back to the pod's own labels — Kubernetes converts a nil
 selector to "match nothing", so every topology domain counts zero pods, the skew is always zero, and the constraint is silently ignored. See kubernetes/kubernetes#135797.
 
-You must add an explicit labelSelector to each constraint. It should match the labels the chart puts on the pod template:
+You must add an explicit `labelSelector` to each constraint. It should match the labels the chart puts on the pod template:
 
+```yaml
 labelSelector:
   matchLabels:
     app: <helm release name>   # or .Values.nameOverride, if set
     type: webapp
+```
 
 matchLabelKeys also has no effect without a labelSelector, since it works by extending that selector.
 
-If you did not override topologySpreadConstraints, the chart defaults apply unchanged (zone and hostname, maxSkew: 1, whenUnsatisfiable: ScheduleAnyway) — but note the defaults carry no labelSelector either, so they are subject to the same caveat. Set
-the value to [] to disable spreading explicitly and fall back to the cluster-level default constraints.
+If you did not override `topologySpreadConstraints`, the chart defaults apply unchanged (zone and hostname, maxSkew: 1, `whenUnsatisfiable`: `ScheduleAnyway`) — but note the defaults carry no `labelSelector` either, so they are subject to the same caveat. Set
+the value to `[]` to disable spreading explicitly and fall back to the cluster-level default constraints.
 
 before
 
+```yaml
 topologySpreadConstraints:
   enabled: true
   maxSkew: 1
@@ -80,9 +83,11 @@ topologySpreadConstraints:
   topologyKeys:
     - topology.kubernetes.io/zone
     - kubernetes.io/hostname
+```
 
 after (equivalent to 1.x behaviour, for a release named my-app)
 
+```yaml
 topologySpreadConstraints:
   - topologyKey: topology.kubernetes.io/zone
     maxSkew: 1
@@ -98,16 +103,21 @@ topologySpreadConstraints:
       matchLabels:
         app: my-app
         type: webapp
+```
 
 Verifying after upgrade. Because a missing selector fails open rather than erroring, a broken config looks healthy. Confirm the selector is present on the live pods:
 
+```bash
 kubectl get pod -l app=<release>,type=webapp \
   -o jsonpath='{.items[0].spec.topologySpreadConstraints}' | jq
+```
 
 and that pods are actually distributed:
 
+```bash
 kubectl get pods -l app=<release>,type=webapp \
   -o custom-columns=NODE:.spec.nodeName --no-headers | sort | uniq -c
+```
 
 </details>
 
