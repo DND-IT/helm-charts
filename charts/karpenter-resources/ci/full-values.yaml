@@ -1,3 +1,6 @@
+# Legacy list-form regression fixture: taints, startupTaints, requirements
+# and disruption.budgets are all written as lists, which must keep replacing
+# `nodePools.defaults` wholesale. Do not convert to the map form.
 global:
   role: KarpenterNodeRole-BasicCluster
   eksDiscovery:
