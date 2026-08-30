@@ -1,0 +1,206 @@
+# -- Override the chart name
+nameOverride: ""
+# -- Override the full resource name
+fullnameOverride: ""
+
+# -- Common labels to add to all resources
+commonLabels: {}
+# -- Common annotations to add to all resources
+commonAnnotations: {}
+
+## PostgreSQL image configuration
+image:
+  # -- Image repository
+  repository: pgvector/pgvector
+  # -- Image tag (pgvector version + postgres version)
+  tag: "0.8.0-pg17"
+  # -- Image pull policy
+  pullPolicy: IfNotPresent
+
+# -- Image pull secrets
+imagePullSecrets: []
+
+## Authentication configuration
+auth:
+  # -- Password for the postgres superuser. Required unless existingSecret is set.
+  postgresPassword: ""
+  # -- Name of the application database to create
+  database: "app"
+  # -- Name of the application user to create
+  username: "app"
+  # -- Password for the application user
+  password: ""
+  # -- Use an existing secret for passwords. Keys: postgres-password, password
+  existingSecret: ""
+
+## pgvector extension configuration
+pgvector:
+  # -- Automatically create the vector extension in the application database
+  createExtension: true
+
+## Additional initdb scripts (run after extension creation)
+# -- Map of script name to SQL content, executed alphabetically
+# @default -- `{}`
+initdbScripts: {}
+#   01-schema.sql: |
+#     CREATE TABLE items (id bigserial PRIMARY KEY, embedding vector(1536));
+
+## Persistence configuration
+persistence:
+  # -- Enable persistent storage for PostgreSQL data
+  enabled: true
+  # -- Storage class for the PVC (empty uses cluster default)
+  storageClass: ""
+  # -- Access modes for the PVC
+  accessModes:
+    - ReadWriteOnce
+  # -- Size of the persistent volume
+  size: 8Gi
+  # -- Annotations for the PVC
+  annotations: {}
+
+## Service configuration
+service:
+  # -- Service type
+  type: ClusterIP
+  # -- Service port
+  port: 5432
+  # -- Additional service annotations
+  annotations: {}
+
+## ServiceAccount configuration
+serviceAccount:
+  # -- Create a service account
+  create: true
+  # -- Service account name (generated if not set)
+  name: ""
+  # -- Service account annotations
+  annotations: {}
+
+## Pod security context
+podSecurityContext:
+  # -- Run as user (999 = postgres)
+  runAsUser: 999
+  # -- Run as group
+  runAsGroup: 999
+  # -- Filesystem group
+  fsGroup: 999
+  # -- Run as non-root
+  runAsNonRoot: true
+
+## Container security context
+containerSecurityContext:
+  # -- Allow privilege escalation
+  allowPrivilegeEscalation: false
+  # -- Seccomp profile
+  seccompProfile:
+    type: RuntimeDefault
+  capabilities:
+    drop:
+      - ALL
+
+## Resource requests and limits
+# @default -- `{}`
+resources: {}
+#   requests:
+#     cpu: 250m
+#     memory: 256Mi
+#   limits:
+#     memory: 1Gi
+
+## Liveness probe configuration
+livenessProbe:
+  exec:
+    command:
+      - pg_isready
+      - -U
+      - postgres
+  initialDelaySeconds: 30
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+## Readiness probe configuration
+readinessProbe:
+  exec:
+    command:
+      - pg_isready
+      - -U
+      - postgres
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+## Startup probe configuration
+startupProbe:
+  exec:
+    command:
+      - pg_isready
+      - -U
+      - postgres
+  initialDelaySeconds: 5
+  periodSeconds: 5
+  failureThreshold: 30
+
+## PostgreSQL configuration
+# -- Additional PostgreSQL configuration parameters (appended to postgresql.conf)
+postgresqlConfiguration: {}
+#   max_connections: "200"
+#   shared_buffers: "256MB"
+
+# -- Additional environment variables
+extraEnv: []
+#   - name: PGDATA
+#     value: /var/lib/postgresql/data/pgdata
+
+# -- Additional volume mounts
+extraVolumeMounts: []
+
+# -- Additional volumes
+extraVolumes: []
+
+## Metrics (postgres-exporter sidecar)
+metrics:
+  # -- Enable postgres-exporter sidecar
+  enabled: false
+  image:
+    # -- Exporter image repository
+    repository: prometheuscommunity/postgres-exporter
+    # -- Exporter image tag
+    tag: "v0.16.0"
+    # -- Exporter image pull policy
+    pullPolicy: IfNotPresent
+  # -- Exporter resource requests and limits
+  resources: {}
+
+## Pod Disruption Budget
+podDisruptionBudget:
+  # -- Enable PDB
+  enabled: false
+  # -- Minimum available pods
+  minAvailable: 1
+
+## Network Policy
+networkPolicy:
+  # -- Enable NetworkPolicy
+  enabled: false
+  # -- Allowed ingress sources (empty allows all)
+  ingressRules: []
+  #   - from:
+  #       - podSelector:
+  #           matchLabels:
+  #             app: myapp
+
+# -- Node selector
+nodeSelector: {}
+# -- Tolerations
+tolerations: []
+# -- Affinity rules
+affinity: {}
+# -- Topology spread constraints
+topologySpreadConstraints: []
+# -- Pod annotations
+podAnnotations: {}
+# -- Pod labels
+podLabels: {}
