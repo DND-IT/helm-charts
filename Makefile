@@ -4,7 +4,6 @@
 
 # Default target
 help: ## Show this help message
-	@echo $(MAKEFILE_LIST)
 	@echo "Multi-Chart Repository Makefile"
 	@echo "Usage: make <target> CHART=<chart-name>"
 	@echo ""
