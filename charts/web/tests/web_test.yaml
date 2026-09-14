@@ -169,6 +169,12 @@ tests:
         documentSelector:
           path: kind
           value: Deployment
+      - equal:
+          path: metadata.annotations["test"]
+          value: dummy
+        documentSelector:
+          path: kind
+          value: Deployment
   # ==========================================================================
   # Service defaults
   # ==========================================================================
