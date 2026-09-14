@@ -264,6 +264,7 @@ ingress:
 | probe.startup | string | `nil` |  |
 | probe.startupHttpHeaders | string | `nil` |  |
 | probe.startupTimeoutSeconds | int | `1` |  |
+| reloader.enabled | bool | `true` |  |
 | replicas | int | `1` |  |
 | resources | object | `{}` |  |
 | revisionHistoryLimit | int | `3` |  |

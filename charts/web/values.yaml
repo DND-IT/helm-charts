@@ -153,3 +153,8 @@ hpa:
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
+
+# Deployment-level annotations
+# Enable Stakater Reloader to automatically restart pods when ConfigMaps/Secrets change
+workloadAnnotations:
+  reloader.stakater.com/auto: "true"

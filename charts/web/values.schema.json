@@ -317,6 +317,14 @@
                     "type": "integer"
                 }
             }
+        },
+        "workloadAnnotations": {
+            "type": "object",
+            "properties": {
+                "reloader.stakater.com/auto": {
+                    "type": "string"
+                }
+            }
         }
     }
 }

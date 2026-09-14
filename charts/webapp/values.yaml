@@ -104,6 +104,7 @@ tolerations: []
 affinity: {}
 
 metadata:
+  # Additional deployment annotations (reloader.stakater.com/auto is enabled by default, can be disabled with reloader.enabled=false)
   deploymentAnnotations: {}
   podAnnotations: {}
   hpaAnnotations: {}
@@ -112,6 +113,10 @@ metadata:
       env: ""
       service: ""
       version: ""
+
+# Enable Stakater Reloader to automatically restart pods when ConfigMaps/Secrets change
+reloader:
+  enabled: true
 
 topologySpreadConstraints:
   # -- Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).

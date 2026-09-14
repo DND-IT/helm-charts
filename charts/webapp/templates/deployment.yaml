@@ -2,8 +2,16 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "webapp.name" . }}
+  {{- if ne (.Values.reloader.enabled | toString) "false" }}
+  annotations:
+    reloader.stakater.com/auto: "true"
+    {{- with .Values.metadata.deploymentAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- else if .Values.metadata.deploymentAnnotations }}
   annotations:
     {{- toYaml .Values.metadata.deploymentAnnotations | nindent 4 }}
+  {{- end }}
   labels:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}
