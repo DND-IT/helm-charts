@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Stakater reloader is now enabled by default on the `Deployment` by injecting the `reloader.stakater.com/auto: "true"` annotation. To disable this, the `reloader.stakater.co/auto: "false"` annotation has to be set in the `workloadAnnotations` value
+- Stakater reloader is now enabled by default on the `Deployment` by injecting the `reloader.stakater.com/auto: "true"` annotation. To disable this, the `reloader.stakater.com/auto: "false"` annotation has to be set in the `workloadAnnotations` value
 
 ## [1.9.0] - 2026-08-13
 
