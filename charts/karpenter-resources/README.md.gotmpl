@@ -34,17 +34,19 @@ Alternatively, you can use a values file:
 cat > values.yaml << EOF
 global:
   role: karpenter-node-role
-  instanceProfileName: karpenter-node-instance-profile
+  eksDiscovery:
+    enabled: true
+    clusterName: my-cluster
 
 nodePools:
   default:
     enabled: true
+    # Requirements are a map keyed by a short alias. Narrowing one entry keeps
+    # every other default (instance-hypervisor, capacity-type, ...) intact.
     requirements:
-      - key: "karpenter.k8s.aws/instance-category"
-        operator: In
+      instance-category:
         values: ["c"]
-      - key: "karpenter.k8s.aws/instance-cpu"
-        operator: In
+      instance-cpu:
         values: ["8"]
     limits:
       cpu: 100
@@ -71,6 +73,63 @@ helm install karpenter-resources dnd-it/karpenter-resources \
   --create-namespace \
   -f values.yaml
 ```
+
+### NodePool defaults and list-or-map fields
+
+`nodePools.defaults` is a reserved key holding values that are deep-merged
+**underneath every** NodePool. Per-pool values always win, and `defaults` never
+renders a NodePool of its own -- so a custom pool needs to declare only what
+makes it different:
+
+```yaml
+nodePools:
+  defaults:
+    expireAfter: "168h"          # applies to every pool below
+  default:
+    enabled: true
+  production:
+    enabled: true
+    nodeClassRef:
+      name: production           # everything else is inherited
+```
+
+`requirements`, `taints`, `startupTaints` and `disruption.budgets` accept
+**either a list or a map keyed by a short alias**. The map form is the one to
+reach for in an overlay: Helm deep-merges maps, so you can change a single
+field of a single entry, whereas a list replaces the whole set.
+
+```yaml
+nodePools:
+  default:
+    enabled: true
+    requirements:
+      instance-cpu:
+        values: ["8", "16"]      # narrowed; key and operator inherited
+      instance-memory:
+        enabled: false           # drop an inherited entry
+      instance-family:           # add a new one
+        key: karpenter.k8s.aws/instance-family
+        operator: In
+        values: ["c5", "c5d"]
+```
+
+Map entries are rendered in sorted alias order. Karpenter ANDs requirements
+together and applies the most restrictive matching disruption budget, so order
+carries no meaning.
+
+To remove inherited entries, in order of preference:
+
+1. set `enabled: false` on the individual entry;
+2. use the **list** form to replace the whole set;
+3. set the field to `[]` -- correct for `taints`, `startupTaints` and
+   `disruption.budgets`; for `requirements` this renders a NodePool the
+   Karpenter CRD rejects unless the pool supplies its own;
+4. set `nodePools: {defaults: null}` to disable inheritance entirely.
+
+`requirements: null` and `requirements: {}` do **not** work: Helm's value
+coalescing deletes null-valued keys (indistinguishable from unset) and `{}`
+merges without clearing. There is also no way to render a pool with no
+`disruption` block at all once `defaults` supplies one -- use option 4.
 
 ### Terraform Example
 

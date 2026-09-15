@@ -1,3 +1,8 @@
+# Backward-compatibility suite for the legacy LIST form of `requirements`,
+# `taints`, `startupTaints` and `disruption.budgets`. A list must keep replacing
+# `nodePools.defaults` wholesale, in the order given -- which is why the
+# positional-index assertions below are load-bearing. Do NOT "modernise" these
+# to the map form; see tests/nodepool_defaults_test.yaml for that.
 suite: test nodepool
 templates:
   - nodepool.yaml

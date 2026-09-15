@@ -2,6 +2,9 @@
 {{- $clusterName := .Values.global.eksDiscovery.clusterName }}
 {{- $eksDiscoveryEnabled := .Values.global.eksDiscovery.enabled }}
 {{- $eksDiscoveryTags := .Values.global.eksDiscovery.tags }}
+{{- /* Unlike nodePools there is no reserved `defaults` key here; if
+       `ec2NodeClasses.defaults` is ever introduced this range needs the same
+       `omit .Values.ec2NodeClasses "defaults"` treatment as nodepool.yaml. */ -}}
 {{- range $name, $nodeClass := .Values.ec2NodeClasses }}
 {{- if $nodeClass.enabled }}
 ---

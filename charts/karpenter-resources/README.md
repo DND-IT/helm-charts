@@ -1,6 +1,6 @@
 # karpenter-resources
 
-![Version: 1.0.3](https://img.shields.io/badge/Version-1.0.3-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.0](https://img.shields.io/badge/AppVersion-1.6.0-informational?style=flat-square)
+![Version: 1.1.0](https://img.shields.io/badge/Version-1.1.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square) ![AppVersion: 1.6.0](https://img.shields.io/badge/AppVersion-1.6.0-informational?style=flat-square)
 
 A Helm chart for Karpenter Custom Resources
 
@@ -33,17 +33,19 @@ Alternatively, you can use a values file:
 cat > values.yaml << EOF
 global:
   role: karpenter-node-role
-  instanceProfileName: karpenter-node-instance-profile
+  eksDiscovery:
+    enabled: true
+    clusterName: my-cluster
 
 nodePools:
   default:
     enabled: true
+    # Requirements are a map keyed by a short alias. Narrowing one entry keeps
+    # every other default (instance-hypervisor, capacity-type, ...) intact.
     requirements:
-      - key: "karpenter.k8s.aws/instance-category"
-        operator: In
+      instance-category:
         values: ["c"]
-      - key: "karpenter.k8s.aws/instance-cpu"
-        operator: In
+      instance-cpu:
         values: ["8"]
     limits:
       cpu: 100
@@ -70,6 +72,63 @@ helm install karpenter-resources dnd-it/karpenter-resources \
   --create-namespace \
   -f values.yaml
 ```
+
+### NodePool defaults and list-or-map fields
+
+`nodePools.defaults` is a reserved key holding values that are deep-merged
+**underneath every** NodePool. Per-pool values always win, and `defaults` never
+renders a NodePool of its own -- so a custom pool needs to declare only what
+makes it different:
+
+```yaml
+nodePools:
+  defaults:
+    expireAfter: "168h"          # applies to every pool below
+  default:
+    enabled: true
+  production:
+    enabled: true
+    nodeClassRef:
+      name: production           # everything else is inherited
+```
+
+`requirements`, `taints`, `startupTaints` and `disruption.budgets` accept
+**either a list or a map keyed by a short alias**. The map form is the one to
+reach for in an overlay: Helm deep-merges maps, so you can change a single
+field of a single entry, whereas a list replaces the whole set.
+
+```yaml
+nodePools:
+  default:
+    enabled: true
+    requirements:
+      instance-cpu:
+        values: ["8", "16"]      # narrowed; key and operator inherited
+      instance-memory:
+        enabled: false           # drop an inherited entry
+      instance-family:           # add a new one
+        key: karpenter.k8s.aws/instance-family
+        operator: In
+        values: ["c5", "c5d"]
+```
+
+Map entries are rendered in sorted alias order. Karpenter ANDs requirements
+together and applies the most restrictive matching disruption budget, so order
+carries no meaning.
+
+To remove inherited entries, in order of preference:
+
+1. set `enabled: false` on the individual entry;
+2. use the **list** form to replace the whole set;
+3. set the field to `[]` -- correct for `taints`, `startupTaints` and
+   `disruption.budgets`; for `requirements` this renders a NodePool the
+   Karpenter CRD rejects unless the pool supplies its own;
+4. set `nodePools: {defaults: null}` to disable inheritance entirely.
+
+`requirements: null` and `requirements: {}` do **not** work: Helm's value
+coalescing deletes null-valued keys (indistinguishable from unset) and `{}`
+merges without clearing. There is also no way to render a pool with no
+`disruption` block at all once `defaults` supplies one -- use option 4.
 
 ### Terraform Example
 
@@ -135,41 +194,10 @@ resource "helm_release" "karpenter_resources" {
 | global.eksDiscovery.tags.subnets."karpenter.sh/discovery" | string | `""` |  |
 | global.role | string | `""` |  |
 | nameOverride | string | `""` |  |
-| nodePools.default.annotations | object | `{}` |  |
-| nodePools.default.disruption.consolidateAfter | string | `"1h"` |  |
-| nodePools.default.disruption.consolidationPolicy | string | `"WhenEmptyOrUnderutilized"` |  |
 | nodePools.default.enabled | bool | `false` |  |
-| nodePools.default.expireAfter | string | `"720h"` |  |
-| nodePools.default.labels | object | `{}` |  |
-| nodePools.default.limits.cpu | int | `1000` |  |
-| nodePools.default.limits.memory | string | `"4000Gi"` |  |
-| nodePools.default.nodeClassRef.group | string | `"karpenter.k8s.aws"` |  |
-| nodePools.default.nodeClassRef.kind | string | `"EC2NodeClass"` |  |
 | nodePools.default.nodeClassRef.name | string | `"default"` |  |
-| nodePools.default.requirements[0].key | string | `"karpenter.k8s.aws/instance-category"` |  |
-| nodePools.default.requirements[0].operator | string | `"In"` |  |
-| nodePools.default.requirements[0].values[0] | string | `"c"` |  |
-| nodePools.default.requirements[0].values[1] | string | `"m"` |  |
-| nodePools.default.requirements[0].values[2] | string | `"r"` |  |
-| nodePools.default.requirements[0].values[3] | string | `"t"` |  |
-| nodePools.default.requirements[1].key | string | `"karpenter.k8s.aws/instance-cpu"` |  |
-| nodePools.default.requirements[1].operator | string | `"In"` |  |
-| nodePools.default.requirements[1].values[0] | string | `"4"` |  |
-| nodePools.default.requirements[1].values[1] | string | `"8"` |  |
-| nodePools.default.requirements[1].values[2] | string | `"16"` |  |
-| nodePools.default.requirements[1].values[3] | string | `"32"` |  |
-| nodePools.default.requirements[2].key | string | `"karpenter.k8s.aws/instance-hypervisor"` |  |
-| nodePools.default.requirements[2].operator | string | `"In"` |  |
-| nodePools.default.requirements[2].values[0] | string | `"nitro"` |  |
-| nodePools.default.requirements[3].key | string | `"karpenter.k8s.aws/instance-memory"` |  |
-| nodePools.default.requirements[3].operator | string | `"Gt"` |  |
-| nodePools.default.requirements[3].values[0] | string | `"2048"` |  |
-| nodePools.default.requirements[4].key | string | `"karpenter.sh/capacity-type"` |  |
-| nodePools.default.requirements[4].operator | string | `"In"` |  |
-| nodePools.default.requirements[4].values[0] | string | `"spot"` |  |
-| nodePools.default.requirements[4].values[1] | string | `"on-demand"` |  |
-| nodePools.default.requirements[5].key | string | `"karpenter.k8s.aws/instance-generation"` |  |
-| nodePools.default.requirements[5].operator | string | `"Gt"` |  |
-| nodePools.default.requirements[5].values[0] | string | `"2"` |  |
-| nodePools.default.startupTaints | list | `[]` |  |
-| nodePools.default.taints | list | `[]` |  |
+| nodePools.defaults | object | see below | Shared values deep-merged **underneath every** NodePool. Per-pool values always win. `defaults` is reserved and never renders a NodePool of its own; it must not set `enabled`. Set `nodePools.defaults: null` to opt out of inheritance entirely and get pre-1.1.0 behaviour. |
+| nodePools.defaults.disruption.budgets | list/object | `[]` | Disruption budgets. Same list-or-map handling as `requirements`. Karpenter applies the most restrictive matching budget, so order does not matter. Set to `[]` for none. |
+| nodePools.defaults.requirements | list/object | 6 entries keyed by alias, see values.yaml | Node requirements, ANDed together by Karpenter. Either a list (replaced wholesale by an overlay) or a map keyed by a short alias. The map form lets an overlay narrow ONE requirement without losing the others, e.g. `nodePools.defaults.requirements.instance-cpu.values`. Set `enabled: false` on an entry to drop it. Karpenter requires the field to be present, so `[]` renders an invalid NodePool unless the pool supplies its own. |
+| nodePools.defaults.startupTaints | list/object | `[]` | Startup taints. Same list-or-map handling as `taints`. |
+| nodePools.defaults.taints | list/object | `[]` | Node taints. Either a list (replaced wholesale by an overlay) or a map keyed by a short alias (deep-merged, so an overlay can change one entry; `enabled: false` drops an entry). Set to `[]` for none. |
