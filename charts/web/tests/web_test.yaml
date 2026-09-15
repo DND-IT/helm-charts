@@ -142,16 +142,14 @@ tests:
           path: kind
           value: Deployment
 
-  - it: should be able to disable reloader annotation
+  - it: should be able to disable reloader enablement
     set:
       image.repository: nginx
       image.tag: latest
-      workloadAnnotations:
-        reloader.stakater.com/auto: "false"
+      reloader.enabled: false
     asserts:
-      - equal:
+      - notExists:
           path: metadata.annotations["reloader.stakater.com/auto"]
-          value: "false"
         documentSelector:
           path: kind
           value: Deployment
@@ -161,7 +159,7 @@ tests:
       image.repository: nginx
       image.tag: latest
       workloadAnnotations:
-        test: dummy
+        my.annotation: my value
     asserts:
       - equal:
           path: metadata.annotations["reloader.stakater.com/auto"]
@@ -170,33 +168,22 @@ tests:
           path: kind
           value: Deployment
       - equal:
-          path: metadata.annotations["test"]
-          value: dummy
+          path: metadata.annotations["my.annotation"]
+          value: my value
         documentSelector:
           path: kind
           value: Deployment
-  - it: should not add reloader annotation when already in commonAnnotations
+
+  - it: should be able to overwrite reloader annotation
     set:
       image.repository: nginx
       image.tag: latest
-      commonAnnotations:
+      workloadAnnotations:
         reloader.stakater.com/auto: "false"
     asserts:
       - equal:
           path: metadata.annotations["reloader.stakater.com/auto"]
           value: "false"
-        documentSelector:
-          path: kind
-          value: Deployment
-
-  - it: should be able to disable reloader enablement
-    set:
-      image.repository: nginx
-      image.tag: latest
-      reloader.enabled: false
-    asserts:
-      - notExists:
-          path: metadata.annotations["reloader.stakater.com/auto"]
         documentSelector:
           path: kind
           value: Deployment
@@ -215,6 +202,7 @@ tests:
         documentSelector:
           path: kind
           value: Deployment
+
   # ==========================================================================
   # Service defaults
   # ==========================================================================

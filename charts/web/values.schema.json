@@ -224,6 +224,14 @@
                 }
             }
         },
+        "reloader": {
+            "type": "object",
+            "properties": {
+                "enabled": {
+                    "type": "boolean"
+                }
+            }
+        },
         "resources": {
             "type": "object",
             "properties": {
@@ -319,12 +327,7 @@
             }
         },
         "workloadAnnotations": {
-            "type": "object",
-            "properties": {
-                "reloader.stakater.com/auto": {
-                    "type": "string"
-                }
-            }
+            "type": "object"
         }
     }
 }
