@@ -155,6 +155,11 @@ podDisruptionBudget:
   minAvailable: 1
 
 # Deployment-level annotations
-# Enable Stakater Reloader to automatically restart pods when ConfigMaps/Secrets change
-workloadAnnotations:
-  reloader.stakater.com/auto: "true"
+workloadAnnotations: {}
+  # Uncomment below to enable Stakater Reloader for automatic pod restarts on ConfigMap/Secret changes.
+  # (Note: set this only if reloader.stakater.com/auto is not already in commonAnnotations)
+  # reloader.stakater.com/auto: "true"
+
+# Reloader enablement (alternative to workloadAnnotations)
+reloader:
+  enabled: true
