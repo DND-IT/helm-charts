@@ -7,11 +7,10 @@ help: ## Show this help message
 	@echo "Multi-Chart Repository Makefile"
 	@echo "Usage: make <target> CHART=<chart-name>"
 	@echo ""
-	@echo "Available charts:"
 	@$(MAKE) list-charts
 	@echo ""
 	@echo "Available targets:"
-	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $1, $2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-20s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 	@echo ""
 	@echo "Examples:"
 	@echo "  make lint CHART=generic-app"
@@ -66,7 +65,7 @@ EXAMPLE_VALUES_FILE := $(CHART_PATH)/$(EXAMPLE_VALUES)
 list-charts: ## List all available charts
 	@echo "Available charts:"
 	@if [ -d "$(CHART_DIR)" ]; then \
-		find $(CHART_DIR) -maxdepth 1 -type d -not -path $(CHART_DIR) -exec basename {} \; | sort; \
+		find $(CHART_DIR) -maxdepth 1 -type d -not -path $(CHART_DIR) -exec basename {} \; | sort | sed 's/^/  /'; \
 	elif [ -f "Chart.yaml" ]; then \
 		echo "$(shell basename $(PWD)) (single chart repository)"; \
 	else \

@@ -130,6 +130,79 @@ tests:
           path: kind
           value: Deployment
 
+  - it: should have default reloader annotation
+    set:
+      image.repository: nginx
+      image.tag: latest
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should be able to disable reloader enablement
+    set:
+      image.repository: nginx
+      image.tag: latest
+      reloader.enabled: false
+    asserts:
+      - notExists:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should be able to set other workloadAnnotations, keeping the reloader one to true
+    set:
+      image.repository: nginx
+      image.tag: latest
+      workloadAnnotations:
+        my.annotation: my value
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: metadata.annotations["my.annotation"]
+          value: my value
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should be able to overwrite reloader annotation
+    set:
+      image.repository: nginx
+      image.tag: latest
+      workloadAnnotations:
+        reloader.stakater.com/auto: "false"
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "false"
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should respect explicit workloadAnnotations over reloader.enabled
+    set:
+      image.repository: nginx
+      image.tag: latest
+      reloader.enabled: false
+      workloadAnnotations:
+        reloader.stakater.com/auto: "true"
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+        documentSelector:
+          path: kind
+          value: Deployment
+
   # ==========================================================================
   # Service defaults
   # ==========================================================================

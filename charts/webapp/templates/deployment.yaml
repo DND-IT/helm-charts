@@ -2,8 +2,14 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ include "webapp.name" . }}
+  {{- $deploymentAnnotations := deepCopy (.Values.metadata.deploymentAnnotations | default dict) }}
+  {{- if ne (.Values.reloader.enabled | toString) "false" }}
+  {{- $_ := set $deploymentAnnotations "reloader.stakater.com/auto" "true" }}
+  {{- end }}
+  {{- if $deploymentAnnotations }}
   annotations:
-    {{- toYaml .Values.metadata.deploymentAnnotations | nindent 4 }}
+    {{- toYaml $deploymentAnnotations | nindent 4 }}
+  {{- end }}
   labels:
     chart: {{ .Chart.Name }}-{{ .Chart.Version }}
     heritage: {{ .Release.Service }}

@@ -113,6 +113,10 @@ metadata:
       service: ""
       version: ""
 
+# Enable Stakater Reloader to automatically restart pods when ConfigMaps/Secrets change
+reloader:
+  enabled: true
+
 topologySpreadConstraints:
   # -- Enable pod [Topology Spread Constraints](https://kubernetes.io/docs/concepts/scheduling-eviction/topology-spread-constraints/).
   # If no constraints are defined, the cluster default is used.

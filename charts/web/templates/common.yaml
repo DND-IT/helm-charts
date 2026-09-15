@@ -1,1 +1,4 @@
+{{- if and .Values.reloader.enabled (not (and .Values.commonAnnotations (hasKey .Values.commonAnnotations "reloader.stakater.com/auto"))) -}}
+  {{- $_ := set .Values "workloadAnnotations" (merge (.Values.workloadAnnotations | default dict) (dict "reloader.stakater.com/auto" "true")) -}}
+{{- end -}}
 {{- include "common.loader.generate" . }}

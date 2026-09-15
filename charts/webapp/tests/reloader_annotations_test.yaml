@@ -1,0 +1,43 @@
+suite: test webapp reloader annotation
+templates:
+  - deployment.yaml
+tests:
+  # ==========================================================================
+  # Deployment defaults
+  # ==========================================================================
+  - it: should create reloader annotation by default
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should be able to disable reloader annotation
+    set:
+      reloader.enabled: false
+    asserts:
+      - notExists:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should be able to set other deploy annotations
+    set:
+      metadata.deploymentAnnotations:
+        test: dummy
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "true"
+        documentSelector:
+          path: kind
+          value: Deployment
+      - equal:
+          path: metadata.annotations["test"]
+          value: dummy
+        documentSelector:
+          path: kind
+          value: Deployment

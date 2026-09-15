@@ -153,3 +153,7 @@ hpa:
 podDisruptionBudget:
   enabled: true
   minAvailable: 1
+
+# Reloader enablement
+reloader:
+  enabled: true
