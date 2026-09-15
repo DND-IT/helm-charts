@@ -104,7 +104,6 @@ tolerations: []
 affinity: {}
 
 metadata:
-  # Additional deployment annotations (reloader.stakater.com/auto is enabled by default, can be disabled with reloader.enabled=false)
   deploymentAnnotations: {}
   podAnnotations: {}
   hpaAnnotations: {}

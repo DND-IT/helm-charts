@@ -154,6 +154,6 @@ podDisruptionBudget:
   enabled: true
   minAvailable: 1
 
-# Reloader enablement (alternative to workloadAnnotations)
+# Reloader enablement
 reloader:
   enabled: true
