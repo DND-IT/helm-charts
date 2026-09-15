@@ -2254,6 +2254,33 @@ entries:
     version: 1.0.0
   web:
   - apiVersion: v2
+    created: "2026-09-15T14:00:14.704669267Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying HTTP-facing web applications to Kubernetes.
+      Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
+      Designed for web applications that need external traffic exposure. '
+    digest: eeb6c2e284f58312db2d4854701cc022a835047fe90773b6e1a96223e8082f83
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - web
+    - application
+    - ingress
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: web
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/web-1.10.0/web-1.10.0.tgz
+    version: 1.10.0
+  - apiVersion: v2
     created: "2026-08-14T08:45:50.152235263Z"
     dependencies:
     - name: common
@@ -2740,6 +2767,18 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/web-1.0.0/web-1.0.0.tgz
     version: 1.0.0
   webapp:
+  - apiVersion: v2
+    created: "2026-09-15T14:00:14.883968796Z"
+    description: A generic kubernetes application
+    digest: 306c217d6553f746c6c042609d951688d19e64ac9209f3850d2588f8a0b55ab1
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: webapp
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/webapp-2.2.0/webapp-2.2.0.tgz
+    version: 2.2.0
   - apiVersion: v2
     created: "2026-08-24T13:57:57.185701549Z"
     description: A generic kubernetes application
@@ -3350,4 +3389,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/worker-1.0.0/worker-1.0.0.tgz
     version: 1.0.0
-generated: "2026-08-24T13:57:57.18783228Z"
+generated: "2026-09-15T14:00:14.884399277Z"
