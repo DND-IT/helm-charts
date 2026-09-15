@@ -325,9 +325,6 @@
                     "type": "integer"
                 }
             }
-        },
-        "workloadAnnotations": {
-            "type": "object"
         }
     }
 }
