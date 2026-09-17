@@ -1,6 +1,6 @@
 # cronjob
 
-![Version: 0.11.1](https://img.shields.io/badge/Version-0.11.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.12.0](https://img.shields.io/badge/Version-0.12.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A generic kubernetes cron job
 
@@ -37,6 +37,7 @@ resource "helm_release" "cronjob" {
 | affinity | object | `{}` |  |
 | args | list | `[]` |  |
 | command | list | `[]` |  |
+| createServiceAccount | bool | `true` | Render the ServiceAccount. Set to false when the ServiceAccount is created elsewhere, for example when several aliases of this chart share one release name. |
 | cronjob.backoffLimit | int | `3` |  |
 | cronjob.concurrencyPolicy | string | `"Allow"` |  |
 | cronjob.failedJobsHistoryLimit | int | `1` |  |
