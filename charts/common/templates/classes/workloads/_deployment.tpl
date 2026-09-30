@@ -40,8 +40,8 @@ metadata:
     {{- include "common.annotations" (dict "context" . "annotations" .Values.workloadAnnotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if not .Values.hpa.enabled }}
-  replicas: {{ .Values.replicas | default 1 }}
+  {{- if and (not .Values.hpa.enabled) (not (kindIs "invalid" .Values.replicas)) }}
+  replicas: {{ .Values.replicas }}
   {{- end }}
   {{- with .Values.revisionHistoryLimit }}
   revisionHistoryLimit: {{ . }}
@@ -87,8 +87,8 @@ metadata:
     {{- include "common.annotations" (dict "context" $ "annotations" $deployment.annotations) | nindent 4 }}
   {{- end }}
 spec:
-  {{- if not $deployment.hpa }}
-  replicas: {{ $deployment.replicas | default 1 }}
+  {{- if and (not $deployment.hpa) (not (kindIs "invalid" $deployment.replicas)) }}
+  replicas: {{ $deployment.replicas }}
   {{- end }}
   {{- with $deployment.revisionHistoryLimit }}
   revisionHistoryLimit: {{ . }}

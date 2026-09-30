@@ -1,6 +1,6 @@
 # mysql
 
-![Version: 0.3.0](https://img.shields.io/badge/Version-0.3.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.3.1](https://img.shields.io/badge/Version-0.3.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A Helm chart for deploying MySQL 8.0 to Kubernetes using a StatefulSet.
 Includes headless Service, PVC via volumeClaimTemplates, ConfigMap for custom my.cnf,
@@ -50,6 +50,7 @@ Kubernetes: `>=1.32.0-0`
 | readinessProbe.periodSeconds | int | `5` |  |
 | readinessProbe.tcpSocket.port | int | `3306` |  |
 | readinessProbe.timeoutSeconds | int | `3` |  |
+| replicas | int | `1` |  |
 | resources.limits.memory | string | `"1Gi"` |  |
 | resources.requests.cpu | string | `"250m"` |  |
 | resources.requests.memory | string | `"512Mi"` |  |

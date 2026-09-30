@@ -5,6 +5,12 @@ All notable changes to the web Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.11.0] - 2026-09-30
+
+### Changed
+
+- Picks up `common` 1.14.0: with `hpa.enabled: false`, `spec.replicas` is rendered only when `replicas` is set, rather than defaulting to `1`. Leave it unset when something outside the chart, such as a KEDA `ScaledObject`, scales the Deployment.
+
 ## [1.10.0] - 2026-09-15
 
 ### Changed

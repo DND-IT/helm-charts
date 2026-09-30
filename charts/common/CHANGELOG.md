@@ -5,6 +5,12 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.14.0] - 2026-09-30
+
+### Changed
+
+- `common.deployment` and `common.extraDeployments` render `spec.replicas` only when `replicas` is set, and `replicas` no longer has a default (it was `1` in `values.yaml` and again in the template). The field is optional and the API server defaults it to 1, so a new Deployment comes out the same, but when `replicas` is unset nothing in the chart owns the field any more. That leaves the count to whatever scales the workload from outside, such as a KEDA `ScaledObject`: before, a GitOps controller applying the chart put `replicas: 1` back on every sync and brought a workload that had scaled to zero back up. An explicit `replicas: 0` still renders.
+
 ## [1.13.0] - 2026-08-13
 
 ### Changed

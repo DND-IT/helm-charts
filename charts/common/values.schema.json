@@ -637,9 +637,6 @@
         "readinessProbe": {
             "type": "object"
         },
-        "replicas": {
-            "type": "integer"
-        },
         "resources": {
             "type": "object"
         },

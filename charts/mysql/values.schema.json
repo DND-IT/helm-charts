@@ -117,6 +117,9 @@
                 }
             }
         },
+        "replicas": {
+            "type": "integer"
+        },
         "resources": {
             "type": "object",
             "properties": {

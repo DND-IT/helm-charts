@@ -5,6 +5,12 @@ All notable changes to the worker Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-09-30
+
+### Changed
+
+- Picks up `common` 1.14.0: `spec.replicas` is rendered only when `replicas` is set, rather than defaulting to `1`; the API server's own default is 1. Set `replicas` explicitly to keep the chart in charge of the count.
+
 ## [1.5.0] - 2026-07-01
 
 ### Added
