@@ -80,6 +80,30 @@ entries:
     version: 0.1.0
   common:
   - apiVersion: v2
+    created: "2026-09-30T15:15:20.756329135Z"
+    description: 'A Helm library chart containing shared templates and helpers for
+      Kubernetes workloads. Provides common functionality for naming, labels, security
+      contexts, containers, pods, and volumes. Designed to be used as a dependency
+      by application charts (web, worker, task). '
+    digest: a79de292a9b7b8c1c82127b28a7fb31c3129c784a0c6f6463247bffd47baf0a5
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - library
+    - common
+    - helpers
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: common
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: library
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/common-1.14.0/common-1.14.0.tgz
+    version: 1.14.0
+  - apiVersion: v2
     created: "2026-08-14T08:45:49.994316511Z"
     description: 'A Helm library chart containing shared templates and helpers for
       Kubernetes workloads. Provides common functionality for naming, labels, security
@@ -1679,6 +1703,34 @@ entries:
     version: 0.1.0
   mysql:
   - apiVersion: v2
+    created: "2026-09-30T15:15:21.26618055Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying MySQL 8.0 to Kubernetes using a StatefulSet.
+      Includes headless Service, PVC via volumeClaimTemplates, ConfigMap for custom
+      my.cnf, Secret for credentials, and health checks. Designed for stateful MySQL
+      deployments with persistent storage. '
+    digest: aeebcadca40c27af421fe731f0affb1f4a6c6181711419c7a4c11df1a6af3b8c
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - mysql
+    - database
+    - statefulset
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: mysql
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/mysql-0.3.1/mysql-0.3.1.tgz
+    version: 0.3.1
+  - apiVersion: v2
     created: "2026-07-01T13:49:58.183583677Z"
     dependencies:
     - name: common
@@ -2253,6 +2305,33 @@ entries:
     - https://github.com/DND-IT/helm-charts/releases/download/task-1.0.0/task-1.0.0.tgz
     version: 1.0.0
   web:
+  - apiVersion: v2
+    created: "2026-09-30T15:15:21.502147939Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying HTTP-facing web applications to Kubernetes.
+      Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
+      Designed for web applications that need external traffic exposure. '
+    digest: c513e29de486dae4e41f7ca458cd0dd976e265fa4a1c3b089f0f9a05d1e32dcf
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - web
+    - application
+    - ingress
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: web
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/web-1.11.0/web-1.11.0.tgz
+    version: 1.11.0
   - apiVersion: v2
     created: "2026-09-15T14:00:14.704669267Z"
     dependencies:
@@ -3093,6 +3172,33 @@ entries:
     version: 0.2.0
   worker:
   - apiVersion: v2
+    created: "2026-09-30T15:15:21.732079711Z"
+    dependencies:
+    - name: common
+      repository: file://../common
+      version: 1.x.x
+    description: 'A Helm chart for deploying background worker processes to Kubernetes.
+      Includes Deployment, HPA, PDB, and ServiceAccount. Designed for background processing
+      workloads that don''t expose HTTP endpoints. No service or ingress by default. '
+    digest: 4fbd5813eadbab5ab24a78f4c35a521b4ab8e343c59d2f1691b9fefd18f43397
+    home: https://github.com/dnd-it/helm-charts
+    keywords:
+    - worker
+    - background
+    - processing
+    - kubernetes
+    kubeVersion: '>=1.32.0-0'
+    maintainers:
+    - email: abc@abc.com
+      name: DAI
+    name: worker
+    sources:
+    - https://github.com/dnd-it/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/worker-1.6.0/worker-1.6.0.tgz
+    version: 1.6.0
+  - apiVersion: v2
     created: "2026-07-01T13:49:58.721864125Z"
     dependencies:
     - name: common
@@ -3389,4 +3495,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/worker-1.0.0/worker-1.0.0.tgz
     version: 1.0.0
-generated: "2026-09-15T14:00:14.884399277Z"
+generated: "2026-09-30T15:15:21.732441921Z"
