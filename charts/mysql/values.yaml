@@ -22,6 +22,9 @@ image:
 workload:
   type: deployment
 
+# One MySQL pod; common no longer defaults replicas
+replicas: 1
+
 # Persistent storage for Deployment mode
 volumes:
   persistent:

@@ -80,7 +80,9 @@ security:
 workload:
   type: deployment
 
-replicas: 1
+# Unset by default: `spec.replicas` is left out and the API server defaults it to 1, so
+# an HPA or an external scaler such as KEDA owns the count. Set it to pin the count.
+# replicas: 1
 revisionHistoryLimit: 2
 
 strategy:

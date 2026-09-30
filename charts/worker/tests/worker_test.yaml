@@ -21,9 +21,8 @@ tests:
         documentSelector:
           path: kind
           value: Deployment
-      - equal:
+      - notExists:
           path: spec.replicas
-          value: 1
         documentSelector:
           path: kind
           value: Deployment

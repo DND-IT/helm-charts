@@ -778,6 +778,32 @@ tests:
           path: kind
           value: Deployment
 
+  - it: should omit Deployment.spec.replicas when HPA is disabled and replicas is unset
+    set:
+      image.repository: nginx
+      image.tag: latest
+      hpa.enabled: false
+    asserts:
+      - notExists:
+          path: spec.replicas
+        documentSelector:
+          path: kind
+          value: Deployment
+
+  - it: should render an explicit zero replicas
+    set:
+      image.repository: nginx
+      image.tag: latest
+      hpa.enabled: false
+      replicas: 0
+    asserts:
+      - equal:
+          path: spec.replicas
+          value: 0
+        documentSelector:
+          path: kind
+          value: Deployment
+
   - it: should create a PodDisruptionBudget by default with minAvailable 1
     set:
       image.repository: nginx
