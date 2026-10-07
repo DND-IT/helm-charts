@@ -4,6 +4,7 @@
 {{ include "app-monitors.monitor" (dict
   "root" $
   "monitor" .
+  "prefix" $.Values.env
   "signal" "sqs-oldest-message-age"
   "title" "SQS oldest message age - {{queuename.name}}"
   "query" (printf "max(%s):max:aws.sqs.approximate_age_of_oldest_message{%s} by {env,queuename} > %v" .window $scope .critical)
@@ -18,6 +19,7 @@
 {{ include "app-monitors.monitor" (dict
   "root" $
   "monitor" .
+  "prefix" $.Values.env
   "signal" "sqs-backlog"
   "title" "SQS backlog - {{queuename.name}}"
   "query" (printf "min(%s):max:aws.sqs.approximate_number_of_messages_visible{%s} by {env,queuename} > %v" .window $scope .critical)

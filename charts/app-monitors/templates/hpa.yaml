@@ -4,9 +4,10 @@
 {{ include "app-monitors.monitor" (dict
   "root" $
   "monitor" .
+  "prefix" (include "app-monitors.kubePrefix" $)
   "signal" "hpa-maxed-out"
   "title" "HPA at max replicas - {{horizontalpodautoscaler.name}}"
-  "query" (printf "min(%s):max:kubernetes_state.hpa.current_replicas{%s} by {horizontalpodautoscaler} - max:kubernetes_state.hpa.max_replicas{%s} by {horizontalpodautoscaler} >= 0" .window $scope $scope)
+  "query" (printf "min(%s):max:kubernetes_state.hpa.current_replicas{%s} by {aws_account_alias,kube_cluster_name,horizontalpodautoscaler} - max:kubernetes_state.hpa.max_replicas{%s} by {aws_account_alias,kube_cluster_name,horizontalpodautoscaler} >= 0" .window $scope $scope)
   "critical" 0
   "message" (printf "HPA {{horizontalpodautoscaler.name}} in %s ran at its max replicas for the whole %s window. Raise maxReplicas or look at why load grew." $.Values.scope.kubeNamespace .window)
 ) }}

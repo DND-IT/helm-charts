@@ -14,3 +14,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - HPA at max replicas monitor
 - SQS oldest message age and backlog monitors
 - Routing tags built from `team`, `env` and `app`; render fails when any is missing
+- Workload and HPA monitor titles start with `[<aws_account_alias> - <kube_cluster_name>]`; SQS monitor titles start with `[<env>]`

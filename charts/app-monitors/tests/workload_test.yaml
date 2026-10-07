@@ -25,10 +25,17 @@ tests:
     asserts:
       - matchRegex:
           path: spec.query
-          pattern: "\\{kube_namespace:example-namespace\\} by \\{kube_deployment\\} > 7$"
+          pattern: "\\{kube_namespace:example-namespace\\} by \\{aws_account_alias,kube_cluster_name,kube_deployment\\} > 7$"
       - equal:
           path: spec.options.thresholds.critical
           value: "7"
+
+  - it: prefixes the title with account and cluster
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.name
+          value: "[{{aws_account_alias.name}} - {{kube_cluster_name.name}}] example-app - Pod restarts - {{kube_deployment.name}}"
 
   - it: carries the routing tags and extra tags
     documentIndex: 0

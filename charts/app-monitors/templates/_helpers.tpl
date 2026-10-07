@@ -29,6 +29,10 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 kube_namespace:{{ required "app-monitors: .Values.scope.kubeNamespace is required by the workload and HPA monitors" .Values.scope.kubeNamespace }}
 {{- end -}}
 
+{{- define "app-monitors.kubePrefix" -}}
+{{`{{aws_account_alias.name}}`}} - {{`{{kube_cluster_name.name}}`}}
+{{- end -}}
+
 {{- define "app-monitors.sqsScope" -}}
 {{- if not .Values.scope.sqsQueues -}}
 {{- fail "app-monitors: .Values.scope.sqsQueues is required by the SQS monitors" -}}
@@ -44,7 +48,8 @@ Takes a dict:
   root      the chart root context ($)
   monitor   the monitor's values block (.Values.monitors.<name>)
   signal    kebab-case suffix of the resource name, e.g. pod-restarts
-  title     monitor title after "[<env>] <app> - "
+  prefix    text inside the brackets that start the monitor title
+  title     monitor title after "[<prefix>] <app> - "
   query     full Datadog query
   critical  critical threshold, the same number the query compares against
   message   alert text; no @-handles, routing is done on tags
@@ -60,7 +65,7 @@ metadata:
   labels:
     {{- include "app-monitors.labels" .root | nindent 4 }}
 spec:
-  name: {{ printf "[%s] %s - %s" $v.env $v.app .title | quote }}
+  name: {{ printf "[%s] %s - %s" .prefix $v.app .title | quote }}
   type: query alert
   query: {{ .query | quote }}
   message: {{ .message | quote }}

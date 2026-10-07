@@ -20,6 +20,13 @@ tests:
           path: spec.query
           value: "min(last_15m):max:aws.sqs.approximate_number_of_messages_visible{env:prod-example AND (queuename:queue-a OR queuename:queue-b)} by {env,queuename} > 50"
 
+  - it: prefixes the title with env
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.name
+          value: "[prod-example] example-app - SQS oldest message age - {{queuename.name}}"
+
   - it: fails without queues
     set:
       scope.sqsQueues: []
