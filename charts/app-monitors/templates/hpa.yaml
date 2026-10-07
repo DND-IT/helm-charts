@@ -1,0 +1,14 @@
+{{- with .Values.monitors.hpaMaxedOut }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "signal" "hpa-maxed-out"
+  "title" "HPA at max replicas - {{horizontalpodautoscaler.name}}"
+  "query" (printf "min(%s):max:kubernetes_state.hpa.current_replicas{%s} by {horizontalpodautoscaler} - max:kubernetes_state.hpa.max_replicas{%s} by {horizontalpodautoscaler} >= 0" .window $scope $scope)
+  "critical" 0
+  "message" (printf "HPA {{horizontalpodautoscaler.name}} in %s ran at its max replicas for the whole %s window. Raise maxReplicas or look at why load grew." $.Values.scope.kubeNamespace .window)
+) }}
+{{- end }}
+{{- end }}

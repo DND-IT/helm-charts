@@ -1,0 +1,16 @@
+team: example-team
+app: example-app
+env: prod-example
+extraTags:
+  - "github-repo:example-repo"
+scope:
+  kubeNamespace: example-namespace
+  sqsQueues:
+    - example-queue
+monitors:
+  hpaMaxedOut:
+    enabled: true
+  sqsOldestMessageAge:
+    enabled: true
+  sqsBacklog:
+    enabled: true
