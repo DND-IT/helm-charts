@@ -179,7 +179,7 @@ jobs:
     permissions:
       contents: read
       id-token: write
-    uses: DND-IT/github-workflows/.github/workflows/datadog-cr-validate.yaml@datadog-cr-validate
+    uses: DND-IT/github-workflows/.github/workflows/datadog-cr-validate.yaml@datadog-cr-validate-v0
     with:
       charts: |
         charts/app-monitors -f charts/app-monitors/ci/all-monitors-values.yaml
