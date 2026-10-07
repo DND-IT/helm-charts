@@ -1,0 +1,87 @@
+suite: workload monitors
+templates:
+  - workload.yaml
+values:
+  - ../ci/all-monitors-values.yaml
+tests:
+  - it: renders the three workload monitors by default
+    asserts:
+      - hasDocuments:
+          count: 3
+      - isKind:
+          of: DatadogMonitor
+
+  - it: names the resource <app>-<env>-<signal>
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-pod-restarts
+
+  - it: builds query and critical threshold from the same value
+    set:
+      monitors.podRestarts.critical: 7
+    documentIndex: 0
+    asserts:
+      - matchRegex:
+          path: spec.query
+          pattern: "\\{kube_namespace:example-namespace\\} by \\{aws_account_alias,kube_cluster_name,kube_deployment\\} > 7$"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "7"
+
+  - it: prefixes the title with account and cluster
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.name
+          value: "[{{aws_account_alias.name}} - {{kube_cluster_name.name}}] example-app - Pod restarts - {{kube_deployment.name}}"
+
+  - it: carries the routing tags and extra tags
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.tags
+          value:
+            - "team:example-team"
+            - "env:prod-example"
+            - "service:example-app"
+            - "managed-by:app-monitors"
+            - "github-repo:example-repo"
+
+  - it: renders only the critical threshold by default
+    documentIndex: 0
+    asserts:
+      - notExists:
+          path: spec.options.thresholds.warning
+
+  - it: renders the warning threshold when set
+    set:
+      monitors.podRestarts.warning: 1
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.options.thresholds.warning
+          value: "1"
+
+  - it: renders nothing for a disabled monitor
+    set:
+      monitors.podRestarts.enabled: false
+      monitors.oomKilled.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 1
+
+  - it: fails without team
+    set:
+      team: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "app-monitors: .Values.team is required (routing tag)"
+
+  - it: fails without a kube namespace
+    set:
+      scope.kubeNamespace: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "app-monitors: .Values.scope.kubeNamespace is required by the workload and HPA monitors"

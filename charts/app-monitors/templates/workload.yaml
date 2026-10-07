@@ -1,0 +1,45 @@
+{{- with .Values.monitors.podRestarts }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "prefix" (include "app-monitors.kubePrefix" $)
+  "signal" "pod-restarts"
+  "title" "Pod restarts - {{kube_deployment.name}}"
+  "query" (printf "change(max(%s),%s):sum:kubernetes.containers.restarts{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} > %v" .window .window $scope .critical)
+  "critical" .critical
+  "message" (printf "Containers of {{kube_deployment.name}} in %s restarted more than %v times over %s." $.Values.scope.kubeNamespace .critical .window)
+) }}
+{{- end }}
+{{- end }}
+{{- with .Values.monitors.oomKilled }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "prefix" (include "app-monitors.kubePrefix" $)
+  "signal" "oom-killed"
+  "title" "Container OOMKilled - {{kube_deployment.name}}"
+  "query" (printf "sum(%s):sum:kubernetes_state.container.status_report.count.terminated{reason:oomkilled AND %s} by {aws_account_alias,kube_cluster_name,kube_deployment} >= %v" .window $scope .critical)
+  "critical" .critical
+  "message" (printf "A container of {{kube_deployment.name}} in %s was OOMKilled. Check its memory limit and usage." $.Values.scope.kubeNamespace)
+) }}
+{{- end }}
+{{- end }}
+{{- with .Values.monitors.replicasNotReady }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "prefix" (include "app-monitors.kubePrefix" $)
+  "signal" "replicas-not-ready"
+  "title" "Replicas not ready - {{kube_deployment.name}}"
+  "query" (printf "min(%s):sum:kubernetes_state.deployment.replicas_desired{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} - sum:kubernetes_state.deployment.replicas_available{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} >= %v" .window $scope $scope .critical)
+  "critical" .critical
+  "message" (printf "{{kube_deployment.name}} in %s had at least %v replica(s) fewer available than desired for the whole %s window." $.Values.scope.kubeNamespace .critical .window)
+) }}
+{{- end }}
+{{- end }}

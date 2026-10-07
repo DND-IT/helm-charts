@@ -1,0 +1,136 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "type": "object",
+    "properties": {
+        "app": {
+            "type": "string"
+        },
+        "env": {
+            "type": "string"
+        },
+        "extraTags": {
+            "type": "array"
+        },
+        "monitors": {
+            "type": "object",
+            "properties": {
+                "hpaMaxedOut": {
+                    "type": "object",
+                    "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "priority": {
+                            "type": "integer"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "oomKilled": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "priority": {
+                            "type": "integer"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "podRestarts": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "priority": {
+                            "type": "integer"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "replicasNotReady": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "priority": {
+                            "type": "integer"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "sqsBacklog": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "priority": {
+                            "type": "integer"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "sqsOldestMessageAge": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "priority": {
+                            "type": "integer"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "renotifyInterval": {
+            "type": "integer"
+        },
+        "scope": {
+            "type": "object",
+            "properties": {
+                "kubeNamespace": {
+                    "type": "string"
+                },
+                "sqsQueues": {
+                    "type": "array"
+                }
+            }
+        },
+        "team": {
+            "type": "string"
+        }
+    }
+}

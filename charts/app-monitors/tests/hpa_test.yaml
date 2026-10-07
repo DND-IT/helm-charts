@@ -1,0 +1,21 @@
+suite: hpa monitors
+templates:
+  - hpa.yaml
+values:
+  - ../ci/all-monitors-values.yaml
+tests:
+  - it: is off by default
+    set:
+      monitors.hpaMaxedOut.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: alerts when current replicas reach max
+    asserts:
+      - matchRegex:
+          path: spec.query
+          pattern: "^min\\(last_30m\\):max:kubernetes_state.hpa.current_replicas.* - max:kubernetes_state.hpa.max_replicas.* >= 0$"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "0"

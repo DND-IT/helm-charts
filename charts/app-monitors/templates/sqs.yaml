@@ -1,0 +1,30 @@
+{{- with .Values.monitors.sqsOldestMessageAge }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.sqsScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "prefix" $.Values.env
+  "signal" "sqs-oldest-message-age"
+  "title" "SQS oldest message age - {{queuename.name}}"
+  "query" (printf "max(%s):max:aws.sqs.approximate_age_of_oldest_message{%s} by {env,queuename} > %v" .window $scope .critical)
+  "critical" .critical
+  "message" (printf "The oldest message in {{queuename.name}} is older than %vs. Consumers are not draining the queue." .critical)
+) }}
+{{- end }}
+{{- end }}
+{{- with .Values.monitors.sqsBacklog }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.sqsScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "prefix" $.Values.env
+  "signal" "sqs-backlog"
+  "title" "SQS backlog - {{queuename.name}}"
+  "query" (printf "min(%s):max:aws.sqs.approximate_number_of_messages_visible{%s} by {env,queuename} > %v" .window $scope .critical)
+  "critical" .critical
+  "message" (printf "{{queuename.name}} kept more than %v visible messages for the whole %s window. The queue grows faster than it is consumed." .critical .window)
+) }}
+{{- end }}
+{{- end }}

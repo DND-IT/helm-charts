@@ -1,0 +1,71 @@
+# Values for app-monitors chart
+# Shared (layer 2) Datadog monitors for one application in one environment.
+# Each monitor below renders one DatadogMonitor. The query shape is fixed by the
+# chart; an app only chooses which monitors to enable and tunes thresholds.
+
+# -- Owning team. Rendered as the `team:` tag that notification rules route on. Required.
+team: ""
+# -- Application name. Used in resource names, the monitor title and the `service:` tag. Required.
+app: ""
+# -- Datadog environment, e.g. `prod-discovery`. Used in resource names, the monitor title and the `env:` tag. Required.
+env: ""
+# -- Extra tags added to every monitor, e.g. `github-repo:<repo>`.
+extraTags: []
+
+scope:
+  # -- Kubernetes namespace the workload and HPA monitors filter on. Required when any of them is enabled.
+  kubeNamespace: ""
+  # -- SQS queue names the SQS monitors filter on. Required when any of them is enabled.
+  sqsQueues: []
+
+# -- Minutes between re-notifications while a monitor stays in alert. 0 disables re-notification.
+renotifyInterval: 0
+
+# Each monitor takes an optional `warning` threshold next to `critical`.
+monitors:
+  # Restarts across all containers of a deployment within the window.
+  podRestarts:
+    # -- Enable the pod restarts monitor
+    enabled: true
+    window: last_15m
+    critical: 3
+    priority: 3
+
+  # Containers terminated with reason OOMKilled within the window.
+  oomKilled:
+    # -- Enable the OOMKilled monitor
+    enabled: true
+    window: last_10m
+    critical: 1
+    priority: 2
+
+  # Desired minus available replicas of a deployment, for every point in the window.
+  replicasNotReady:
+    # -- Enable the replicas not ready monitor
+    enabled: true
+    window: last_15m
+    critical: 1
+    priority: 2
+
+  # HPA running at its max replicas for every point in the window.
+  hpaMaxedOut:
+    # -- Enable the HPA at max replicas monitor
+    enabled: false
+    window: last_30m
+    priority: 3
+
+  # Age in seconds of the oldest message still in the queue.
+  sqsOldestMessageAge:
+    # -- Enable the SQS oldest message age monitor
+    enabled: false
+    window: last_10m
+    critical: 60
+    priority: 2
+
+  # Visible messages in the queue, for every point in the window.
+  sqsBacklog:
+    # -- Enable the SQS backlog monitor
+    enabled: false
+    window: last_15m
+    critical: 50
+    priority: 3
