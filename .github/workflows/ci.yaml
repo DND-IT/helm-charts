@@ -32,9 +32,9 @@ jobs:
           python-version-file: .python-version
 
       - name: Install chart-testing
-        uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
+        uses: helm/chart-testing-action@720270857a28afd41e2426521a7801db09e9b510 # v2.9.0
         with:
-          version: v3.14.0 # renovate: datasource=github-releases depName=chart-testing packageName=helm/chart-testing
+          version: v3.15.0 # renovate: datasource=github-releases depName=chart-testing packageName=helm/chart-testing
 
       - name: Run lint
         run: ct lint --config ct.yaml
@@ -134,18 +134,18 @@ jobs:
           fetch-depth: 0
 
       - name: Create kind ${{ matrix.k8s }} cluster
-        uses: helm/kind-action@06c1ae10762d3b9c1644e7fe69596ae519e015a2 # v1.15.0
+        uses: helm/kind-action@1544676c07bb3570fcb70166beaa07c4528fd4aa # v1.15.1
         with:
           node_image: kindest/node:${{ matrix.k8s }}
-          version: v0.31.0 # renovate: datasource=github-releases depName=kind packageName=kubernetes-sigs/kind
+          version: v0.33.0 # renovate: datasource=github-releases depName=kind packageName=kubernetes-sigs/kind
 
       - name: Install CRDs
         run: .github/install-crds.sh
 
       - name: Install chart-testing
-        uses: helm/chart-testing-action@6ec842c01de15ebb84c8627d2744a0c2f2755c9f # v2.8.0
+        uses: helm/chart-testing-action@720270857a28afd41e2426521a7801db09e9b510 # v2.9.0
         with:
-          version: v3.14.0 # renovate: datasource=github-releases depName=chart-testing packageName=helm/chart-testing
+          version: v3.15.0 # renovate: datasource=github-releases depName=chart-testing packageName=helm/chart-testing
 
       - name: Run chart install
         run: ct install --config ct.yaml --excluded-charts common
