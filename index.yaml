@@ -78,6 +78,27 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/app-0.1.0/app-0.1.0.tgz
     version: 0.1.0
+  app-monitors:
+  - apiVersion: v2
+    created: "2026-10-20T11:59:01.998650038Z"
+    description: Shared Datadog monitors for an application, rendered as DatadogMonitor
+      resources
+    digest: fdd8ac9b09844ff58023fef19526541cfe62290ca55ec5f58c79e7cc81f252a6
+    home: https://github.com/DND-IT/helm-charts
+    keywords:
+    - datadog
+    - monitoring
+    - alerting
+    maintainers:
+    - email: dai@tamedia.ch
+      name: DAI
+    name: app-monitors
+    sources:
+    - https://github.com/DND-IT/helm-charts
+    type: application
+    urls:
+    - https://github.com/DND-IT/helm-charts/releases/download/app-monitors-0.1.0/app-monitors-0.1.0.tgz
+    version: 0.1.0
   common:
   - apiVersion: v2
     created: "2026-09-30T15:15:20.756329135Z"
@@ -3495,4 +3516,4 @@ entries:
     urls:
     - https://github.com/DND-IT/helm-charts/releases/download/worker-1.0.0/worker-1.0.0.tgz
     version: 1.0.0
-generated: "2026-09-30T15:15:21.732441921Z"
+generated: "2026-10-20T11:59:01.999206005Z"
