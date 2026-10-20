@@ -36,6 +36,7 @@ helm install my-app oci://ghcr.io/dnd-it/helm-charts/web \
 | task | `oci://ghcr.io/dnd-it/helm-charts/task` |
 | karpenter-resources | `oci://ghcr.io/dnd-it/helm-charts/karpenter-resources` |
 | datadog-resources | `oci://ghcr.io/dnd-it/helm-charts/datadog-resources` |
+| app-monitors | `oci://ghcr.io/dnd-it/helm-charts/app-monitors` |
 | custom-resources | `oci://ghcr.io/dnd-it/helm-charts/custom-resources` |
 
 ## Local Development

@@ -25,3 +25,8 @@ kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-bala
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/gateway/gateway.k8s.aws_targetgroupconfigurations.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/gateway/gateway.k8s.aws_loadbalancerconfigurations.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes-sigs/aws-load-balancer-controller/${AWS_LBC_VERSION}/config/crd/gateway/gateway.k8s.aws_listenerruleconfigurations.yaml
+
+# Datadog Operator CRDs (DatadogMonitor, used by app-monitors)
+# renovate: datasource=github-releases depName=datadog-operator packageName=DataDog/datadog-operator
+DATADOG_OPERATOR_VERSION="v1.30.0"
+kubectl apply -f https://raw.githubusercontent.com/DataDog/datadog-operator/${DATADOG_OPERATOR_VERSION}/config/crd/bases/v1/datadoghq.com_datadogmonitors.yaml

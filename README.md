@@ -35,6 +35,7 @@ Each chart includes sensible defaults for security contexts, health probes, sche
 | [custom-resources](./charts/custom-resources) | Deploy arbitrary Kubernetes resources | [README](./charts/custom-resources/README.md) |
 | [karpenter-resources](./charts/karpenter-resources) | Karpenter provisioner and node pool configurations | [README](./charts/karpenter-resources/README.md) |
 | [datadog-resources](./charts/datadog-resources) | Manage Datadog custom resources (monitors, dashboards, SLOs) | [README](./charts/datadog-resources/README.md) |
+| [app-monitors](./charts/app-monitors) | Shared Datadog monitors for an application (pod restarts, OOMKilled, HPA, SQS) | [README](./charts/app-monitors/README.md) |
 | [mysql](./charts/mysql) | MySQL 8.0 StatefulSet with persistent storage | [README](./charts/mysql/README.md) |
 
 ### Deprecated Charts
@@ -220,6 +221,7 @@ helm-charts/
 │   ├── custom-resources/    # Custom resources chart
 │   ├── karpenter-resources/ # Karpenter configurations
 │   ├── datadog-resources/   # Datadog custom resources chart
+│   ├── app-monitors/        # Shared Datadog monitors for applications
 │   ├── mysql/               # MySQL StatefulSet chart
 │   ├── webapp/              # [DEPRECATED] Use web instead
 │   └── cronjob/             # [DEPRECATED] Use task instead
