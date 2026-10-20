@@ -4,7 +4,6 @@
 {{ include "app-monitors.monitor" (dict
   "root" $
   "monitor" .
-  "prefix" (include "app-monitors.kubePrefix" $)
   "signal" "pod-restarts"
   "title" "Pod restarts - {{kube_deployment.name}}"
   "query" (printf "change(max(%s),%s):sum:kubernetes.containers.restarts{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} > %v" .window .window $scope .critical)
@@ -19,7 +18,6 @@
 {{ include "app-monitors.monitor" (dict
   "root" $
   "monitor" .
-  "prefix" (include "app-monitors.kubePrefix" $)
   "signal" "oom-killed"
   "title" "Container OOMKilled - {{kube_deployment.name}}"
   "query" (printf "sum(%s):sum:kubernetes_state.container.status_report.count.terminated{reason:oomkilled AND %s} by {aws_account_alias,kube_cluster_name,kube_deployment} >= %v" .window $scope .critical)
@@ -34,7 +32,6 @@
 {{ include "app-monitors.monitor" (dict
   "root" $
   "monitor" .
-  "prefix" (include "app-monitors.kubePrefix" $)
   "signal" "replicas-not-ready"
   "title" "Replicas not ready - {{kube_deployment.name}}"
   "query" (printf "min(%s):sum:kubernetes_state.deployment.replicas_desired{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} - sum:kubernetes_state.deployment.replicas_available{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} >= %v" .window $scope $scope .critical)

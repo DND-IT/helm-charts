@@ -4,7 +4,6 @@
 {{ include "app-monitors.monitor" (dict
   "root" $
   "monitor" .
-  "prefix" (include "app-monitors.kubePrefix" $)
   "signal" "hpa-maxed-out"
   "title" "HPA at max replicas - {{horizontalpodautoscaler.name}}"
   "query" (printf "min(%s):max:kubernetes_state.hpa.current_replicas{%s} by {aws_account_alias,kube_cluster_name,horizontalpodautoscaler} - max:kubernetes_state.hpa.max_replicas{%s} by {aws_account_alias,kube_cluster_name,horizontalpodautoscaler} >= 0" .window $scope $scope)

@@ -30,12 +30,12 @@ tests:
           path: spec.options.thresholds.critical
           value: "7"
 
-  - it: prefixes the title with account and cluster
+  - it: prefixes the title with env
     documentIndex: 0
     asserts:
       - equal:
           path: spec.name
-          value: "[{{aws_account_alias.name}} - {{kube_cluster_name.name}}] example-app - Pod restarts - {{kube_deployment.name}}"
+          value: "[prod-example] example-app - Pod restarts - {{kube_deployment.name}}"
 
   - it: carries the routing tags and extra tags
     documentIndex: 0
