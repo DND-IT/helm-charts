@@ -1,6 +1,6 @@
 suite: hpa monitors
 templates:
-  - hpa.yaml
+  - datadogmonitor-hpa.yaml
 values:
   - ../ci/all-monitors-values.yaml
 tests:

@@ -72,6 +72,7 @@ nav:
     - Task: charts/task.md
     - Karpenter Resources: charts/karpenter-resources.md
     - Datadog Resources: charts/datadog-resources.md
+    - App Monitors: charts/app-monitors.md
     - Custom Resources: charts/custom-resources.md
   - Architecture:
     - architecture/index.md

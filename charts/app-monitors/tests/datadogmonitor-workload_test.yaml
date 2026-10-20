@@ -1,6 +1,6 @@
 suite: workload monitors
 templates:
-  - workload.yaml
+  - datadogmonitor-workload.yaml
 values:
   - ../ci/all-monitors-values.yaml
 tests:

@@ -1,6 +1,6 @@
 suite: sqs monitors
 templates:
-  - sqs.yaml
+  - datadogmonitor-sqs.yaml
 values:
   - ../ci/all-monitors-values.yaml
 tests:

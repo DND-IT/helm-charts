@@ -103,11 +103,14 @@ an enabled monitor's scope is empty.
 2. Add a block under `monitors:` in `values.yaml` with `enabled`, `window` and
    `critical`. Do not set a default `warning`, `priority` or `severity`.
 3. Add an `include "app-monitors.monitor"` call to the template file for its
-   signal family (`workload.yaml`, `hpa.yaml`, `sqs.yaml`), or a new file for a
+   signal family (`datadogmonitor-workload.yaml`, `datadogmonitor-hpa.yaml`, `datadogmonitor-sqs.yaml`), or a new file for a
    new family. Build the query with `printf` from the values, and pass the same
    value as `critical`.
 4. Add the key to the table above and a test under `tests/`.
-5. New monitors default to `enabled: false` so a chart upgrade does not create
+5. Turn the monitor on in `ci/all-monitors-values.yaml`. CI renders the chart
+   with this file and validates every monitor against Datadog, so a monitor that
+   is off there is never checked.
+6. New monitors default to `enabled: false` so a chart upgrade does not create
    monitors in every app at once.
 
 ## Prerequisites

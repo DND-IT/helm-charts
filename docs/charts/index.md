@@ -19,6 +19,7 @@ All application charts are thin wrappers around a shared [common library](../arc
 |-------|-------------|
 | [**karpenter-resources**](karpenter-resources.md) | Karpenter NodePool and EC2NodeClass resources |
 | [**datadog-resources**](datadog-resources.md) | Datadog monitors, dashboards, and SLOs |
+| [**app-monitors**](app-monitors.md) | Shared Datadog monitors for an application |
 | [**custom-resources**](custom-resources.md) | Deploy arbitrary Kubernetes custom resources |
 
 ## Chart Comparison
