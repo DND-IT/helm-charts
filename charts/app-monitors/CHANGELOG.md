@@ -13,5 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Workload monitors: pod restarts, OOMKilled, replicas not ready
 - HPA at max replicas monitor
 - SQS oldest message age and backlog monitors
-- Routing tags built from `team`, `env` and `app`; render fails when any is missing
+- Routing tags built from `team`, `env`, `app` and `repository`; render fails when any is missing
+- Optional per-monitor `severity`, rendered as the `severity:` tag
+- Optional per-monitor `priority` (1 to 5); not rendered when unset
 - Workload and HPA monitor titles start with `[<aws_account_alias> - <kube_cluster_name>]`; SQS monitor titles start with `[<env>]`

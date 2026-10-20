@@ -1,13 +1,19 @@
 team: example-team
 app: example-app
 env: prod-example
+repository: example-repo
 extraTags:
-  - "github-repo:example-repo"
+  - "extra:example"
 scope:
   kubeNamespace: example-namespace
   sqsQueues:
     - example-queue
 monitors:
+  oomKilled:
+    critical: 2
+    warning: 1
+    priority: 2
+    severity: warning
   hpaMaxedOut:
     enabled: true
   sqsOldestMessageAge:

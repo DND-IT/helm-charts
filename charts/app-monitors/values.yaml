@@ -7,9 +7,11 @@
 team: ""
 # -- Application name. Used in resource names, the monitor title and the `service:` tag. Required.
 app: ""
-# -- Datadog environment, e.g. `prod-discovery`. Used in resource names, the monitor title and the `env:` tag. Required.
+# -- Datadog environment, e.g. `prod-<team>`. Used in resource names, the monitor title and the `env:` tag. Required.
 env: ""
-# -- Extra tags added to every monitor, e.g. `github-repo:<repo>`.
+# -- Repository that owns the monitors. Rendered as the `repository:` tag that notification rules route on. Required.
+repository: ""
+# -- Extra tags added to every monitor.
 extraTags: []
 
 scope:
@@ -21,7 +23,10 @@ scope:
 # -- Minutes between re-notifications while a monitor stays in alert. 0 disables re-notification.
 renotifyInterval: 0
 
-# Each monitor takes an optional `warning` threshold next to `critical`.
+# Each monitor takes these optional keys:
+#   warning   threshold next to `critical`
+#   priority  1 (P1) to 5 (P5)
+#   severity  rendered as the `severity:` tag, e.g. `warning`; notification rules can route on it
 monitors:
   # Restarts across all containers of a deployment within the window.
   podRestarts:
@@ -29,7 +34,6 @@ monitors:
     enabled: true
     window: last_15m
     critical: 3
-    priority: 3
 
   # Containers terminated with reason OOMKilled within the window.
   oomKilled:
@@ -37,7 +41,6 @@ monitors:
     enabled: true
     window: last_10m
     critical: 1
-    priority: 2
 
   # Desired minus available replicas of a deployment, for every point in the window.
   replicasNotReady:
@@ -45,14 +48,12 @@ monitors:
     enabled: true
     window: last_15m
     critical: 1
-    priority: 2
 
   # HPA running at its max replicas for every point in the window.
   hpaMaxedOut:
     # -- Enable the HPA at max replicas monitor
     enabled: false
     window: last_30m
-    priority: 3
 
   # Age in seconds of the oldest message still in the queue.
   sqsOldestMessageAge:
@@ -60,7 +61,6 @@ monitors:
     enabled: false
     window: last_10m
     critical: 60
-    priority: 2
 
   # Visible messages in the queue, for every point in the window.
   sqsBacklog:
@@ -68,4 +68,3 @@ monitors:
     enabled: false
     window: last_15m
     critical: 50
-    priority: 3

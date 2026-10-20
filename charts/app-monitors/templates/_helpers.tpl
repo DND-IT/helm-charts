@@ -5,6 +5,7 @@ Fails the render when a value that every monitor depends on is missing.
 {{- $_ := required "app-monitors: .Values.team is required (routing tag)" .Values.team -}}
 {{- $_ = required "app-monitors: .Values.app is required" .Values.app -}}
 {{- $_ = required "app-monitors: .Values.env is required" .Values.env -}}
+{{- $_ = required "app-monitors: .Values.repository is required (routing tag)" .Values.repository -}}
 {{- end -}}
 
 {{- define "app-monitors.labels" -}}
@@ -19,6 +20,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 - "team:{{ .Values.team }}"
 - "env:{{ .Values.env }}"
 - "service:{{ .Values.app }}"
+- "repository:{{ .Values.repository }}"
 - "managed-by:app-monitors"
 {{- range .Values.extraTags }}
 - {{ . | quote }}
@@ -69,9 +71,14 @@ spec:
   type: query alert
   query: {{ .query | quote }}
   message: {{ .message | quote }}
-  priority: {{ .monitor.priority }}
+  {{- with .monitor.priority }}
+  priority: {{ . }}
+  {{- end }}
   tags:
     {{- include "app-monitors.tags" .root | nindent 4 }}
+    {{- with .monitor.severity }}
+    - "severity:{{ . }}"
+    {{- end }}
   options:
     thresholds:
       critical: {{ .critical | toString | quote }}

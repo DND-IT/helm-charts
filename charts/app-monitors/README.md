@@ -51,10 +51,9 @@ dependencies:
 # deploy/app/values.yaml
 app-monitors:
   enabled: false
-  team: discovery
-  app: ai-tools
-  extraTags:
-    - "github-repo:discovery-ai-tools"
+  team: <team>
+  app: <app>
+  repository: <repository>
 ```
 
 Turn it on per environment and set only what differs:
@@ -63,11 +62,11 @@ Turn it on per environment and set only what differs:
 # deploy/app/envs/prod/values.yaml
 app-monitors:
   enabled: true
-  env: prod-discovery
+  env: <env>
   scope:
-    kubeNamespace: discovery-prod-ai-tools
+    kubeNamespace: <namespace>
     sqsQueues:
-      - celery-broker-backend-ai-tools
+      - <queue-name>
   monitors:
     sqsBacklog:
       enabled: true
@@ -76,6 +75,8 @@ app-monitors:
 ```
 
 Monitors have only a `critical` threshold by default. Add `warning` to get one.
+Monitors have no priority by default. Add `priority` (1 to 5, shown as P1 to P5)
+to set one. Add `severity` to a monitor to tag it `severity:<severity>`.
 
 PR preview environments do not set `enabled`, so they create no monitors.
 
@@ -87,17 +88,19 @@ notification rules route on them:
 - `team:<team>`
 - `env:<env>`
 - `service:<app>`
+- `repository:<repository>`
 - `managed-by:app-monitors`
+- `severity:<severity>`, when the monitor sets `severity`
 - each entry of `extraTags`
 
-The render fails when `team`, `app` or `env` is missing, or when an enabled
-monitor's scope is empty.
+The render fails when `team`, `app`, `env` or `repository` is missing, or when
+an enabled monitor's scope is empty.
 
 ## Adding a monitor
 
 1. Check the metric and its tags in the Datadog metrics explorer.
-2. Add a block under `monitors:` in `values.yaml` with `enabled`, `window`,
-   `critical` and `priority`. Do not set a default `warning`.
+2. Add a block under `monitors:` in `values.yaml` with `enabled`, `window` and
+   `critical`. Do not set a default `warning`, `priority` or `severity`.
 3. Add an `include "app-monitors.monitor"` call to the template file for its
    signal family (`workload.yaml`, `hpa.yaml`, `sqs.yaml`), or a new file for a
    new family. Build the query with `printf` from the values, and pass the same
@@ -127,32 +130,27 @@ monitor's scope is empty.
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
 | app | string | `""` | Application name. Used in resource names, the monitor title and the `service:` tag. Required. |
-| env | string | `""` | Datadog environment, e.g. `prod-discovery`. Used in resource names, the monitor title and the `env:` tag. Required. |
-| extraTags | list | `[]` | Extra tags added to every monitor, e.g. `github-repo:<repo>`. |
+| env | string | `""` | Datadog environment, e.g. `prod-<team>`. Used in resource names, the monitor title and the `env:` tag. Required. |
+| extraTags | list | `[]` | Extra tags added to every monitor. |
 | monitors.hpaMaxedOut.enabled | bool | `false` | Enable the HPA at max replicas monitor |
-| monitors.hpaMaxedOut.priority | int | `3` |  |
 | monitors.hpaMaxedOut.window | string | `"last_30m"` |  |
 | monitors.oomKilled.critical | int | `1` |  |
 | monitors.oomKilled.enabled | bool | `true` | Enable the OOMKilled monitor |
-| monitors.oomKilled.priority | int | `2` |  |
 | monitors.oomKilled.window | string | `"last_10m"` |  |
 | monitors.podRestarts.critical | int | `3` |  |
 | monitors.podRestarts.enabled | bool | `true` | Enable the pod restarts monitor |
-| monitors.podRestarts.priority | int | `3` |  |
 | monitors.podRestarts.window | string | `"last_15m"` |  |
 | monitors.replicasNotReady.critical | int | `1` |  |
 | monitors.replicasNotReady.enabled | bool | `true` | Enable the replicas not ready monitor |
-| monitors.replicasNotReady.priority | int | `2` |  |
 | monitors.replicasNotReady.window | string | `"last_15m"` |  |
 | monitors.sqsBacklog.critical | int | `50` |  |
 | monitors.sqsBacklog.enabled | bool | `false` | Enable the SQS backlog monitor |
-| monitors.sqsBacklog.priority | int | `3` |  |
 | monitors.sqsBacklog.window | string | `"last_15m"` |  |
 | monitors.sqsOldestMessageAge.critical | int | `60` |  |
 | monitors.sqsOldestMessageAge.enabled | bool | `false` | Enable the SQS oldest message age monitor |
-| monitors.sqsOldestMessageAge.priority | int | `2` |  |
 | monitors.sqsOldestMessageAge.window | string | `"last_10m"` |  |
 | renotifyInterval | int | `0` | Minutes between re-notifications while a monitor stays in alert. 0 disables re-notification. |
+| repository | string | `""` | Repository that owns the monitors. Rendered as the `repository:` tag that notification rules route on. Required. |
 | scope.kubeNamespace | string | `""` | Kubernetes namespace the workload and HPA monitors filter on. Required when any of them is enabled. |
 | scope.sqsQueues | list | `[]` | SQS queue names the SQS monitors filter on. Required when any of them is enabled. |
 | team | string | `""` | Owning team. Rendered as the `team:` tag that notification rules route on. Required. |

@@ -52,10 +52,9 @@ dependencies:
 # deploy/app/values.yaml
 app-monitors:
   enabled: false
-  team: discovery
-  app: ai-tools
-  extraTags:
-    - "github-repo:discovery-ai-tools"
+  team: <team>
+  app: <app>
+  repository: <repository>
 ```
 
 Turn it on per environment and set only what differs:
@@ -64,11 +63,11 @@ Turn it on per environment and set only what differs:
 # deploy/app/envs/prod/values.yaml
 app-monitors:
   enabled: true
-  env: prod-discovery
+  env: <env>
   scope:
-    kubeNamespace: discovery-prod-ai-tools
+    kubeNamespace: <namespace>
     sqsQueues:
-      - celery-broker-backend-ai-tools
+      - <queue-name>
   monitors:
     sqsBacklog:
       enabled: true
@@ -77,6 +76,8 @@ app-monitors:
 ```
 
 Monitors have only a `critical` threshold by default. Add `warning` to get one.
+Monitors have no priority by default. Add `priority` (1 to 5, shown as P1 to P5)
+to set one. Add `severity` to a monitor to tag it `severity:<severity>`.
 
 PR preview environments do not set `enabled`, so they create no monitors.
 
@@ -88,17 +89,19 @@ notification rules route on them:
 - `team:<team>`
 - `env:<env>`
 - `service:<app>`
+- `repository:<repository>`
 - `managed-by:app-monitors`
+- `severity:<severity>`, when the monitor sets `severity`
 - each entry of `extraTags`
 
-The render fails when `team`, `app` or `env` is missing, or when an enabled
-monitor's scope is empty.
+The render fails when `team`, `app`, `env` or `repository` is missing, or when
+an enabled monitor's scope is empty.
 
 ## Adding a monitor
 
 1. Check the metric and its tags in the Datadog metrics explorer.
-2. Add a block under `monitors:` in `values.yaml` with `enabled`, `window`,
-   `critical` and `priority`. Do not set a default `warning`.
+2. Add a block under `monitors:` in `values.yaml` with `enabled`, `window` and
+   `critical`. Do not set a default `warning`, `priority` or `severity`.
 3. Add an `include "app-monitors.monitor"` call to the template file for its
    signal family (`workload.yaml`, `hpa.yaml`, `sqs.yaml`), or a new file for a
    new family. Build the query with `printf` from the values, and pass the same

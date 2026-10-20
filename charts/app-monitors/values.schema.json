@@ -20,9 +20,6 @@
                         "enabled": {
                             "type": "boolean"
                         },
-                        "priority": {
-                            "type": "integer"
-                        },
                         "window": {
                             "type": "string"
                         }
@@ -36,9 +33,6 @@
                         },
                         "enabled": {
                             "type": "boolean"
-                        },
-                        "priority": {
-                            "type": "integer"
                         },
                         "window": {
                             "type": "string"
@@ -54,9 +48,6 @@
                         "enabled": {
                             "type": "boolean"
                         },
-                        "priority": {
-                            "type": "integer"
-                        },
                         "window": {
                             "type": "string"
                         }
@@ -70,9 +61,6 @@
                         },
                         "enabled": {
                             "type": "boolean"
-                        },
-                        "priority": {
-                            "type": "integer"
                         },
                         "window": {
                             "type": "string"
@@ -88,9 +76,6 @@
                         "enabled": {
                             "type": "boolean"
                         },
-                        "priority": {
-                            "type": "integer"
-                        },
                         "window": {
                             "type": "string"
                         }
@@ -105,9 +90,6 @@
                         "enabled": {
                             "type": "boolean"
                         },
-                        "priority": {
-                            "type": "integer"
-                        },
                         "window": {
                             "type": "string"
                         }
@@ -117,6 +99,9 @@
         },
         "renotifyInterval": {
             "type": "integer"
+        },
+        "repository": {
+            "type": "string"
         },
         "scope": {
             "type": "object",

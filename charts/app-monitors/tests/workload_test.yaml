@@ -46,8 +46,9 @@ tests:
             - "team:example-team"
             - "env:prod-example"
             - "service:example-app"
+            - "repository:example-repo"
             - "managed-by:app-monitors"
-            - "github-repo:example-repo"
+            - "extra:example"
 
   - it: renders only the critical threshold by default
     documentIndex: 0
@@ -64,6 +65,21 @@ tests:
           path: spec.options.thresholds.warning
           value: "1"
 
+  - it: renders no priority by default
+    documentIndex: 0
+    asserts:
+      - notExists:
+          path: spec.priority
+
+  - it: renders the priority when set
+    set:
+      monitors.podRestarts.priority: 2
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: spec.priority
+          value: 2
+
   - it: renders nothing for a disabled monitor
     set:
       monitors.podRestarts.enabled: false
@@ -78,6 +94,29 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: "app-monitors: .Values.team is required (routing tag)"
+
+  - it: adds the severity tag when set
+    set:
+      monitors.podRestarts.severity: warning
+    documentIndex: 0
+    asserts:
+      - contains:
+          path: spec.tags
+          content: "severity:warning"
+
+  - it: renders without extra tags
+    set:
+      extraTags: []
+    asserts:
+      - hasDocuments:
+          count: 3
+
+  - it: fails without repository
+    set:
+      repository: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "app-monitors: .Values.repository is required (routing tag)"
 
   - it: fails without a kube namespace
     set:
