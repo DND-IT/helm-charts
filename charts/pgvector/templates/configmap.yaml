@@ -1,0 +1,32 @@
+{{- if or .Values.pgvector.createExtension .Values.initdbScripts }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "pgvector.initdbConfigMapName" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "pgvector.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  {{- if .Values.pgvector.createExtension }}
+  00-create-extension.sql: |
+    CREATE EXTENSION IF NOT EXISTS vector;
+    {{- if and .Values.auth.username (ne .Values.auth.username "postgres") }}
+    DO $$
+    BEGIN
+      IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = '{{ .Values.auth.username }}') THEN
+        CREATE ROLE {{ .Values.auth.username }} WITH LOGIN PASSWORD '$(PGVECTOR_APP_PASSWORD)';
+      END IF;
+    END
+    $$;
+    GRANT ALL PRIVILEGES ON DATABASE {{ .Values.auth.database }} TO {{ .Values.auth.username }};
+    {{- end }}
+  {{- end }}
+  {{- range $key, $value := .Values.initdbScripts }}
+  {{ $key }}: |
+    {{- $value | nindent 4 }}
+  {{- end }}
+{{- end }}
