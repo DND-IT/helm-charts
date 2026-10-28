@@ -1,0 +1,11 @@
+# CI test values: PodDisruptionBudget minAvailable as a percentage
+
+image:
+  repository: busybox
+  tag: "1.36"
+
+replicas: 2
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 50%

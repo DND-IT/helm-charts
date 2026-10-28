@@ -1,6 +1,6 @@
 # generic
 
-![Version: 0.13.1](https://img.shields.io/badge/Version-0.13.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.14.0](https://img.shields.io/badge/Version-0.14.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A highly flexible and unopinionated Helm chart for deploying Kubernetes workloads.
 Supports Deployments, CronJobs, and Jobs with extensive configuration options.
@@ -411,7 +411,7 @@ Kubernetes: `>=1.32.0-0`
 | pod.securityContext | object | `{}` |  |
 | pod.terminationGracePeriodSeconds | int | `30` |  |
 | podDisruptionBudget.enabled | bool | `false` |  |
-| podDisruptionBudget.minAvailable | int | `1` |  |
+| podDisruptionBudget.minAvailable | string or int | `1` |  |
 | podDisruptionBudget.unhealthyPodEvictionPolicy | string | `""` |  |
 | ports | list | `[]` |  |
 | progressDeadlineSeconds | int | `600` |  |

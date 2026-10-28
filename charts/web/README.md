@@ -1,6 +1,6 @@
 # web
 
-![Version: 1.11.0](https://img.shields.io/badge/Version-1.11.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 1.12.0](https://img.shields.io/badge/Version-1.12.0-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A Helm chart for deploying HTTP-facing web applications to Kubernetes.
 Includes Deployment, Service, Ingress (enabled by default), HPA, PDB, and ServiceAccount.
@@ -228,7 +228,7 @@ Kubernetes: `>=1.32.0-0`
 | livenessProbe.periodSeconds | int | `10` |  |
 | livenessProbe.timeoutSeconds | int | `5` |  |
 | podDisruptionBudget.enabled | bool | `true` |  |
-| podDisruptionBudget.minAvailable | int | `1` |  |
+| podDisruptionBudget.minAvailable | string or int | `1` |  |
 | port | int | `8080` |  |
 | readinessProbe.failureThreshold | int | `3` |  |
 | readinessProbe.httpGet.path | string | `"/readyz"` |  |

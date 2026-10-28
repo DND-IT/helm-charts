@@ -1,0 +1,9 @@
+# CI test values: PodDisruptionBudget minAvailable as a percentage
+
+image:
+  repository: nginx
+  tag: "1.27"
+
+podDisruptionBudget:
+  enabled: true
+  minAvailable: 50%

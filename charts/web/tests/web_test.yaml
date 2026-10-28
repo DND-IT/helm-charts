@@ -821,6 +821,34 @@ tests:
           path: kind
           value: PodDisruptionBudget
 
+  - it: PDB accepts a percentage minAvailable as a string
+    set:
+      image.repository: nginx
+      image.tag: latest
+      podDisruptionBudget.enabled: true
+      podDisruptionBudget.minAvailable: 50%
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 50%
+        documentSelector:
+          path: kind
+          value: PodDisruptionBudget
+
+  - it: PDB keeps an integer minAvailable as an integer
+    set:
+      image.repository: nginx
+      image.tag: latest
+      podDisruptionBudget.enabled: true
+      podDisruptionBudget.minAvailable: 2
+    asserts:
+      - equal:
+          path: spec.minAvailable
+          value: 2
+        documentSelector:
+          path: kind
+          value: PodDisruptionBudget
+
   # ==========================================================================
   # PVC storageClass: templating, verbatim, and the "-" sentinel
   # ==========================================================================

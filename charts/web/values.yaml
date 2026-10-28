@@ -152,7 +152,7 @@ hpa:
 # this keeps one pod up through voluntary disruptions (node drains, rollouts).
 podDisruptionBudget:
   enabled: true
-  minAvailable: 1
+  minAvailable: 1  # @schema type:[string, integer]
 
 # Reloader enablement
 reloader:

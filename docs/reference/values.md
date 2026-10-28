@@ -143,7 +143,7 @@ Complete reference for all configuration values available in the common library.
 | `hpa.behavior` | object | `{}` | Scaling behavior |
 | `vpa.enabled` | bool | `false` | Create VerticalPodAutoscaler |
 | `podDisruptionBudget.enabled` | bool | `false` | Create PodDisruptionBudget |
-| `podDisruptionBudget.minAvailable` | int | `1` | Minimum available pods |
+| `podDisruptionBudget.minAvailable` | int or string | `1` | Minimum available pods, as a number or a percentage such as `"50%"` |
 
 ## Config and Secrets
 
