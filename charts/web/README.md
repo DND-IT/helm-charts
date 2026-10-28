@@ -228,7 +228,7 @@ Kubernetes: `>=1.32.0-0`
 | livenessProbe.periodSeconds | int | `10` |  |
 | livenessProbe.timeoutSeconds | int | `5` |  |
 | podDisruptionBudget.enabled | bool | `true` |  |
-| podDisruptionBudget.minAvailable | string or int | `1` |  |
+| podDisruptionBudget.minAvailable | int | `1` |  |
 | port | int | `8080` |  |
 | readinessProbe.failureThreshold | int | `3` |  |
 | readinessProbe.httpGet.path | string | `"/readyz"` |  |
