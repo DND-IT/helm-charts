@@ -115,9 +115,6 @@ jobs:
     name: install-chart
     runs-on: ubuntu-latest
     if: ${{ github.event_name != 'pull_request' || github.repository_owner != github.event.pull_request.head.repo.owner.login || !startsWith(github.event.pull_request.head.ref, 'renovate/') }}
-    permissions:
-      contents: read
-      id-token: write
     needs:
       - lint-chart
       - lint-docs
@@ -136,22 +133,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure AWS credentials
-        id: aws-credentials
-        if: ${{ vars.ECR_PUBLIC_PULL_ROLE_ARN != '' && github.actor != 'dependabot[bot]' && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-        continue-on-error: true
-        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6
-        with:
-          role-to-assume: ${{ vars.ECR_PUBLIC_PULL_ROLE_ARN }}
-          aws-region: us-east-1
-
-      - name: Login to Amazon ECR Public
-        if: ${{ steps.aws-credentials.outcome == 'success' }}
-        continue-on-error: true
-        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2
-        with:
-          registry-type: public
-
       - name: Create kind ${{ matrix.k8s }} cluster
         uses: helm/kind-action@06c1ae10762d3b9c1644e7fe69596ae519e015a2 # v1.15.0
         with:
@@ -159,7 +140,7 @@ jobs:
           version: v0.31.0 # renovate: datasource=github-releases depName=kind packageName=kubernetes-sigs/kind
           cluster_name: chart-testing
 
-      - name: Preload public ECR images into kind
+      - name: Preload test images into kind
         run: bash .github/preload-images.sh
 
       - name: Install CRDs
