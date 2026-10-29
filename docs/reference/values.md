@@ -9,6 +9,7 @@ Complete reference for all configuration values available in the common library.
 | `global.image.registry` | string | `""` | Container registry prepended to all images |
 | `commonLabels` | object | `{}` | Labels applied to all resources |
 | `commonAnnotations` | object | `{}` | Annotations applied to all resources |
+| `reloader.enabled` | bool | `false` | Add `reloader.stakater.com/auto: "true"` to Deployment, StatefulSet and DaemonSet annotations; the same key in `commonAnnotations` or `workloadAnnotations` wins. The `web` chart enables it by default |
 | `nameOverride` | string | `""` | Override the chart name |
 | `fullnameOverride` | string | `""` | Override the full resource name |
 | `namespaceOverride` | string | `""` | Override the release namespace |
