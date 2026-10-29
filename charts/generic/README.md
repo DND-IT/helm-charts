@@ -1,6 +1,6 @@
 # generic
 
-![Version: 0.13.1](https://img.shields.io/badge/Version-0.13.1-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
+![Version: 0.13.2](https://img.shields.io/badge/Version-0.13.2-informational?style=flat-square) ![Type: application](https://img.shields.io/badge/Type-application-informational?style=flat-square)
 
 A highly flexible and unopinionated Helm chart for deploying Kubernetes workloads.
 Supports Deployments, CronJobs, and Jobs with extensive configuration options.
