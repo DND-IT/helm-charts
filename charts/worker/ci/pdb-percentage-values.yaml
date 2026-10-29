@@ -1,7 +1,7 @@
 # CI test values for the worker chart: PodDisruptionBudget minAvailable as a percentage
 
 image:
-  repository: busybox
+  repository: mirror.gcr.io/library/busybox
   tag: "1.36"
 
 replicas: 1

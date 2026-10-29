@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Picks up `common` 1.15.0: `podDisruptionBudget.minAvailable` accepts a percentage such as `"50%"` as well as an integer; the values schema allows both.
 
+## [0.13.2] - 2026-10-29
+
+### Changed
+
+- CI values now pull `busybox` and `nginx-unprivileged` from `mirror.gcr.io` instead of `public.ecr.aws`, which rate limits anonymous GitHub runners. No template or default value changes.
+
 ## [0.13.1] - 2026-08-11
 
 ### Fixed
