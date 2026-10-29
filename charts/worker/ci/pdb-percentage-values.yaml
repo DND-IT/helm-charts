@@ -1,10 +1,30 @@
-# CI test values: PodDisruptionBudget minAvailable as a percentage
+# CI test values for the worker chart: PodDisruptionBudget minAvailable as a percentage
 
 image:
   repository: busybox
   tag: "1.36"
 
-replicas: 2
+replicas: 1
+
+command:
+  - /bin/sh
+  - -c
+args:
+  - "while true; do echo 'Working...'; sleep 60; done"
+
+resources:
+  limits:
+    memory: "128Mi"
+  requests:
+    cpu: "50m"
+    memory: "64Mi"
+
+# No service for workers
+service:
+  enabled: false
+
+hpa:
+  enabled: false
 
 podDisruptionBudget:
   enabled: true
