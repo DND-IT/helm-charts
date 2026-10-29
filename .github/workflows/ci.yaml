@@ -138,6 +138,10 @@ jobs:
         with:
           node_image: kindest/node:${{ matrix.k8s }}
           version: v0.31.0 # renovate: datasource=github-releases depName=kind packageName=kubernetes-sigs/kind
+          cluster_name: chart-testing
+
+      - name: Preload test images into kind
+        run: bash .github/preload-images.sh
 
       - name: Install CRDs
         run: .github/install-crds.sh
