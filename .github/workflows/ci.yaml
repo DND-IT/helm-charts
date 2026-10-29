@@ -160,7 +160,7 @@ jobs:
           cluster_name: chart-testing
 
       - name: Preload public ECR images into kind
-        run: .github/preload-images.sh
+        run: bash .github/preload-images.sh
 
       - name: Install CRDs
         run: .github/install-crds.sh
