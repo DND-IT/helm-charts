@@ -11,10 +11,9 @@ metadata:
   namespace: {{ include "common.namespace" . }}
   labels:
     {{- include "common.labels" (dict "context" . "labels" .Values.workloadLabels) | nindent 4 }}
-  {{- $workloadAnnotations := include "common.workloadAnnotations" . | fromYaml }}
-  {{- if or $workloadAnnotations .Values.commonAnnotations }}
+  {{- if or .Values.workloadAnnotations .Values.commonAnnotations }}
   annotations:
-    {{- include "common.annotations" (dict "context" . "annotations" $workloadAnnotations) | nindent 4 }}
+    {{- include "common.annotations" (dict "context" . "annotations" .Values.workloadAnnotations) | nindent 4 }}
   {{- end }}
 spec:
   {{- with .Values.revisionHistoryLimit }}

@@ -9,7 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Picks up `common` 1.15.0 and drops the reloader logic from `templates/common.yaml`, which is a single `common.loader.generate` call again like in the other wrapper charts. `reloader.enabled: true` now passes through to `common`. Rendered output and the `reloader.enabled` value are unchanged.
+- Removes the reloader logic from `templates/common.yaml`, which is a single `common.loader.generate` call again like in the other wrapper charts. The Stakater Reloader annotation is now a plain default: `workloadAnnotations: {reloader.stakater.com/auto: "true"}`. Rendered output is unchanged.
+- **Breaking:** `reloader.enabled` is removed. To disable the reloader, set `workloadAnnotations: {reloader.stakater.com/auto: null}` (or `"false"`). The annotation is also rendered when `commonAnnotations` sets the same key, so set it in `workloadAnnotations` rather than `commonAnnotations`.
 
 ## [1.11.0] - 2026-09-30
 

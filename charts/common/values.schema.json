@@ -49,15 +49,7 @@
         "container": {
             "type": "object",
             "properties": {
-                "reloader": {
-            "type": "object",
-            "properties": {
-                "enabled": {
-                    "type": "boolean"
-                }
-            }
-        },
-        "resources": {
+                "resources": {
                     "type": "object"
                 }
             }

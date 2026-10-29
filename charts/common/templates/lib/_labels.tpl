@@ -33,21 +33,6 @@ Common annotations
 {{- end }}
 
 {{/*
-Workload annotations: workloadAnnotations plus the Stakater Reloader annotation when reloader.enabled is true.
-The reloader annotation yields to the same key in commonAnnotations or workloadAnnotations.
-*/}}
-{{- define "common.workloadAnnotations" -}}
-{{- $annotations := deepCopy (.Values.workloadAnnotations | default dict) -}}
-{{- $reloaderKey := "reloader.stakater.com/auto" -}}
-{{- if and (dig "enabled" false (.Values.reloader | default dict)) (not (hasKey (.Values.commonAnnotations | default dict) $reloaderKey)) -}}
-  {{- $annotations = merge $annotations (dict $reloaderKey "true") -}}
-{{- end -}}
-{{- with $annotations -}}
-{{- toYaml . -}}
-{{- end -}}
-{{- end }}
-
-{{/*
 Selector labels
 */}}
 {{- define "common.selectorLabels" -}}

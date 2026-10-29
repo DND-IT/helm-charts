@@ -142,11 +142,12 @@ tests:
           path: kind
           value: Deployment
 
-  - it: should be able to disable reloader enablement
+  - it: should be able to disable the reloader annotation by nulling it
     set:
       image.repository: nginx
       image.tag: latest
-      reloader.enabled: false
+      workloadAnnotations:
+        reloader.stakater.com/auto: null
     asserts:
       - notExists:
           path: metadata.annotations["reloader.stakater.com/auto"]
@@ -179,35 +180,6 @@ tests:
       image.repository: nginx
       image.tag: latest
       workloadAnnotations:
-        reloader.stakater.com/auto: "false"
-    asserts:
-      - equal:
-          path: metadata.annotations["reloader.stakater.com/auto"]
-          value: "false"
-        documentSelector:
-          path: kind
-          value: Deployment
-
-  - it: should respect explicit workloadAnnotations over reloader.enabled
-    set:
-      image.repository: nginx
-      image.tag: latest
-      reloader.enabled: false
-      workloadAnnotations:
-        reloader.stakater.com/auto: "true"
-    asserts:
-      - equal:
-          path: metadata.annotations["reloader.stakater.com/auto"]
-          value: "true"
-        documentSelector:
-          path: kind
-          value: Deployment
-
-  - it: should not add reloader annotation when already in commonAnnotations
-    set:
-      image.repository: nginx
-      image.tag: latest
-      commonAnnotations:
         reloader.stakater.com/auto: "false"
     asserts:
       - equal:

@@ -5,12 +5,6 @@ All notable changes to the common Helm library chart will be documented in this 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.15.0] - 2026-10-29
-
-### Added
-
-- `reloader.enabled` (default `false`) adds `reloader.stakater.com/auto: "true"` to the `Deployment`, `StatefulSet` and `DaemonSet` annotations through the new `common.workloadAnnotations` helper. The same key in `commonAnnotations` or `workloadAnnotations` takes precedence. Off by default, so existing charts render unchanged; wrapper charts opt in from their `values.yaml`.
-
 ## [1.14.0] - 2026-09-30
 
 ### Changed
