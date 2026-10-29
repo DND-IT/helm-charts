@@ -5,6 +5,12 @@ All notable changes to the web Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.12.0] - 2026-10-29
+
+### Changed
+
+- Picks up `common` 1.15.0 and drops the reloader logic from `templates/common.yaml`, which is a single `common.loader.generate` call again like in the other wrapper charts. `reloader.enabled: true` now passes through to `common`. Rendered output and the `reloader.enabled` value are unchanged.
+
 ## [1.11.0] - 2026-09-30
 
 ### Changed

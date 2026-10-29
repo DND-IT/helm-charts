@@ -25,6 +25,10 @@ workloadLabels: {}
 workloadAnnotations: {}
   # cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
 
+# Stakater Reloader: adds reloader.stakater.com/auto: "true" to the workload annotations
+reloader:
+  enabled: false
+
 # Metadata overrides
 nameOverride: ""
 fullnameOverride: ""

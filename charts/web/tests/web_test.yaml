@@ -203,6 +203,20 @@ tests:
           path: kind
           value: Deployment
 
+  - it: should not add reloader annotation when already in commonAnnotations
+    set:
+      image.repository: nginx
+      image.tag: latest
+      commonAnnotations:
+        reloader.stakater.com/auto: "false"
+    asserts:
+      - equal:
+          path: metadata.annotations["reloader.stakater.com/auto"]
+          value: "false"
+        documentSelector:
+          path: kind
+          value: Deployment
+
   # ==========================================================================
   # Service defaults
   # ==========================================================================
