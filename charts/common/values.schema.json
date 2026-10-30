@@ -583,7 +583,10 @@
                     "type": "boolean"
                 },
                 "minAvailable": {
-                    "type": "integer"
+                    "type": [
+                        "string",
+                        "integer"
+                    ]
                 },
                 "unhealthyPodEvictionPolicy": {
                     "type": "string"
