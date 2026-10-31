@@ -152,7 +152,7 @@ hpa:
 # this keeps one pod up through voluntary disruptions (node drains, rollouts).
 podDisruptionBudget:
   enabled: true
-  minAvailable: 1
+  minAvailable: 1  # @schema type:[string, integer]
 
 # Stakater Reloader: restart the workload when a referenced ConfigMap/Secret changes.
 # Opt out with `reloader.stakater.com/auto: null` (or "false") in your own workloadAnnotations.

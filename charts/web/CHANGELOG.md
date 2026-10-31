@@ -5,12 +5,18 @@ All notable changes to the web Helm chart will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.12.0] - 2026-10-29
+## [1.13.0] - 2026-10-31
 
 ### Changed
 
 - Removes the reloader logic from `templates/common.yaml`, which is a single `common.loader.generate` call again like in the other wrapper charts. The Stakater Reloader annotation is now a plain default: `workloadAnnotations: {reloader.stakater.com/auto: "true"}`. Rendered output is unchanged.
 - **Breaking:** `reloader.enabled` is removed. To disable the reloader, set `workloadAnnotations: {reloader.stakater.com/auto: null}` (or `"false"`). The annotation is also rendered when `commonAnnotations` sets the same key, so set it in `workloadAnnotations` rather than `commonAnnotations`.
+
+## [1.12.0] - 2026-10-28
+
+### Changed
+
+- Picks up `common` 1.15.0: `podDisruptionBudget.minAvailable` accepts a percentage such as `"50%"` as well as an integer; the values schema allows both.
 
 ## [1.11.0] - 2026-09-30
 
