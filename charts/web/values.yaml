@@ -154,6 +154,7 @@ podDisruptionBudget:
   enabled: true
   minAvailable: 1  # @schema type:[string, integer]
 
-# Reloader enablement
-reloader:
-  enabled: true
+# Stakater Reloader: restart the workload when a referenced ConfigMap/Secret changes.
+# Opt out with `reloader.stakater.com/auto: null` (or "false") in your own workloadAnnotations.
+workloadAnnotations:
+  reloader.stakater.com/auto: "true"
