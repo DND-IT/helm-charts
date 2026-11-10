@@ -29,6 +29,7 @@ add a query override here.
 | `podRestarts` | `pod-restarts` | on | `scope.kubeNamespace` |
 | `oomKilled` | `oom-killed` | on | `scope.kubeNamespace` |
 | `replicasNotReady` | `replicas-not-ready` | on | `scope.kubeNamespace` |
+| `crashLoopBackOff` | `crash-loop-back-off` | off | `scope.kubeNamespace` |
 | `hpaMaxedOut` | `hpa-maxed-out` | off | `scope.kubeNamespace` |
 | `sqsOldestMessageAge` | `sqs-oldest-message-age` | off | `env` + `scope.sqsQueues` |
 | `sqsBacklog` | `sqs-backlog` | off | `env` + `scope.sqsQueues` |
