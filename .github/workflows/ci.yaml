@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   lint-chart:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -40,7 +40,7 @@ jobs:
         run: ct lint --config ct.yaml
 
   unit-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: lint-chart
     steps:
       - name: Checkout
@@ -79,7 +79,7 @@ jobs:
           done
 
   lint-docs:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: lint-chart
     steps:
       - name: Checkout
@@ -88,7 +88,7 @@ jobs:
         run: .github/helm-docs.sh
 
   kubeconform-chart:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs:
       - lint-chart
       - lint-docs
@@ -113,7 +113,7 @@ jobs:
 
   install-chart:
     name: install-chart
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: ${{ github.event_name != 'pull_request' || github.repository_owner != github.event.pull_request.head.repo.owner.login || !startsWith(github.event.pull_request.head.ref, 'renovate/') }}
     needs:
       - lint-chart
@@ -155,7 +155,7 @@ jobs:
         run: ct install --config ct.yaml --excluded-charts common
 
   schema-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -198,7 +198,7 @@ jobs:
       - install-chart
       - schema-check
       - datadog-cr-validate
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 1
     if: always()
     steps:
