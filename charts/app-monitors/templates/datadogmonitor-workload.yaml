@@ -40,3 +40,17 @@
 ) }}
 {{- end }}
 {{- end }}
+{{- with .Values.monitors.crashLoopBackOff }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "signal" "crash-loop-back-off"
+  "title" "Container CrashLoopBackOff - {{kube_deployment.name}}"
+  "query" (printf "max(%s):max:kubernetes_state.container.status_report.count.waiting{reason:crashloopbackoff AND %s} by {aws_account_alias,kube_cluster_name,kube_deployment} >= %v" .window $scope .critical)
+  "critical" .critical
+  "message" (printf "A container of {{kube_deployment.name}} in %s is in CrashLoopBackOff. Check the previous container's logs and the pod's events." $.Values.scope.kubeNamespace)
+) }}
+{{- end }}
+{{- end }}

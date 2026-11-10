@@ -49,6 +49,13 @@ monitors:
     window: last_15m
     critical: 1
 
+  # Containers waiting with reason CrashLoopBackOff at any point in the window.
+  crashLoopBackOff:
+    # -- Enable the CrashLoopBackOff monitor
+    enabled: false
+    window: last_10m
+    critical: 1
+
   # HPA running at its max replicas for every point in the window.
   hpaMaxedOut:
     # -- Enable the HPA at max replicas monitor

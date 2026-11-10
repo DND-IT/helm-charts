@@ -4,7 +4,9 @@ templates:
 values:
   - ../ci/all-monitors-values.yaml
 tests:
-  - it: renders the three workload monitors by default
+  - it: renders the three default workload monitors
+    set:
+      monitors.crashLoopBackOff.enabled: false
     asserts:
       - hasDocuments:
           count: 3
@@ -84,6 +86,7 @@ tests:
     set:
       monitors.podRestarts.enabled: false
       monitors.oomKilled.enabled: false
+      monitors.crashLoopBackOff.enabled: false
     asserts:
       - hasDocuments:
           count: 1
@@ -109,7 +112,7 @@ tests:
       extraTags: []
     asserts:
       - hasDocuments:
-          count: 3
+          count: 4
 
   - it: fails without repository
     set:
@@ -124,3 +127,20 @@ tests:
     asserts:
       - failedTemplate:
           errorMessage: "app-monitors: .Values.scope.kubeNamespace is required by the workload and HPA monitors"
+
+  - it: alerts on containers waiting in CrashLoopBackOff
+    documentIndex: 3
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-crash-loop-back-off
+      - equal:
+          path: spec.query
+          value: "max(last_10m):max:kubernetes_state.container.status_report.count.waiting{reason:crashloopbackoff AND kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,kube_deployment} >= 1"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "1"
+      - notExists:
+          path: spec.options.thresholds.warning
+      - notExists:
+          path: spec.priority
