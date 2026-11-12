@@ -14,6 +14,20 @@
         "monitors": {
             "type": "object",
             "properties": {
+                "crashLoopBackOff": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "hpaMaxedOut": {
                     "type": "object",
                     "properties": {
