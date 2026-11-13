@@ -4,6 +4,10 @@
 # - ServiceAccount
 nameOverride: ""
 fullnameOverride: ""
+
+# -- Render the ServiceAccount. Set to false when the ServiceAccount is created
+# elsewhere, for example when several aliases of this chart share one release name.
+createServiceAccount: true
 port: 80
 command: []
 args: []
