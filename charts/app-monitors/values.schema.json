@@ -67,6 +67,20 @@
                         }
                     }
                 },
+                "http50xErrors": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "imagePullBackOff": {
                     "type": "object",
                     "properties": {
@@ -204,6 +218,9 @@
         "scope": {
             "type": "object",
             "properties": {
+                "apmServices": {
+                    "type": "array"
+                },
                 "kubeNamespace": {
                     "type": "string"
                 },

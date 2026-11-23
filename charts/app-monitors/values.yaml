@@ -19,6 +19,8 @@ scope:
   kubeNamespace: ""
   # -- SQS queue names the SQS monitors filter on. Required when any of them is enabled.
   sqsQueues: []
+  # -- APM service names the HTTP 50x errors monitor filters on. Defaults to `app` when empty.
+  apmServices: []
 
 # -- Minutes between re-notifications while a monitor stays in alert. 0 disables re-notification.
 renotifyInterval: 0
@@ -103,6 +105,13 @@ monitors:
     enabled: false
     window: last_1h
     critical: 0
+
+  # Error spans of the application's APM services with an HTTP 50x status, counted over the window.
+  http50xErrors:
+    # -- Enable the HTTP 50x errors monitor
+    enabled: false
+    window: last_2m
+    critical: 100
 
   # Age in seconds of the oldest message still in the queue.
   sqsOldestMessageAge:

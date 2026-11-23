@@ -1,0 +1,16 @@
+{{- with .Values.monitors.http50xErrors }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.apmScope" $ }}
+{{- $window := trimPrefix "last_" .window }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "type" "trace-analytics alert"
+  "signal" "http-50x-errors"
+  "title" "HTTP 50x errors - {{service.name}} on {{[@http.host].name}}"
+  "query" (printf `trace-analytics("%s @http.status_code:50* status:error").rollup("count").by("service,@http.host,kube_cluster_name").last("%s") > %v` $scope $window .critical)
+  "critical" .critical
+  "message" (printf "{{service.name}} returned more than %v HTTP 50x errors on one host within %s; the title names the host. Users are likely affected. Check the service's error traces." .critical $window)
+) }}
+{{- end }}
+{{- end }}

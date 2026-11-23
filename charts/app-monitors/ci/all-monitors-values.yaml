@@ -30,6 +30,8 @@ monitors:
     enabled: true
   pdbNoDisruptionsAllowed:
     enabled: true
+  http50xErrors:
+    enabled: true
   sqsOldestMessageAge:
     enabled: true
   sqsBacklog:

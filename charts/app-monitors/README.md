@@ -36,6 +36,7 @@ add a query override here.
 | `hpaMaxedOut` | `hpa-maxed-out` | off | `scope.kubeNamespace` |
 | `hpaReplicasSurge` | `hpa-replicas-surge` | off | `scope.kubeNamespace` |
 | `pdbNoDisruptionsAllowed` | `pdb-no-disruptions-allowed` | off | `scope.kubeNamespace` |
+| `http50xErrors` | `http-50x-errors` | off | `env` + `scope.apmServices`, or `app` |
 | `sqsOldestMessageAge` | `sqs-oldest-message-age` | off | `env` + `scope.sqsQueues` |
 | `sqsBacklog` | `sqs-backlog` | off | `env` + `scope.sqsQueues` |
 
@@ -109,7 +110,7 @@ an enabled monitor's scope is empty.
 2. Add a block under `monitors:` in `values.yaml` with `enabled`, `window` and
    `critical`. Do not set a default `warning`, `priority` or `severity`.
 3. Add an `include "app-monitors.monitor"` call to the template file for its
-   signal family (`datadogmonitor-workload.yaml`, `datadogmonitor-hpa.yaml`, `datadogmonitor-pdb.yaml`, `datadogmonitor-sqs.yaml`), or a new file for a
+   signal family (`datadogmonitor-workload.yaml`, `datadogmonitor-hpa.yaml`, `datadogmonitor-pdb.yaml`, `datadogmonitor-apm.yaml`, `datadogmonitor-sqs.yaml`), or a new file for a
    new family. Build the query with `printf` from the values, and pass the same
    value as `critical`.
 4. Add the key to the table above and a test under `tests/`.
@@ -153,6 +154,9 @@ an enabled monitor's scope is empty.
 | monitors.hpaReplicasSurge.critical | int | `100` |  |
 | monitors.hpaReplicasSurge.enabled | bool | `false` | Enable the HPA desired replicas surge monitor |
 | monitors.hpaReplicasSurge.window | string | `"last_1d"` |  |
+| monitors.http50xErrors.critical | int | `100` |  |
+| monitors.http50xErrors.enabled | bool | `false` | Enable the HTTP 50x errors monitor |
+| monitors.http50xErrors.window | string | `"last_2m"` |  |
 | monitors.imagePullBackOff.critical | int | `1` |  |
 | monitors.imagePullBackOff.enabled | bool | `false` | Enable the ImagePullBackOff monitor |
 | monitors.imagePullBackOff.window | string | `"last_10m"` |  |
@@ -182,6 +186,7 @@ an enabled monitor's scope is empty.
 | monitors.sqsOldestMessageAge.window | string | `"last_10m"` |  |
 | renotifyInterval | int | `0` | Minutes between re-notifications while a monitor stays in alert. 0 disables re-notification. |
 | repository | string | `""` | Repository that owns the monitors. Rendered as the `repository:` tag that notification rules route on. Required. |
+| scope.apmServices | list | `[]` | APM service names the HTTP 50x errors monitor filters on. Defaults to `app` when empty. |
 | scope.kubeNamespace | string | `""` | Kubernetes namespace the workload, HPA and PDB monitors filter on. Required when any of them is enabled. |
 | scope.sqsQueues | list | `[]` | SQS queue names the SQS monitors filter on. Required when any of them is enabled. |
 | team | string | `""` | Owning team. Rendered as the `team:` tag that notification rules route on. Required. |

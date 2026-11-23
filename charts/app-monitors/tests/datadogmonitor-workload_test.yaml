@@ -21,6 +21,9 @@ tests:
     documentIndex: 0
     asserts:
       - equal:
+          path: spec.type
+          value: query alert
+      - equal:
           path: metadata.name
           value: example-app-prod-example-pod-restarts
 

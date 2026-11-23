@@ -38,6 +38,10 @@ kube_namespace:{{ required "app-monitors: .Values.scope.kubeNamespace is require
 env:{{ .Values.env }} AND ({{ range $i, $q := .Values.scope.sqsQueues }}{{ if $i }} OR {{ end }}queuename:{{ $q }}{{ end }})
 {{- end -}}
 
+{{- define "app-monitors.apmScope" -}}
+env:{{ .Values.env }} service:({{ join " OR " (.Values.scope.apmServices | default (list .Values.app)) }})
+{{- end -}}
+
 {{/*
 Renders one DatadogMonitor. Every monitor template calls this, so the CR shape,
 name, tags and options are defined once.
@@ -50,6 +54,7 @@ Takes a dict:
   query     full Datadog query
   critical  critical threshold, the same number the query compares against
   message   alert text; no @-handles, routing is done on tags
+  type      Datadog monitor type; optional, `query alert` when unset
 */}}
 {{- define "app-monitors.monitor" -}}
 {{- $v := .root.Values -}}
@@ -63,7 +68,7 @@ metadata:
     {{- include "app-monitors.labels" .root | nindent 4 }}
 spec:
   name: {{ printf "[%s] %s - %s" $v.env $v.app .title | quote }}
-  type: query alert
+  type: {{ .type | default "query alert" }}
   query: {{ .query | quote }}
   message: {{ .message | quote }}
   {{- with .monitor.priority }}

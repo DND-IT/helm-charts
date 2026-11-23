@@ -18,6 +18,8 @@ All off by default.
 - Workload monitor `replicasAvailableLow`: available replicas as a percentage of desired
 - HPA monitor `hpaReplicasSurge`: desired replicas against the previous window, in percent
 - PDB monitor `pdbNoDisruptionsAllowed`: a PodDisruptionBudget with no pod to spare
+- APM monitor `http50xErrors`: error spans with an HTTP 50x status, scoped by `scope.apmServices` (default `app`)
+- `app-monitors.monitor` takes an optional `type`, so a template can render a monitor that is not a metric query
 
 ## [0.1.0] - 2026-10-07
 
