@@ -16,7 +16,19 @@ monitors:
     severity: warning
   crashLoopBackOff:
     enabled: true
+  imagePullBackOff:
+    enabled: true
+  cpuThrottling:
+    enabled: true
+  memoryOverRequest:
+    enabled: true
+  replicasAvailableLow:
+    enabled: true
   hpaMaxedOut:
+    enabled: true
+  hpaReplicasSurge:
+    enabled: true
+  pdbNoDisruptionsAllowed:
     enabled: true
   sqsOldestMessageAge:
     enabled: true

@@ -29,7 +29,13 @@ add a query override here.
 | `oomKilled` | `oom-killed` | on | `scope.kubeNamespace` |
 | `replicasNotReady` | `replicas-not-ready` | on | `scope.kubeNamespace` |
 | `crashLoopBackOff` | `crash-loop-back-off` | off | `scope.kubeNamespace` |
+| `imagePullBackOff` | `image-pull-back-off` | off | `scope.kubeNamespace` |
+| `cpuThrottling` | `cpu-throttling` | off | `scope.kubeNamespace` |
+| `memoryOverRequest` | `memory-over-request` | off | `scope.kubeNamespace` |
+| `replicasAvailableLow` | `replicas-available-low` | off | `scope.kubeNamespace` |
 | `hpaMaxedOut` | `hpa-maxed-out` | off | `scope.kubeNamespace` |
+| `hpaReplicasSurge` | `hpa-replicas-surge` | off | `scope.kubeNamespace` |
+| `pdbNoDisruptionsAllowed` | `pdb-no-disruptions-allowed` | off | `scope.kubeNamespace` |
 | `sqsOldestMessageAge` | `sqs-oldest-message-age` | off | `env` + `scope.sqsQueues` |
 | `sqsBacklog` | `sqs-backlog` | off | `env` + `scope.sqsQueues` |
 
@@ -103,7 +109,7 @@ an enabled monitor's scope is empty.
 2. Add a block under `monitors:` in `values.yaml` with `enabled`, `window` and
    `critical`. Do not set a default `warning`, `priority` or `severity`.
 3. Add an `include "app-monitors.monitor"` call to the template file for its
-   signal family (`datadogmonitor-workload.yaml`, `datadogmonitor-hpa.yaml`, `datadogmonitor-sqs.yaml`), or a new file for a
+   signal family (`datadogmonitor-workload.yaml`, `datadogmonitor-hpa.yaml`, `datadogmonitor-pdb.yaml`, `datadogmonitor-sqs.yaml`), or a new file for a
    new family. Build the query with `printf` from the values, and pass the same
    value as `critical`.
 4. Add the key to the table above and a test under `tests/`.
@@ -136,17 +142,35 @@ an enabled monitor's scope is empty.
 | app | string | `""` | Application name. Used in resource names, the monitor title and the `service:` tag. Required. |
 | env | string | `""` | Datadog environment, e.g. `prod-<team>`. Used in resource names, the monitor title and the `env:` tag. Required. |
 | extraTags | list | `[]` | Extra tags added to every monitor. |
+| monitors.cpuThrottling.critical | float | `0.6` |  |
+| monitors.cpuThrottling.enabled | bool | `false` | Enable the CPU throttling monitor |
+| monitors.cpuThrottling.window | string | `"last_15m"` |  |
 | monitors.crashLoopBackOff.critical | int | `1` |  |
 | monitors.crashLoopBackOff.enabled | bool | `false` | Enable the CrashLoopBackOff monitor |
 | monitors.crashLoopBackOff.window | string | `"last_10m"` |  |
 | monitors.hpaMaxedOut.enabled | bool | `false` | Enable the HPA at max replicas monitor |
 | monitors.hpaMaxedOut.window | string | `"last_30m"` |  |
+| monitors.hpaReplicasSurge.critical | int | `100` |  |
+| monitors.hpaReplicasSurge.enabled | bool | `false` | Enable the HPA desired replicas surge monitor |
+| monitors.hpaReplicasSurge.window | string | `"last_1d"` |  |
+| monitors.imagePullBackOff.critical | int | `1` |  |
+| monitors.imagePullBackOff.enabled | bool | `false` | Enable the ImagePullBackOff monitor |
+| monitors.imagePullBackOff.window | string | `"last_10m"` |  |
+| monitors.memoryOverRequest.critical | int | `50` |  |
+| monitors.memoryOverRequest.enabled | bool | `false` | Enable the memory above request monitor |
+| monitors.memoryOverRequest.window | string | `"last_4h"` |  |
 | monitors.oomKilled.critical | int | `1` |  |
 | monitors.oomKilled.enabled | bool | `true` | Enable the OOMKilled monitor |
 | monitors.oomKilled.window | string | `"last_10m"` |  |
+| monitors.pdbNoDisruptionsAllowed.critical | int | `0` |  |
+| monitors.pdbNoDisruptionsAllowed.enabled | bool | `false` | Enable the PDB allows no disruptions monitor |
+| monitors.pdbNoDisruptionsAllowed.window | string | `"last_1h"` |  |
 | monitors.podRestarts.critical | int | `3` |  |
 | monitors.podRestarts.enabled | bool | `true` | Enable the pod restarts monitor |
 | monitors.podRestarts.window | string | `"last_15m"` |  |
+| monitors.replicasAvailableLow.critical | int | `20` |  |
+| monitors.replicasAvailableLow.enabled | bool | `false` | Enable the available replicas low monitor |
+| monitors.replicasAvailableLow.window | string | `"last_5m"` |  |
 | monitors.replicasNotReady.critical | int | `1` |  |
 | monitors.replicasNotReady.enabled | bool | `true` | Enable the replicas not ready monitor |
 | monitors.replicasNotReady.window | string | `"last_15m"` |  |
@@ -158,7 +182,7 @@ an enabled monitor's scope is empty.
 | monitors.sqsOldestMessageAge.window | string | `"last_10m"` |  |
 | renotifyInterval | int | `0` | Minutes between re-notifications while a monitor stays in alert. 0 disables re-notification. |
 | repository | string | `""` | Repository that owns the monitors. Rendered as the `repository:` tag that notification rules route on. Required. |
-| scope.kubeNamespace | string | `""` | Kubernetes namespace the workload and HPA monitors filter on. Required when any of them is enabled. |
+| scope.kubeNamespace | string | `""` | Kubernetes namespace the workload, HPA and PDB monitors filter on. Required when any of them is enabled. |
 | scope.sqsQueues | list | `[]` | SQS queue names the SQS monitors filter on. Required when any of them is enabled. |
 | team | string | `""` | Owning team. Rendered as the `team:` tag that notification rules route on. Required. |
 

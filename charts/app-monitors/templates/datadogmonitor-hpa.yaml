@@ -12,3 +12,17 @@
 ) }}
 {{- end }}
 {{- end }}
+{{- with .Values.monitors.hpaReplicasSurge }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "signal" "hpa-replicas-surge"
+  "title" "HPA desired replicas surge - {{horizontalpodautoscaler.name}}"
+  "query" (printf "pct_change(avg(%s),%s):sum:kubernetes_state.hpa.desired_replicas{%s} by {aws_account_alias,kube_cluster_name,horizontalpodautoscaler} > %v" .window .window $scope .critical)
+  "critical" .critical
+  "message" (printf "HPA {{horizontalpodautoscaler.name}} in %s wants more than %v%% more replicas than in the previous %s window. Check whether load grew or the scaling metric changed." $.Values.scope.kubeNamespace .critical .window)
+) }}
+{{- end }}
+{{- end }}

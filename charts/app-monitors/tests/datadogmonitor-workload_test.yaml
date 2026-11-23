@@ -7,6 +7,10 @@ tests:
   - it: renders the three default workload monitors
     set:
       monitors.crashLoopBackOff.enabled: false
+      monitors.imagePullBackOff.enabled: false
+      monitors.cpuThrottling.enabled: false
+      monitors.memoryOverRequest.enabled: false
+      monitors.replicasAvailableLow.enabled: false
     asserts:
       - hasDocuments:
           count: 3
@@ -89,7 +93,7 @@ tests:
       monitors.crashLoopBackOff.enabled: false
     asserts:
       - hasDocuments:
-          count: 1
+          count: 5
 
   - it: fails without team
     set:
@@ -112,7 +116,7 @@ tests:
       extraTags: []
     asserts:
       - hasDocuments:
-          count: 4
+          count: 8
 
   - it: fails without repository
     set:
@@ -126,7 +130,7 @@ tests:
       scope.kubeNamespace: ""
     asserts:
       - failedTemplate:
-          errorMessage: "app-monitors: .Values.scope.kubeNamespace is required by the workload and HPA monitors"
+          errorMessage: "app-monitors: .Values.scope.kubeNamespace is required by the workload, HPA and PDB monitors"
 
   - it: alerts on containers waiting in CrashLoopBackOff
     documentIndex: 3
@@ -140,6 +144,74 @@ tests:
       - equal:
           path: spec.options.thresholds.critical
           value: "1"
+      - notExists:
+          path: spec.options.thresholds.warning
+      - notExists:
+          path: spec.priority
+
+  - it: alerts on containers waiting in ImagePullBackOff
+    documentIndex: 4
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-image-pull-back-off
+      - equal:
+          path: spec.query
+          value: "max(last_10m):max:kubernetes_state.container.status_report.count.waiting{reason:imagepullbackoff AND kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,kube_deployment} >= 1"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "1"
+      - notExists:
+          path: spec.options.thresholds.warning
+      - notExists:
+          path: spec.priority
+
+  - it: alerts on CPU throttling above a fractional threshold
+    documentIndex: 5
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-cpu-throttling
+      - equal:
+          path: spec.query
+          value: "avg(last_15m):sum:kubernetes.cpu.cfs.throttled.seconds{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,kube_deployment} > 0.6"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "0.6"
+      - notExists:
+          path: spec.options.thresholds.warning
+      - notExists:
+          path: spec.priority
+
+  - it: alerts on memory usage above the request
+    documentIndex: 6
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-memory-over-request
+      - equal:
+          path: spec.query
+          value: "avg(last_4h):((avg:kubernetes.memory.usage{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,kube_deployment} - avg:kubernetes.memory.requests{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,kube_deployment}) / avg:kubernetes.memory.requests{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,kube_deployment}) * 100 > 50"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "50"
+      - notExists:
+          path: spec.options.thresholds.warning
+      - notExists:
+          path: spec.priority
+
+  - it: alerts on a low share of available replicas
+    documentIndex: 7
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-replicas-available-low
+      - equal:
+          path: spec.query
+          value: "avg(last_5m):avg:kubernetes_state.deployment.replicas_available{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,kube_deployment} * 100 / avg:kubernetes_state.deployment.replicas_desired{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,kube_deployment} < 20"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "20"
       - notExists:
           path: spec.options.thresholds.warning
       - notExists:

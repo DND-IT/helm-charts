@@ -28,7 +28,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{- end -}}
 
 {{- define "app-monitors.kubeScope" -}}
-kube_namespace:{{ required "app-monitors: .Values.scope.kubeNamespace is required by the workload and HPA monitors" .Values.scope.kubeNamespace }}
+kube_namespace:{{ required "app-monitors: .Values.scope.kubeNamespace is required by the workload, HPA and PDB monitors" .Values.scope.kubeNamespace }}
 {{- end -}}
 
 {{- define "app-monitors.sqsScope" -}}

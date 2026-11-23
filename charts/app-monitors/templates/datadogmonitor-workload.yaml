@@ -54,3 +54,59 @@
 ) }}
 {{- end }}
 {{- end }}
+{{- with .Values.monitors.imagePullBackOff }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "signal" "image-pull-back-off"
+  "title" "Container ImagePullBackOff - {{kube_deployment.name}}"
+  "query" (printf "max(%s):max:kubernetes_state.container.status_report.count.waiting{reason:imagepullbackoff AND %s} by {aws_account_alias,kube_cluster_name,kube_deployment} >= %v" .window $scope .critical)
+  "critical" .critical
+  "message" (printf "A container of {{kube_deployment.name}} in %s cannot pull its image. Check the image tag, the registry and the pull secret." $.Values.scope.kubeNamespace)
+) }}
+{{- end }}
+{{- end }}
+{{- with .Values.monitors.cpuThrottling }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "signal" "cpu-throttling"
+  "title" "CPU throttling - {{kube_deployment.name}}"
+  "query" (printf "avg(%s):sum:kubernetes.cpu.cfs.throttled.seconds{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} > %v" .window $scope .critical)
+  "critical" .critical
+  "message" (printf "CPU of {{kube_deployment.name}} in %s was throttled above %v on average over %s. Raise the CPU limit or look at what uses the CPU." $.Values.scope.kubeNamespace .critical .window)
+) }}
+{{- end }}
+{{- end }}
+{{- with .Values.monitors.memoryOverRequest }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "signal" "memory-over-request"
+  "title" "Memory above request - {{kube_deployment.name}}"
+  "query" (printf "avg(%s):((avg:kubernetes.memory.usage{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} - avg:kubernetes.memory.requests{%s} by {aws_account_alias,kube_cluster_name,kube_deployment}) / avg:kubernetes.memory.requests{%s} by {aws_account_alias,kube_cluster_name,kube_deployment}) * 100 > %v" .window $scope $scope $scope .critical)
+  "critical" .critical
+  "message" (printf "Average memory usage of {{kube_deployment.name}} in %s was more than %v%% above its request over %s. Raise the memory request or look at what grew." $.Values.scope.kubeNamespace .critical .window)
+) }}
+{{- end }}
+{{- end }}
+{{- with .Values.monitors.replicasAvailableLow }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "signal" "replicas-available-low"
+  "title" "Available replicas low - {{kube_deployment.name}}"
+  "query" (printf "avg(%s):avg:kubernetes_state.deployment.replicas_available{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} * 100 / avg:kubernetes_state.deployment.replicas_desired{%s} by {aws_account_alias,kube_cluster_name,kube_deployment} < %v" .window $scope $scope .critical)
+  "critical" .critical
+  "message" (printf "{{kube_deployment.name}} in %s had fewer than %v%% of its desired replicas available on average over %s." $.Values.scope.kubeNamespace .critical .window)
+) }}
+{{- end }}
+{{- end }}

@@ -1,0 +1,14 @@
+{{- with .Values.monitors.pdbNoDisruptionsAllowed }}
+{{- if .enabled }}
+{{- $scope := include "app-monitors.kubeScope" $ }}
+{{ include "app-monitors.monitor" (dict
+  "root" $
+  "monitor" .
+  "signal" "pdb-no-disruptions-allowed"
+  "title" "PDB allows no disruptions - {{poddisruptionbudget.name}}"
+  "query" (printf "avg(%s):cutoff_min(max:kubernetes_state.pdb.pods_healthy{%s} by {aws_account_alias,kube_cluster_name,poddisruptionbudget}, 1) - cutoff_min(max:kubernetes_state.pdb.pods_desired{%s} by {aws_account_alias,kube_cluster_name,poddisruptionbudget}, 1) <= %v" .window $scope $scope .critical)
+  "critical" .critical
+  "message" (printf "PDB {{poddisruptionbudget.name}} in %s had no pod to spare over %s: healthy pods did not exceed the desired minimum. Node drains and upgrades block on it." $.Values.scope.kubeNamespace .window)
+) }}
+{{- end }}
+{{- end }}

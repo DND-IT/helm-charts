@@ -14,6 +14,20 @@
         "monitors": {
             "type": "object",
             "properties": {
+                "cpuThrottling": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "number"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "crashLoopBackOff": {
                     "type": "object",
                     "properties": {
@@ -39,6 +53,48 @@
                         }
                     }
                 },
+                "hpaReplicasSurge": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "imagePullBackOff": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "memoryOverRequest": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "oomKilled": {
                     "type": "object",
                     "properties": {
@@ -53,7 +109,35 @@
                         }
                     }
                 },
+                "pdbNoDisruptionsAllowed": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "podRestarts": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "replicasAvailableLow": {
                     "type": "object",
                     "properties": {
                         "critical": {
