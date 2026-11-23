@@ -30,3 +30,10 @@ Create chart name and version as used by the chart label.
 {{- define "webapp.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
+
+{{/*
+Convert names/strings to Kubernetes name (DNS Subdomain Name) by replacing some chars with "-"
+*/}}
+{{- define "sanitizeName" -}}
+{{- . | lower | replace "/" "-" | replace "_" "-" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}

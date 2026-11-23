@@ -96,7 +96,7 @@ spec:
                 {{- with .Values.externalSecrets.secretNames }}
                   {{- range . }}
                 - secretRef:
-                    name: {{ . | lower | replace "/" "-" | replace "_" "-" }}
+                    name: {{ include "sanitizeName" . }}
                   {{- end }}
                 {{- end }}
                 {{- with .Values.extraEnvFrom }}

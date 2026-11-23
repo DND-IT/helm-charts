@@ -23,3 +23,10 @@ If release name contains chart name it will be used as a full name.
 {{- end -}}
 {{- end -}}
 {{- end -}}
+
+{{/*
+Convert names/strings to Kubernetes name (DNS Subdomain Name) by replacing some chars with "-"
+*/}}
+{{- define "sanitizeName" -}}
+{{- . | lower | replace "/" "-" | replace "_" "-" | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
