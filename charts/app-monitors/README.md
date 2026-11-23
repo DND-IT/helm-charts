@@ -51,7 +51,7 @@ Add the chart as a dependency of the application's umbrella chart, off by defaul
 dependencies:
   - name: app-monitors
     repository: https://dnd-it.github.io/helm-charts
-    version: 0.1.0
+    version: 0.2.0
     condition: app-monitors.enabled
 ```
 
