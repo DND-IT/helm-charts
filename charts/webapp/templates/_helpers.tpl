@@ -32,7 +32,7 @@ Create chart name and version as used by the chart label.
 {{- end -}}
 
 {{/*
-Convert names/strings to Kubernetes name (DNS Subdomain Name) by replacing some chars with "-"
+Convert name/string to Kubernetes name (DNS Subdomain Name) by replacing some chars with "-"
 */}}
 {{- define "sanitizeName" -}}
 {{- . | lower | replace "/" "-" | replace "_" "-" | trunc 63 | trimSuffix "-" -}}
