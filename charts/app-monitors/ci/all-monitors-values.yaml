@@ -14,7 +14,23 @@ monitors:
     warning: 1
     priority: 2
     severity: warning
+  crashLoopBackOff:
+    enabled: true
+  imagePullBackOff:
+    enabled: true
+  cpuThrottling:
+    enabled: true
+  memoryOverRequest:
+    enabled: true
+  replicasAvailableLow:
+    enabled: true
   hpaMaxedOut:
+    enabled: true
+  hpaReplicasSurge:
+    enabled: true
+  pdbNoDisruptionsAllowed:
+    enabled: true
+  http50xErrors:
     enabled: true
   sqsOldestMessageAge:
     enabled: true

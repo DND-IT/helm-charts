@@ -1,0 +1,36 @@
+suite: pdb monitors
+templates:
+  - datadogmonitor-pdb.yaml
+values:
+  - ../ci/all-monitors-values.yaml
+tests:
+  - it: is off by default
+    set:
+      monitors.pdbNoDisruptionsAllowed.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: alerts when healthy pods do not exceed the desired minimum
+    documentIndex: 0
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-pdb-no-disruptions-allowed
+      - equal:
+          path: spec.query
+          value: "avg(last_1h):cutoff_min(max:kubernetes_state.pdb.pods_healthy{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,poddisruptionbudget}, 1) - cutoff_min(max:kubernetes_state.pdb.pods_desired{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,poddisruptionbudget}, 1) <= 0"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "0"
+      - notExists:
+          path: spec.options.thresholds.warning
+      - notExists:
+          path: spec.priority
+
+  - it: fails without a kube namespace
+    set:
+      scope.kubeNamespace: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "app-monitors: .Values.scope.kubeNamespace is required by the workload, HPA and PDB monitors"

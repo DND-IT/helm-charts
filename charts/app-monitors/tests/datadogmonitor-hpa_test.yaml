@@ -7,11 +7,13 @@ tests:
   - it: is off by default
     set:
       monitors.hpaMaxedOut.enabled: false
+      monitors.hpaReplicasSurge.enabled: false
     asserts:
       - hasDocuments:
           count: 0
 
   - it: alerts when current replicas reach max
+    documentIndex: 0
     asserts:
       - matchRegex:
           path: spec.query
@@ -19,3 +21,20 @@ tests:
       - equal:
           path: spec.options.thresholds.critical
           value: "0"
+
+  - it: alerts on desired replicas against the previous window
+    documentIndex: 1
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-hpa-replicas-surge
+      - equal:
+          path: spec.query
+          value: "pct_change(avg(last_1d),last_1d):sum:kubernetes_state.hpa.desired_replicas{kube_namespace:example-namespace} by {aws_account_alias,kube_cluster_name,horizontalpodautoscaler} > 100"
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "100"
+      - notExists:
+          path: spec.options.thresholds.warning
+      - notExists:
+          path: spec.priority

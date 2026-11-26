@@ -29,7 +29,15 @@ add a query override here.
 | `podRestarts` | `pod-restarts` | on | `scope.kubeNamespace` |
 | `oomKilled` | `oom-killed` | on | `scope.kubeNamespace` |
 | `replicasNotReady` | `replicas-not-ready` | on | `scope.kubeNamespace` |
+| `crashLoopBackOff` | `crash-loop-back-off` | off | `scope.kubeNamespace` |
+| `imagePullBackOff` | `image-pull-back-off` | off | `scope.kubeNamespace` |
+| `cpuThrottling` | `cpu-throttling` | off | `scope.kubeNamespace` |
+| `memoryOverRequest` | `memory-over-request` | off | `scope.kubeNamespace` |
+| `replicasAvailableLow` | `replicas-available-low` | off | `scope.kubeNamespace` |
 | `hpaMaxedOut` | `hpa-maxed-out` | off | `scope.kubeNamespace` |
+| `hpaReplicasSurge` | `hpa-replicas-surge` | off | `scope.kubeNamespace` |
+| `pdbNoDisruptionsAllowed` | `pdb-no-disruptions-allowed` | off | `scope.kubeNamespace` |
+| `http50xErrors` | `http-50x-errors` | off | `env` + `scope.apmServices`, or `app` |
 | `sqsOldestMessageAge` | `sqs-oldest-message-age` | off | `env` + `scope.sqsQueues` |
 | `sqsBacklog` | `sqs-backlog` | off | `env` + `scope.sqsQueues` |
 
@@ -44,7 +52,7 @@ Add the chart as a dependency of the application's umbrella chart, off by defaul
 dependencies:
   - name: app-monitors
     repository: https://dnd-it.github.io/helm-charts
-    version: 0.1.0
+    version: 0.2.0
     condition: app-monitors.enabled
 ```
 
@@ -103,7 +111,7 @@ an enabled monitor's scope is empty.
 2. Add a block under `monitors:` in `values.yaml` with `enabled`, `window` and
    `critical`. Do not set a default `warning`, `priority` or `severity`.
 3. Add an `include "app-monitors.monitor"` call to the template file for its
-   signal family (`datadogmonitor-workload.yaml`, `datadogmonitor-hpa.yaml`, `datadogmonitor-sqs.yaml`), or a new file for a
+   signal family (`datadogmonitor-workload.yaml`, `datadogmonitor-hpa.yaml`, `datadogmonitor-pdb.yaml`, `datadogmonitor-apm.yaml`, `datadogmonitor-sqs.yaml`), or a new file for a
    new family. Build the query with `printf` from the values, and pass the same
    value as `critical`.
 4. Add the key to the table above and a test under `tests/`.

@@ -11,7 +11,15 @@ The chart fixes the query of each monitor. An application turns monitors on and 
 | `podRestarts` | on | `scope.kubeNamespace` |
 | `oomKilled` | on | `scope.kubeNamespace` |
 | `replicasNotReady` | on | `scope.kubeNamespace` |
+| `crashLoopBackOff` | off | `scope.kubeNamespace` |
+| `imagePullBackOff` | off | `scope.kubeNamespace` |
+| `cpuThrottling` | off | `scope.kubeNamespace` |
+| `memoryOverRequest` | off | `scope.kubeNamespace` |
+| `replicasAvailableLow` | off | `scope.kubeNamespace` |
 | `hpaMaxedOut` | off | `scope.kubeNamespace` |
+| `hpaReplicasSurge` | off | `scope.kubeNamespace` |
+| `pdbNoDisruptionsAllowed` | off | `scope.kubeNamespace` |
+| `http50xErrors` | off | `env` + `scope.apmServices`, or `app` |
 | `sqsOldestMessageAge` | off | `env` + `scope.sqsQueues` |
 | `sqsBacklog` | off | `env` + `scope.sqsQueues` |
 
@@ -26,7 +34,7 @@ Add the chart as a dependency of the application's umbrella chart:
 dependencies:
   - name: app-monitors
     repository: https://dnd-it.github.io/helm-charts
-    version: 0.1.0
+    version: 0.2.0
     condition: app-monitors.enabled
 ```
 

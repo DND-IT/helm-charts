@@ -1,0 +1,39 @@
+suite: apm monitors
+templates:
+  - datadogmonitor-apm.yaml
+values:
+  - ../ci/all-monitors-values.yaml
+tests:
+  - it: is off by default
+    set:
+      monitors.http50xErrors.enabled: false
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: counts 50x error spans of the app's service
+    asserts:
+      - equal:
+          path: metadata.name
+          value: example-app-prod-example-http-50x-errors
+      - equal:
+          path: spec.type
+          value: trace-analytics alert
+      - equal:
+          path: spec.query
+          value: 'trace-analytics("env:prod-example service:(example-app) @http.status_code:50* status:error").rollup("count").by("service,@http.host,kube_cluster_name").last("2m") > 100'
+      - equal:
+          path: spec.options.thresholds.critical
+          value: "100"
+      - notExists:
+          path: spec.options.thresholds.warning
+
+  - it: scopes on the listed APM services
+    set:
+      scope.apmServices:
+        - example-api
+        - example-worker
+    asserts:
+      - matchRegex:
+          path: spec.query
+          pattern: 'service:\(example-api OR example-worker\) '

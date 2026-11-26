@@ -15,10 +15,12 @@ repository: ""
 extraTags: []
 
 scope:
-  # -- Kubernetes namespace the workload and HPA monitors filter on. Required when any of them is enabled.
+  # -- Kubernetes namespace the workload, HPA and PDB monitors filter on. Required when any of them is enabled.
   kubeNamespace: ""
   # -- SQS queue names the SQS monitors filter on. Required when any of them is enabled.
   sqsQueues: []
+  # -- APM service names the HTTP 50x errors monitor filters on. Defaults to `app` when empty.
+  apmServices: []
 
 # -- Minutes between re-notifications while a monitor stays in alert. 0 disables re-notification.
 renotifyInterval: 0
@@ -49,11 +51,67 @@ monitors:
     window: last_15m
     critical: 1
 
+  # Containers waiting with reason CrashLoopBackOff at any point in the window.
+  crashLoopBackOff:
+    # -- Enable the CrashLoopBackOff monitor
+    enabled: false
+    window: last_10m
+    critical: 1
+
+  # Containers waiting with reason ImagePullBackOff at any point in the window.
+  imagePullBackOff:
+    # -- Enable the ImagePullBackOff monitor
+    enabled: false
+    window: last_10m
+    critical: 1
+
+  # CPU throttling of a deployment's containers, averaged over the window.
+  cpuThrottling:
+    # -- Enable the CPU throttling monitor
+    enabled: false
+    window: last_15m
+    critical: 0.6
+
+  # Percent by which a deployment's memory usage exceeds its request, averaged over the window.
+  memoryOverRequest:
+    # -- Enable the memory above request monitor
+    enabled: false
+    window: last_4h
+    critical: 50
+
+  # Available replicas as a percentage of desired, averaged over the window.
+  replicasAvailableLow:
+    # -- Enable the available replicas low monitor
+    enabled: false
+    window: last_5m
+    critical: 20
+
   # HPA running at its max replicas for every point in the window.
   hpaMaxedOut:
     # -- Enable the HPA at max replicas monitor
     enabled: false
     window: last_30m
+
+  # Percent change of an HPA's desired replicas against the previous window.
+  hpaReplicasSurge:
+    # -- Enable the HPA desired replicas surge monitor
+    enabled: false
+    window: last_1d
+    critical: 100
+
+  # Healthy pods minus the PDB's desired minimum, averaged over the window; 0 or less blocks evictions.
+  pdbNoDisruptionsAllowed:
+    # -- Enable the PDB allows no disruptions monitor
+    enabled: false
+    window: last_1h
+    critical: 0
+
+  # Error spans of the application's APM services with an HTTP 50x status, counted over the window.
+  http50xErrors:
+    # -- Enable the HTTP 50x errors monitor
+    enabled: false
+    window: last_2m
+    critical: 100
 
   # Age in seconds of the oldest message still in the queue.
   sqsOldestMessageAge:

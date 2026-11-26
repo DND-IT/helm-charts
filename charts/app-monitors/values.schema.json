@@ -14,9 +14,93 @@
         "monitors": {
             "type": "object",
             "properties": {
+                "cpuThrottling": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "number"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "crashLoopBackOff": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "hpaMaxedOut": {
                     "type": "object",
                     "properties": {
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "hpaReplicasSurge": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "http50xErrors": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "imagePullBackOff": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "memoryOverRequest": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
                         "enabled": {
                             "type": "boolean"
                         },
@@ -39,7 +123,35 @@
                         }
                     }
                 },
+                "pdbNoDisruptionsAllowed": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
                 "podRestarts": {
+                    "type": "object",
+                    "properties": {
+                        "critical": {
+                            "type": "integer"
+                        },
+                        "enabled": {
+                            "type": "boolean"
+                        },
+                        "window": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "replicasAvailableLow": {
                     "type": "object",
                     "properties": {
                         "critical": {
@@ -106,6 +218,9 @@
         "scope": {
             "type": "object",
             "properties": {
+                "apmServices": {
+                    "type": "array"
+                },
                 "kubeNamespace": {
                     "type": "string"
                 },
